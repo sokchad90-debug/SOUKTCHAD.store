@@ -1,0 +1,125 @@
+import React, { useCallback } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Platform, View, Pressable, PressableProps } from 'react-native';
+import { useApp } from '@/contexts/AppContext';
+
+function TabIcon({ name, color, size }: { name: any; color: string; size: number }) {
+  return <MaterialIcons name={name} size={26} color={color} />;
+}
+
+function StableTabButton(props: PressableProps & { children?: React.ReactNode }) {
+  return (
+    <Pressable
+      {...props}
+      android_ripple={null}
+      style={[props.style as any, { opacity: 1 }]}
+    />
+  );
+}
+
+export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const { colors, t, user, chatBadgeCount, profileBadgeCount, language } = useApp();
+  const isAr = language === 'ar';
+  const isSeller = user?.role === 'seller' || user?.role === 'super_admin' || user?.role === 'staff' || user?.isSeller === true;
+
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          height: Platform.select({
+            ios: insets.bottom + 56,
+            android: insets.bottom + 56,
+            default: 64,
+          }),
+          paddingTop: 8,
+          paddingBottom: Platform.select({
+            ios: insets.bottom + 6,
+            android: insets.bottom + 6,
+            default: 6,
+          }),
+          paddingHorizontal: 8,
+          backgroundColor: colors.tabBar,
+          borderTopWidth: 0,
+          borderTopColor: 'transparent',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 6,
+          elevation: 8,
+          ...(isAr ? { flexDirection: 'row-reverse' as const } : {}),
+        },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.tabBarInactive,
+        tabBarIconStyle: { width: 28, height: 28, marginBottom: 1 },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700', marginTop: 1 },
+        tabBarBadgeStyle: {
+          fontSize: 10, fontWeight: '700', minWidth: 18, height: 18, lineHeight: 16,
+          borderRadius: 9, backgroundColor: '#EF4444',
+        },
+        tabBarButton: StableTabButton,
+      }}
+    >
+      {/* BUYER TABS */}
+      <Tabs.Screen name="index" options={{
+        title: t('home'),
+        tabBarIcon: ({ color, size }) => <TabIcon name="storefront" size={size} color={color} />,
+        href: isSeller ? null : undefined,
+      }} />
+      <Tabs.Screen name="categories" options={{
+        title: isAr ? 'الأقسام' : 'Catégories',
+        tabBarIcon: ({ color, size }) => <TabIcon name="grid-view" size={size} color={color} />,
+        href: isSeller ? null : undefined,
+      }} />
+
+      {/* SELLER TABS */}
+      <Tabs.Screen name="seller-stats" options={{
+        title: isAr ? 'إحصائيات' : 'Statistiques',
+        tabBarIcon: ({ color, size }) => <TabIcon name="insights" size={size} color={color} />,
+        href: isSeller ? undefined : null,
+      }} />
+      <Tabs.Screen name="store-profile" options={{
+        href: isSeller ? undefined : null,
+        title: isAr ? 'متجرى' : 'Ma boutique',
+        tabBarIcon: ({ color, size }) => <TabIcon name="storefront" size={size} color={color} />,
+        href: null,
+      }} />
+      <Tabs.Screen name="seller-analytics" options={{
+        title: isAr ? 'تحليلات' : 'Analytique',
+        tabBarIcon: ({ color, size }) => <TabIcon name="analytics" size={size} color={color} />,
+        href: null,
+      }} />
+
+      {/* SHARED TABS */}
+      <Tabs.Screen name="chats" options={{
+        title: t('chats'),
+        tabBarIcon: ({ color, size }) => <TabIcon name="chat" size={size} color={color} />,
+        tabBarBadge: undefined,
+      }} />
+      <Tabs.Screen name="sell" options={{
+        title: isAr ? 'منتجاتي' : 'Produits',
+        tabBarIcon: ({ color, size }) => <TabIcon name="add-circle" size={size} color={color} />,
+        href: isSeller ? undefined : null,
+      }} />
+      <Tabs.Screen name="seller-orders" options={{
+        title: isAr ? 'الطلبات' : 'Commandes',
+        tabBarIcon: ({ color, size }) => <TabIcon name="receipt-long" size={size} color={color} />,
+        href: null,
+      }} />
+      <Tabs.Screen name="favorites" options={{
+        title: t('favorites'),
+        tabBarIcon: ({ color, size }) => <TabIcon name="favorite" size={size} color={color} />,
+        href: null,
+      }} />
+      <Tabs.Screen name="profile" options={{
+        title: isAr ? 'حسابي' : 'Mon Compte',
+        tabBarIcon: ({ color, size }) => <TabIcon name="person" size={size} color={color} />,
+        tabBarBadge: undefined,
+        href: isSeller ? null : undefined,
+      }} />
+    </Tabs>
+  );
+}

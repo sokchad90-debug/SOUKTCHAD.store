@@ -1,0 +1,26 @@
+# .dockerignore — Exclude from Docker build context
+node_modules/
+.git/
+.gitignore
+.expo/
+dist/
+web-build/
+app/
+assets/
+components/
+constants/
+contexts/
+hooks/
+scripts/
+services/
+template/
+pnpm-lock.yaml
+package.json
+app.json
+babel.config.js
+tsconfig.json
+eslint.config.js
+expo-env.d.ts
+README.md
+*.md
+.env

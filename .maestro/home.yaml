@@ -1,0 +1,22 @@
+appId: com.anonymous.sokchadapp
+---
+- launchApp:
+    appId: com.anonymous.sokchadapp
+    clearState: true
+- waitForAnimationToEnd
+- takeScreenshot: home_loaded
+
+- assertVisible: "Sokchad"
+- assertVisible: "Rechercher..."
+
+- runFlow:
+    when:
+      visible: "Offres"
+    commands:
+      - takeScreenshot: home_banner_visible
+
+- runFlow:
+    when:
+      visible: "Tout"
+    commands:
+      - takeScreenshot: home_categories_visible

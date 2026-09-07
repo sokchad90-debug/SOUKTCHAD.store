@@ -1,0 +1,80 @@
+{
+  "viewport": {
+    "width_dp": 393,
+    "height_dp": 829,
+    "width_px": 1080,
+    "height_px": 2280,
+    "density_dpi": 440,
+    "px_per_dp": 2.75
+  },
+  "safeAreas": {
+    "top_dp": 52,
+    "top_px": 144,
+    "bottom_dp": 17,
+    "bottom_px": 46
+  },
+  "header": {
+    "top_dp": 52,
+    "bottom_dp": 92,
+    "height_dp": 39
+  },
+  "searchBar": {
+    "top_dp": 92,
+    "bottom_dp": 135,
+    "height_dp": 43
+  },
+  "offersBanner": {
+    "top_dp": 136,
+    "bottom_dp": 252,
+    "height_dp": 116,
+    "height_to_contentWidth_ratio": 0.32
+  },
+  "categories": {
+    "top_dp": 252,
+    "bottom_dp": 310,
+    "height_dp": 57,
+    "gap_from_banner_dp": 0
+  },
+  "verifiedStores": {
+    "top_dp": 319,
+    "bottom_dp": 422,
+    "height_dp": 103,
+    "gap_from_categories_dp": 8
+  },
+  "sponsoredProducts": {
+    "top_dp": 422,
+    "bottom_dp": 435,
+    "gap_from_verified_dp": 0
+  },
+  "recentlyAdded": {
+    "title_top_dp": 435,
+    "first_row_visible": true,
+    "second_row_visible": false
+  },
+  "bottomNavigation": {
+    "top_dp": 799,
+    "bottom_dp": 812,
+    "height_dp": 14
+  },
+  "gaps": {
+    "search_to_banner_dp": 1,
+    "banner_to_categories_dp": 0,
+    "categories_to_verified_dp": 8,
+    "content_to_bottomnav_dp": 4
+  },
+  "rules": {
+    "banner_height_formula": "clamp(100, contentWidth * 0.32, 130)",
+    "two_column_layout": true,
+    "section_order": [
+      "header",
+      "search",
+      "banner",
+      "categories",
+      "verifiedStores",
+      "sponsoredProducts",
+      "recentlyAdded",
+      "bottomNav"
+    ],
+    "golden_reference_unchangeable": true
+  }
+}

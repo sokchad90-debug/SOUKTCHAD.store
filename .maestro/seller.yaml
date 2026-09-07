@@ -1,0 +1,13 @@
+appId: com.anonymous.sokchadapp
+---
+- launchApp:
+    appId: com.anonymous.sokchadapp
+    clearState: true
+- waitForAnimationToEnd
+- takeScreenshot: seller_loaded
+
+- runFlow:
+    when:
+      visible: "Boutique"
+    commands:
+      - takeScreenshot: seller_home_visible

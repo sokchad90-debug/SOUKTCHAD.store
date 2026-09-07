@@ -1,0 +1,13 @@
+appId: com.anonymous.sokchadapp
+---
+- launchApp:
+    appId: com.anonymous.sokchadapp
+    clearState: true
+- waitForAnimationToEnd
+- takeScreenshot: filters_loaded
+
+- runFlow:
+    when:
+      visible: "Filtres"
+    commands:
+      - takeScreenshot: filters_modal_visible

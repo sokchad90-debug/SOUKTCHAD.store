@@ -1,0 +1,17 @@
+# Sokchad Admin API — Apache Protection
+# ========================================
+
+# Block direct access to config
+<FilesMatch "^(config\.php)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# Disable directory listing
+Options -Indexes
+
+# Security headers
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "DENY"
+Header set X-XSS-Protection "1; mode=block"
