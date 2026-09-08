@@ -43,8 +43,9 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1'
       - name: Build release APK
         working-directory: android
+        timeout-minutes: 30
         run: |
-          ./gradlew assembleRelease --no-daemon --max-workers=2 | tee ../artifacts/gradle-build.txt
+          ./gradlew assembleRelease --no-daemon --max-workers=2 --stacktrace -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+ExitOnOutOfMemoryError" 2>&1 | tee ../artifacts/gradle-build.txt
       - name: Prepare and verify APKs
         run: |
           cp android/app/build/outputs/apk/release/app-release.apk artifacts/SOKCHAD-responsive.apk
