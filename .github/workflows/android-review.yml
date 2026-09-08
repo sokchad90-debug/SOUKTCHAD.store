@@ -40,7 +40,7 @@ jobs:
           git diff --exit-code -- package.json package-lock.json
       - name: Install Android build tools
         run: |
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1'
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1'
       - name: Build release APK
         working-directory: android
         run: |
