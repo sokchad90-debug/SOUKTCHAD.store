@@ -104,6 +104,15 @@ def capture(name, language, check_seam=False):
                                              image.getpixel((inside, y))))
         entry['search_seam_color_delta'] = delta
         assert delta <= 3, f'Visible search/filter seam: color delta {delta}'
+        if 'restart' in name:
+            banners = [n for n in tree.iter('node') if
+                       n.get('resource-id', '').endswith('home-deals-banner')]
+            assert banners, 'Deals banner missing from the initial home screen'
+            bx1, by1, bx2, by2 = bounds(banners[0])
+            entry['banner_bounds'] = [bx1, by1, bx2, by2]
+            assert abs(bx1 - (image.width - bx2)) <= 2, 'Deals banner is not centered'
+            assert abs((bx2 - bx1) / image.width - 0.9488) <= 0.005, 'Deals banner lost its reference width'
+            assert abs((by2 - by1) / (bx2 - bx1) - 0.3) <= 0.005, 'Deals banner aspect ratio changed'
     REPORT['screens'].append(entry)
     save_report()
     print('Captured', name, image.size, flush=True)

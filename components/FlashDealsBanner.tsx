@@ -81,6 +81,7 @@ export function FlashDealsBanner({ colors, language, router, lb, products }: any
 
   return (
     <Pressable
+      testID="home-deals-banner"
       onPress={() => router.push('/flash-deals' as any)}
       style={({ pressed }) => [
         styles.container,
@@ -120,7 +121,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: '2.56%',
+    width: '94.88%',
+    alignSelf: 'center',
     marginBottom: 4,
     marginTop: 6,
     borderRadius: 10,

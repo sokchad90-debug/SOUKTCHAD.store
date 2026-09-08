@@ -538,7 +538,7 @@ export default function HomeScreen() {
               {/* Notification bell hidden — no badge shown on home header */}
             </Animated.View>
             {/* Search bar — stays sticky */}
-            <View style={[styles.searchContainer, isAr && { flexDirection: 'row-reverse' }]}>
+            <View style={[styles.searchContainer, { backgroundColor: colors.surface }, isAr && { flexDirection: 'row-reverse' }]}>
               <View style={[styles.searchBar, { backgroundColor: colors.surface }, isAr && { flexDirection: 'row-reverse' }]}>
                 <MaterialIcons name="search" size={20} color={colors.textTertiary} />
                 <TextInput
