@@ -2,11 +2,10 @@ import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Tabs, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Platform, View, Pressable, PressableProps, StyleSheet, ActivityIndicator, LayoutChangeEvent, Dimensions } from 'react-native';
+import { Platform, View, Pressable, PressableProps, StyleSheet, ActivityIndicator, LayoutChangeEvent, useWindowDimensions } from 'react-native';
 import { BottomTabBar, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useApp } from '@/contexts/AppContext';
 import { scale } from '@/constants/responsive';
-import { IS_SHORT_SCREEN } from '@/ui/responsive';
 
 // ─── Tab Bar Measurement ───
 let _tabBarY = 0;
@@ -76,6 +75,7 @@ const styles = StyleSheet.create({
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
   const { colors, t, user, chatBadgeCount, profileBadgeCount, isReady, authLoading, userChecked } = useApp();
   const isSeller = user?.role === 'seller' || user?.role === 'super_admin' || user?.role === 'staff' || user?.isSeller === true;
   const router = useRouter();
@@ -114,7 +114,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          height: insets.bottom + (IS_SHORT_SCREEN ? scale(52) : scale(56)),
+          height: insets.bottom + Math.max(56, 40 + 16 * fontScale),
           paddingTop: scale(6),
           paddingBottom: insets.bottom + scale(6),
           paddingHorizontal: scale(8),
@@ -128,6 +128,7 @@ export default function TabLayout() {
           elevation: 0,
         },
         tabBarActiveTintColor: colors.primary,
+        tabBarLabelPosition: 'below-icon',
         tabBarInactiveTintColor: colors.tabBarInactive,
         tabBarIconStyle: { width: scale(28), height: scale(28), marginBottom: 0 },
         tabBarLabelStyle: { fontSize: scale(9), fontWeight: '700' as const, marginTop: -2 },

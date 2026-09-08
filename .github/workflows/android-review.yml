@@ -1,0 +1,93 @@
+name: Android APK and real screenshots
+
+on:
+  push:
+    branches: [fix/home-responsive-layout]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-review:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 50
+    env:
+      CI: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - name: Install locked project dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Verify source checks
+        run: |
+          node scripts/check-typescript.cjs
+          node --test tests/home-geometry.test.cjs | tee artifacts/geometry-tests.txt
+          git diff --exit-code -- package.json package-lock.json
+      - name: Install Android build tools
+        run: |
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1'
+      - name: Build release APK
+        working-directory: android
+        run: |
+          ./gradlew assembleRelease --no-daemon --max-workers=2 | tee ../artifacts/gradle-build.txt
+      - name: Prepare and verify APKs
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk artifacts/SOKCHAD-responsive.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose artifacts/SOKCHAD-responsive.apk > artifacts/apk-signature.txt
+          curl --fail --location --retry 2 'https://github.com/sokchad90-debug/SOUKTCHAD.store/releases/download/v8.0-golden/app-release.apk' -o artifacts/baseline.apk
+          python3 - <<'PY'
+          import hashlib, pathlib
+          apk = pathlib.Path('artifacts/baseline.apk')
+          assert hashlib.sha256(apk.read_bytes()).hexdigest() == 'd439f987e94b3a116ecac3ff746ca1d42bb30f304e79e4c1e400dcf941410e67'
+          PY
+          python3 -m pip install Pillow==11.3.0
+      - name: Enable Android hardware acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Test real app and capture French and Arabic screens
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          ram-size: 2048M
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: python3 scripts/android_review.py
+      - name: Package source and checksums
+        if: always()
+        run: |
+          mkdir -p artifacts
+          git archive --format=tar --prefix=SOKCHAD_GOLDEN_SOURCE_v8.0-responsive/ HEAD | gzip > artifacts/SOKCHAD_GOLDEN_SOURCE_v8.0-responsive.tar.gz
+          python3 - <<'PY'
+          import hashlib, pathlib
+          root = pathlib.Path('artifacts')
+          paths = sorted(p for p in root.iterdir() if p.is_file() and p.name != 'SHA256SUMS.txt')
+          (root / 'SHA256SUMS.txt').write_text(''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in paths))
+          PY
+      - name: Preserve APK, screenshots and test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sokchad-android-review
+          path: artifacts/
+          retention-days: 30
+          if-no-files-found: error

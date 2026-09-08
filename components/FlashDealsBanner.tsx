@@ -3,9 +3,6 @@ import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { scale, BANNER_HEIGHT } from '@/constants/responsive';
-import { SEARCH_TO_BANNER_GAP } from '@/ui/responsive';
-import { Dimensions } from 'react-native';
 
 function formatCountdown(ms: number, language: string = 'en'): string {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -67,7 +64,7 @@ export function FlashDealsBanner({ colors, language, router, lb, products }: any
     const tick = () => {
       const remaining = earliest - Date.now();
       if (remaining <= 0) {
-        setCountdown('0s');
+        setCountdown(formatCountdown(0, language));
         return;
       }
       setCountdown(formatCountdown(remaining, language));
@@ -105,14 +102,14 @@ export function FlashDealsBanner({ colors, language, router, lb, products }: any
       {/* Overlay with label + timer */}
       <View style={[styles.overlay, isAr && { flexDirection: 'row-reverse' }]}>
         <View style={styles.flashBadge}>
-          <MaterialIcons name="flash-on" size={scale(10)} color="#FFF" />
+          <MaterialIcons name="flash-on" size={10} color="#FFF" />
           <Text style={styles.flashLabel}>
             {lb('Deals', 'Offres', 'العروض')}
           </Text>
         </View>
-        <View style={styles.timerSection}>
+        <View style={[styles.timerSection, isAr && { flexDirection: 'row-reverse' }]}>
           <Text style={styles.timerText}>{countdown}</Text>
-          <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(14)} color="#FFF" />
+          <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={14} color="#FFF" />
         </View>
       </View>
     </Pressable>
@@ -123,14 +120,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: scale(10),
-    marginBottom: scale(4),
-    marginTop: SEARCH_TO_BANNER_GAP,
-    borderRadius: scale(10),
+    marginHorizontal: '2.56%',
+    marginBottom: 4,
+    marginTop: 6,
+    borderRadius: 10,
     borderWidth: 1.5,
     padding: 0,
     gap: 0,
-    height: BANNER_HEIGHT,
+    aspectRatio: 10 / 3,
     overflow: 'hidden',
   },
   dealImage: {
@@ -150,30 +147,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: scale(8),
+    paddingHorizontal: 8,
     backgroundColor: 'rgba(0,0,0,0.35)',
   },
   flashBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: scale(2),
-    paddingHorizontal: scale(6),
-    paddingVertical: scale(2),
-    borderRadius: scale(5),
+    gap: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
     backgroundColor: '#EF4444',
   },
   flashLabel: {
     color: '#FFF',
-    fontSize: scale(11),
+    fontSize: 11,
     fontWeight: '800',
   },
   timerSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: scale(2),
+    gap: 2,
   },
   timerText: {
-    fontSize: scale(12),
+    fontSize: 12,
     fontWeight: '800',
     color: '#EF4444',
   },

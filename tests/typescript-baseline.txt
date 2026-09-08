@@ -1,0 +1,46 @@
+app/(tabs)/seller-analytics.tsx(276,60): error TS2322: Type '{ width: string; backgroundColor: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Types of property 'width' are incompatible.
+    Type 'string' is not assignable to type 'DimensionValue | undefined'.
+app/(tabs)/seller-analytics.tsx(298,60): error TS2322: Type '{ width: string; backgroundColor: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Types of property 'width' are incompatible.
+    Type 'string' is not assignable to type 'DimensionValue | undefined'.
+app/(tabs)/seller-analytics.tsx(402,46): error TS2322: Type '{ width: string; backgroundColor: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Types of property 'width' are incompatible.
+    Type 'string' is not assignable to type 'DimensionValue | undefined'.
+app/seller/[id].tsx(132,7): error TS2448: Block-scoped variable 'seller' used before its declaration.
+contexts/AppContext.tsx(615,24): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '{ Authorization: string; 'Content-Type': string; } | { 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property ''Authorization'' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+contexts/AppContext.tsx(643,85): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '{ Authorization: string; 'Content-Type': string; } | { 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property ''Authorization'' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+contexts/AppContext.tsx(655,24): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '{ Authorization: string; 'Content-Type': string; } | { 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property ''Authorization'' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+contexts/AppContext.tsx(714,27): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '{ Authorization: string; 'Content-Type': string; } | { 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property ''Authorization'' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+contexts/AppContext.tsx(1664,11): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '{ Authorization: string; 'Content-Type': string; } | { 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property ''Authorization'' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+index.tsx(445,42): error TS2345: Argument of type '"tabPress"' is not assignable to parameter of type 'keyof EventMapCore<Readonly<{ key: string; index: number; routeNames: never[]; history?: unknown[] | undefined; routes: NavigationRoute<RootParamList, never>[]; type: string; stale: false; }>>'.

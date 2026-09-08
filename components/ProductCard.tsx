@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -8,7 +9,6 @@ import { Product, getSellerById } from '@/services/mockData';
 import { formatPrice } from '@/constants/config';
 import { shadows, borderRadius } from '@/constants/theme';
 import { impactLight } from '@/services/haptics';
-import { scale, normalize, CARD_WIDTH } from '@/constants/responsive';
 
 function isDiscountActive(product: Product): boolean {
   if (!product.discountPercent || product.discountPercent <= 0) return false;
@@ -22,23 +22,20 @@ function getDiscountedPrice(product: Product): number {
   return Math.round(product.price * (1 - discount / 100));
 }
 
-function useCardDimensions(imageHeightRatio: number = 0.65) {
-  const cardWidth = CARD_WIDTH;
-  const imageHeight = cardWidth * imageHeightRatio;
-  return { cardWidth, imageHeight, scale, normalize };
-}
-
 interface ProductCardProps {
   product: Product;
   index?: number;
   imageHeightRatio?: number;
+  width?: number;
 }
 
-function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCardProps) {
+function ProductCardInner({ product, index, imageHeightRatio = 0.49, width }: ProductCardProps) {
   const router = useRouter();
   const { colors, language, isFavorite, toggleFavorite } = useApp();
   const isAr = language === 'ar';
-  const { cardWidth: CARD_WIDTH, imageHeight: IMAGE_HEIGHT, scale: cardScale, normalize: cardFont } = useCardDimensions(imageHeightRatio);
+  const window = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const cardWidth = width ?? (window.width - insets.left - insets.right) * 0.45;
   
 
   // Guard: if product is undefined/null, render nothing to prevent white screen crashes
@@ -59,11 +56,12 @@ function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCa
 
   return (
     <Pressable
+      testID={`product-card-${product.id}`}
       onPress={handlePress}
       style={({ pressed }) => [
         styles.container,
         {
-          width: CARD_WIDTH,
+          width: cardWidth,
           backgroundColor: colors.surface,
           borderColor: colors.borderLight,
           opacity: pressed ? 0.92 : 1,
@@ -72,7 +70,7 @@ function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCa
         shadows.card,
       ]}
     >
-      <View style={[styles.imageContainer, { height: IMAGE_HEIGHT }]}>
+      <View testID={`product-image-${product.id}`} style={[styles.imageContainer, { aspectRatio: 1 / imageHeightRatio }]}>
         <Image
           source={{ uri: product?.images?.[0] || '' }}
           style={styles.image}
@@ -83,12 +81,12 @@ function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCa
         />
         {product.isPinned ? (
           <View style={[styles.pinnedBadge, { backgroundColor: colors.pinned }]}>
-            <MaterialIcons name="push-pin" size={scale(9)} color="#FFF" />
+            <MaterialIcons name="push-pin" size={9} color="#FFF" />
           </View>
         ) : null}
         {seller?.isVerified ? (
           <View style={[styles.verifiedBadge, { backgroundColor: colors.verified }]}>
-            <MaterialIcons name="verified" size={scale(9)} color="#FFF" />
+            <MaterialIcons name="verified" size={9} color="#FFF" />
           </View>
         ) : null}
         <Pressable
@@ -98,7 +96,7 @@ function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCa
         >
           <MaterialIcons
             name={isFavorite(product.id) ? 'favorite' : 'favorite-border'}
-            size={scale(16)}
+            size={16}
             color={isFavorite(product.id) ? '#EF4444' : '#FFF'}
           />
         </Pressable>
@@ -106,37 +104,37 @@ function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCa
 
       <View style={styles.info}>
         {isDiscountActive(product) ? (
-          <View style={styles.discountRow}>
-            <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardFont(14) }]} numberOfLines={1}>
+          <View style={[styles.discountRow, isAr && { flexDirection: 'row-reverse' }]}>
+            <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: 14 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
               {formatPrice(getDiscountedPrice(product))}
             </Text>
             <View style={[styles.discountBadge, { backgroundColor: '#EF4444' }]}>
-              <Text style={[styles.discountBadgeText, { fontSize: cardFont(9) }]}>-{Math.min(30, product.discountPercent || 0)}%</Text>
+              <Text style={[styles.discountBadgeText, { fontSize: 9 }]}>-{Math.min(30, product.discountPercent || 0)}%</Text>
             </View>
           </View>
         ) : (
-          <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardFont(14) }]} numberOfLines={1}>
+          <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: 14 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             {formatPrice(product.price)}
           </Text>
         )}
         {isDiscountActive(product) ? (
-          <Text style={[styles.oldPrice, { color: colors.textTertiary, textAlign: isAr ? 'right' : 'left', fontSize: cardFont(11) }]}>
+          <Text style={[styles.oldPrice, { color: colors.textTertiary, textAlign: isAr ? 'right' : 'left', fontSize: 11 }]}>
             {formatPrice(product.price)}
           </Text>
         ) : null}
-        <Text style={[styles.title, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', fontSize: cardFont(11), lineHeight: cardFont(15) }]} numberOfLines={1}>
+        <Text style={[styles.title, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', fontSize: 11, lineHeight: 15 }]} numberOfLines={2}>
           {title}
         </Text>
         <View style={[styles.meta, isAr && { flexDirection: 'row-reverse' }]}>
-          <MaterialIcons name="location-on" size={cardScale(10)} color={colors.textSecondary} />
-          <Text style={[styles.location, { color: colors.textTertiary, fontSize: cardFont(10), textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1}>
+          <MaterialIcons name="location-on" size={10} color={colors.textSecondary} />
+          <Text style={[styles.location, { color: colors.textTertiary, fontSize: 10, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1}>
             {product?.location || ''}
           </Text>
         </View>
         {(product.stock ?? 0) > 0 ? (
           <View style={[styles.stockRow, isAr && { flexDirection: 'row-reverse' }]}>
-            <MaterialIcons name="inventory" size={cardScale(9)} color={colors.success} />
-            <Text style={[styles.stockText, { color: colors.success, fontSize: cardFont(9), textAlign: isAr ? 'right' : 'left' }]}>
+            <MaterialIcons name="inventory" size={9} color={colors.success} />
+            <Text style={[styles.stockText, { color: colors.success, fontSize: 9, textAlign: isAr ? 'right' : 'left' }]}>
               {language === 'fr' ? 'En stock' : language === 'ar' ? 'متوفر' : 'In Stock'}: {product.stock}
             </Text>
           </View>
@@ -151,10 +149,10 @@ export default ProductCard;
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: scale(16),
+    borderRadius: 16,
     borderWidth: 1,
     overflow: 'hidden',
-    marginBottom: scale(10),
+    marginBottom: 10,
   },
   imageContainer: {
     width: '100%',
@@ -166,90 +164,93 @@ const styles = StyleSheet.create({
   },
   pinnedBadge: {
     position: 'absolute',
-    top: scale(6),
-    left: scale(6),
-    width: scale(20),
-    height: scale(20),
-    borderRadius: scale(16),
+    top: 6,
+    left: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   verifiedBadge: {
     position: 'absolute',
-    top: scale(6),
-    right: scale(34),
-    width: scale(20),
-    height: scale(20),
-    borderRadius: scale(16),
+    top: 6,
+    right: 34,
+    width: 20,
+    height: 20,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   favoriteBtn: {
     position: 'absolute',
-    top: scale(6),
-    right: scale(6),
-    width: scale(26),
-    height: scale(26),
-    borderRadius: scale(13),
+    top: 6,
+    right: 6,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
   info: {
-    paddingVertical: scale(6),
-    paddingHorizontal: scale(8),
-    gap: scale(2),
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    gap: 2,
   },
   discountRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: scale(4),
+    gap: 4,
   },
   discountBadge: {
-    paddingHorizontal: scale(4),
-    paddingVertical: scale(1),
-    borderRadius: scale(4),
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
   },
   discountBadgeText: {
     color: '#FFF',
-    fontSize: scale(9),
+    fontSize: 9,
     fontWeight: '800',
   },
   oldPrice: {
-    fontSize: scale(11),
+    fontSize: 11,
     textDecorationLine: 'line-through',
     marginTop: -1,
     fontFamily: 'Cairo-Regular',
   },
   price: {
-    fontSize: scale(14),
+    fontSize: 14,
+    flexShrink: 1,
     fontWeight: '800',
     fontFamily: 'Cairo-Bold',
     letterSpacing: -0.3,
   },
   title: {
-    fontSize: scale(11),
+    fontSize: 11,
     fontWeight: '500',
     lineHeight: 15,
   },
   meta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: scale(2),
+    gap: 2,
     marginTop: 1,
   },
   location: {
-    fontSize: scale(10),
+    flexShrink: 1,
+    fontSize: 10,
     fontWeight: '400',
     fontFamily: 'Cairo-Regular',
   },
   stockRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: scale(2),
+    gap: 2,
     marginTop: 1,
   },
   stockText: {
-    fontSize: scale(9),
+    flexShrink: 1,
+    fontSize: 9,
     fontWeight: '600',
     fontFamily: 'Cairo-SemiBold',
   },
