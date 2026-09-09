@@ -114,34 +114,20 @@ function HomeListHeader({
               <View
                 style={[
                   styles.categoryCircle,
-                  {
-                    borderColor: isSelected ? cat.color : 'transparent',
-                  },
                 ]}
               >
-                {cat.image ? (
-                  <Image
-                    source={cat.image}
-                    style={{ width: '100%', height: '100%', borderRadius: 10 }}
-                    contentFit="cover"
-                    transition={150}
-                  />
-                ) : (
-                  <MaterialIcons
-                    name={cat.icon as any}
-                    size={24}
-                    color={cat.color}
-                  />
-                )}
+                <MaterialIcons
+                  name={cat.icon as any}
+                  size={26}
+                  color="#1E293B"
+                />
               </View>
               <Text
                 style={[
                   styles.categoryCircleLabel,
-                  { color: isSelected ? cat.color : colors.textSecondary, fontWeight: isSelected ? '700' : '600', textAlign: 'center' },
+                  { color: '#1E293B', fontWeight: '600', textAlign: 'center' },
                 ]}
                 numberOfLines={1}
-                adjustsFontSizeToFit={true}
-                minimumFontScale={0.5}
               >
                 {getCategoryName(cat)}
               </Text>
@@ -300,7 +286,7 @@ function HomeListHeader({
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { fontScale, width: winW } = useWindowDimensions();
-  const searchBarH = Math.round(Math.max(48, 38 * Math.min(fontScale, 1.6)));
+  const searchBarH = Math.round(Math.max(44, 34 * Math.min(fontScale, 1.6)));
   const numCols = winW >= 500 ? 3 : 2;
   const { user, isReady, authLoading, userChecked } = useApp();
   const isSeller = user?.role === 'seller' || user?.role === 'super_admin' || user?.role === 'staff' || user?.isSeller === true;
@@ -558,14 +544,14 @@ export default function HomeScreen() {
             onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}
           >
             {/* Collapsible Sokchad header row */}
-            <View style={[styles.headerRow, { height: Math.max(52, Math.min(56, 54 * Math.min(fontScale, 1.15))), position: 'relative', justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[styles.headerRow, { height: Math.max(48, Math.min(54, 48 * Math.min(fontScale, 1.15))), position: 'relative', justifyContent: 'center', alignItems: 'center' }]}>
               {/* TipTob-style side icons: bell + cart LEFT, hamburger RIGHT, logo centered */}
               <View style={[styles.headerSideIcons, isAr && { flexDirection: 'row-reverse' }]}>
                 <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)}>
-                  <MaterialIcons name="notifications-none" size={26} color="#FFFFFF" />
+                  <MaterialIcons name="notifications-none" size={24} color="#FFFFFF" />
                 </Pressable>
                 <Pressable hitSlop={10} onPress={() => router.push('/checkout' as any)}>
-                  <MaterialIcons name="shopping-cart" size={26} color="#FFFFFF" />
+                  <MaterialIcons name="shopping-cart" size={24} color="#FFFFFF" />
                 </Pressable>
               </View>
               <Image
@@ -577,11 +563,11 @@ export default function HomeScreen() {
               <View style={[styles.headerSideIcons, styles.headerSideRight, isAr && { flexDirection: 'row-reverse' }]}>
                 {/* Location pin — ICON ONLY, big like cart, opens city dropdown */}
                 <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }}>
-                  <MaterialIcons name="location-on" size={26} color="#FFFFFF" />
+                  <MaterialIcons name="location-on" size={24} color="#FFFFFF" />
                 </Pressable>
                 {/* Menu (3 lines) opens the filter sheet directly */}
                 <Pressable hitSlop={12} onPress={() => { selection(); openFilters(); }}>
-                  <MaterialIcons name="menu" size={28} color="#FFFFFF" />
+                  <MaterialIcons name="menu" size={26} color="#FFFFFF" />
                   {activeFilterCount > 0 ? (
                     <View style={styles.filterBadge}>
                       <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
@@ -876,7 +862,7 @@ const styles = StyleSheet.create({
   headerLocationChip: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 7, paddingVertical: 4, borderRadius: 999, maxWidth: 86 },
   headerLocationChipText: { fontSize: 11, fontWeight: '700', maxWidth: 58, fontFamily: 'Cairo-Bold' },
   logoImage: { width: LOGO_IMG, height: LOGO_IMG, borderRadius: scale(6) },
-  logoHeaderImage: { width: 68, height: 34, resizeMode: 'contain' },
+  logoHeaderImage: { width: 62, height: 31, resizeMode: 'contain' },
   notifBtn: { width: NOTIF_BTN, height: NOTIF_BTN, borderRadius: Math.round(NOTIF_BTN / 2), alignItems: 'center', justifyContent: 'center' },
   searchContainer: {
     flexDirection: 'row', paddingHorizontal: scale(16), marginBottom: scale(6), gap: 0,
@@ -939,12 +925,7 @@ const styles = StyleSheet.create({
   categoryGridItem: { alignItems: 'center', width: '25%', marginBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4) },
   categoryCircleScroll: { paddingHorizontal: scale(16), gap: scale(10), paddingBottom: scale(2), marginBottom: 0, paddingTop: scale(2) },
   categoryCircleItem: { alignItems: 'center', width: scale(68) },
-  categoryCircle: {
-    width: CATEGORY_CIRCLE, height: CATEGORY_CIRCLE, borderRadius: scale(12),
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2,
-    overflow: 'hidden',
-  },
+  categoryCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   categoryCircleLabel: { fontSize: scale(10), marginTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4), textAlign: 'center', fontFamily: 'Cairo-Regular' },
   moreArrowBtn: { position: 'absolute', right: scale(4), top: '50%', marginTop: -scale(18), padding: scale(8), zIndex: 10, width: scale(36), height: scale(36), alignItems: 'center', justifyContent: 'center' },
   moreArrowBtnRTL: { right: 'auto', left: scale(4) },
@@ -976,10 +957,10 @@ const styles = StyleSheet.create({
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', width: '100%', paddingHorizontal: scale(16), paddingTop: 0, paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
   seeAllRow: { flexDirection: 'row', alignItems: 'center', gap: scale(2) },
   seeAllText: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
-  sectionTitle: { fontSize: scale(15), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
+  sectionTitle: { fontSize: scale(17), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   pinnedScroll: { paddingHorizontal: scale(16), gap: scale(6), paddingBottom: 0 },
   pinnedCard: { width: PINNED_CARD_W, borderRadius: scale(8), overflow: 'hidden', borderWidth: 1 },
-  pinnedImage: { width: PINNED_CARD_W, height: PINNED_CARD_W },
+  pinnedImage: { width: PINNED_CARD_W, height: Math.round(PINNED_CARD_W / 1.5) },
   pinnedInfo: { padding: scale(5) },
   pinnedPrice: { fontSize: scale(10), fontWeight: '700', fontFamily: 'Cairo-Bold' },
   pinnedOldPrice: { fontSize: scale(9), textDecorationLine: 'line-through' as const, marginTop: -1, fontFamily: 'Cairo-Regular' },
