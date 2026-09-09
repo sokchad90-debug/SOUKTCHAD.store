@@ -582,8 +582,14 @@ export default function HomeScreen() {
                 <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }}>
                   <MaterialIcons name="location-on" size={26} color="#FFFFFF" />
                 </Pressable>
-                <Pressable hitSlop={10} onPress={() => router.push('/(tabs)/categories' as any)}>
+                {/* Menu (3 lines) opens the filter sheet directly */}
+                <Pressable hitSlop={12} onPress={() => { selection(); openFilters(); }}>
                   <MaterialIcons name="menu" size={28} color="#FFFFFF" />
+                  {activeFilterCount > 0 ? (
+                    <View style={styles.filterBadge}>
+                      <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+                    </View>
+                  ) : null}
                 </Pressable>
               </View>
             </View>
@@ -605,17 +611,7 @@ export default function HomeScreen() {
                   </Pressable>
                 ) : null}
               </View>
-              <Pressable
-                onPress={openFilters}
-                style={({ pressed }) => [styles.searchBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.88 : 1 }]}
-              >
-                <MaterialIcons name="tune" size={22} color="#FFF" />
-                {activeFilterCount > 0 ? (
-                  <View style={styles.filterBadge}>
-                    <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-                  </View>
-                ) : null}
-              </Pressable>
+
               </View>
             </View>
           </View>
