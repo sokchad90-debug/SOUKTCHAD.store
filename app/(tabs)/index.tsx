@@ -7,6 +7,7 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -549,10 +550,15 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#10B981' }]}>
+    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#4C1CEA' }]}>
       <View style={{ flex: 1, backgroundColor: colors.background }}>
           {/* Sticky Search Bar — always visible at top */}
-          <View style={[styles.stickySearchWrap, { backgroundColor: '#10B981', paddingTop: 2 }]} onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}>
+          <LinearGradient
+            colors={['#4C1CEA', '#3B7FD4', '#10B981']}
+            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+            style={[styles.stickySearchWrap, { paddingTop: 2 }]}
+            onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}
+          >
             {/* Collapsible Sokchad header row */}
             <View style={[styles.headerRow, { height: 56, position: 'relative', justifyContent: 'center', alignItems: 'center' }]}>
               {/* TipTob-style side icons: bell + cart LEFT, hamburger RIGHT, logo centered */}
@@ -614,7 +620,7 @@ export default function HomeScreen() {
 
               </View>
             </View>
-          </View>
+          </LinearGradient>
 
           {/* City Picker Dropdown Modal — outside sticky so it overlays full screen */}
           <Modal
