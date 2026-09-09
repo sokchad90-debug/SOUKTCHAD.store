@@ -289,7 +289,7 @@ export const getIsVeryShortScreen = () => _isVeryShortScreen;
 // ---- Percentage-based dimensions (wp = width %, hp = height %) ----
 // Same values on ALL screen sizes. No exceptions.
 export const getSearchBarHeight = () => hp('5%');
-export const SEARCH_BAR_H = hp('5%');
+export const SEARCH_BAR_H = hp('6.5%');
 export const getBannerHeight = () => hp('13%');
 export const BANNER_HEIGHT = hp('13%');
 export const getCategoryCircleSize = () => wp('14%');

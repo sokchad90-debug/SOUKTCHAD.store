@@ -578,16 +578,9 @@ export default function HomeScreen() {
                 />
               )}
               <View style={[styles.headerSideIcons, styles.headerSideRight, isAr && { flexDirection: 'row-reverse' }]}>
-                {/* Location pin — opens city dropdown (same as filter) */}
-                <Pressable
-                  hitSlop={10}
-                  onPress={() => { selection(); setShowCityDropdown(true); }}
-                  style={({ pressed }) => [styles.headerLocationChip, { backgroundColor: 'rgba(255,255,255,0.18)', opacity: pressed ? 0.85 : 1 }]}
-                >
-                  <MaterialIcons name="location-on" size={16} color="#FFFFFF" />
-                  <Text numberOfLines={1} style={[styles.headerLocationChipText, { color: '#FFFFFF' }]}>
-                    {selectedCity === 'all' ? lb('Location', 'Localisation', 'الموقع') : selectedCity}
-                  </Text>
+                {/* Location pin — ICON ONLY, big like cart, opens city dropdown */}
+                <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }}>
+                  <MaterialIcons name="location-on" size={26} color="#FFFFFF" />
                 </Pressable>
                 <Pressable hitSlop={10} onPress={() => router.push('/(tabs)/categories' as any)}>
                   <MaterialIcons name="menu" size={28} color="#FFFFFF" />
@@ -598,7 +591,7 @@ export default function HomeScreen() {
             <View style={styles.searchContainer}>
               <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
               <View style={[styles.searchBar, { backgroundColor: "#FFFFFF" }]}>
-                <MaterialIcons name="search" size={20} color={colors.textTertiary} />
+                <MaterialIcons name="search" size={22} color={colors.textTertiary} />
                 <TextInput
                   style={[styles.searchInput, { color: colors.textPrimary, textAlign: 'center' }]}
                   placeholder={t('search')}
@@ -616,7 +609,7 @@ export default function HomeScreen() {
                 onPress={openFilters}
                 style={({ pressed }) => [styles.searchBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.88 : 1 }]}
               >
-                <MaterialIcons name="tune" size={20} color="#FFF" />
+                <MaterialIcons name="tune" size={22} color="#FFF" />
                 {activeFilterCount > 0 ? (
                   <View style={styles.filterBadge}>
                     <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
@@ -903,7 +896,7 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     gap: scale(8),
   },
-  searchInput: { flex: 1, fontSize: scale(13), height: '100%' },
+  searchInput: { flex: 1, fontSize: scale(15), height: '100%' },
   searchBtn: {
     width: SEARCH_BAR_H, height: SEARCH_BAR_H,
     borderRadius: 999,
