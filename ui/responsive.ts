@@ -289,16 +289,21 @@ export const getIsVeryShortScreen = () => _isVeryShortScreen;
 // ---- Percentage-based dimensions (wp = width %, hp = height %) ----
 // Same values on ALL screen sizes. No exceptions.
 export const getSearchBarHeight = () => hp('5%');
-export const SEARCH_BAR_H = hp('6.5%');
-export const getBannerHeight = () => hp('13%');
-export const BANNER_HEIGHT = hp('13%');
+// Fixed 48dp baseline — grows with system font scale, never tied to screen height
+export const SEARCH_BAR_H_BASE = 48;
+export const getSearchBarH = (fontScale: number = 1) => Math.round(Math.max(48, 38 * Math.min(fontScale, 1.6)));
+export const SEARCH_BAR_H = getSearchBarH();
+export const getBannerHeight = () => Math.min(hp('13%'), 180);
+export const BANNER_HEIGHT = Math.min(hp('13%'), 180);
 export const getCategoryCircleSize = () => wp('14%');
-export const CATEGORY_CIRCLE = wp('14%');
-export const AVATAR_SIZE = wp('14%');
-export const AVATAR_RADIUS = wp('7%');
+// Tablet caps: clamp to 64dp max so images don't dwarf text on wide screens
+export const CATEGORY_CIRCLE = Math.min(wp('14%'), 64);
+
+export const AVATAR_SIZE = Math.min(wp('14%'), 64);
+export const AVATAR_RADIUS = Math.min(wp('7%'), 32);
 export const AVATAR_BORDER = scale(2);
-export const VERIFIED_STORE_ITEM_W = wp('26%');
-export const VERIFIED_BADGE = wp('5%');
+export const VERIFIED_STORE_ITEM_W = Math.min(wp('26%'), 120);
+export const VERIFIED_BADGE = Math.min(wp('5%'), 22);
 export const PINNED_CARD_W = wp('29%');
 export const PINNED_IMG_H = hp('8%');
 export const SEARCH_TO_BANNER_GAP = scale(6);

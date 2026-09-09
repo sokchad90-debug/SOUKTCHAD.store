@@ -25,7 +25,7 @@ function formatCountdown(ms: number, language: string = 'en'): string {
 
 export function FlashDealsBanner({ colors, language, router, lb, products }: any) {
   const [hasDeals, setHasDeals] = useState(false);
-  const [countdown, setCountdown] = useState('0s');
+  const [countdown, setCountdown] = useState<string | null>('');
   const [dealImage, setDealImage] = useState('');
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -67,7 +67,7 @@ export function FlashDealsBanner({ colors, language, router, lb, products }: any
     const tick = () => {
       const remaining = earliest - Date.now();
       if (remaining <= 0) {
-        setCountdown('0s');
+        setCountdown(null); // deal expired — hide timer instead of stuck 0s
         return;
       }
       setCountdown(formatCountdown(remaining, language));
@@ -110,10 +110,12 @@ export function FlashDealsBanner({ colors, language, router, lb, products }: any
             {lb('Deals', 'Offres', 'العروض')}
           </Text>
         </View>
-        <View style={styles.timerSection}>
-          <Text style={styles.timerText}>{countdown}</Text>
-          <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(14)} color="#FFF" />
-        </View>
+        {countdown !== null ? (
+          <View style={styles.timerSection}>
+            <Text style={styles.timerText}>{countdown}</Text>
+            <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(14)} color="#FFF" />
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );

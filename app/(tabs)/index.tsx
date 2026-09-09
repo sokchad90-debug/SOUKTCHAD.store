@@ -302,6 +302,9 @@ function HomeListHeader({
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const { fontScale, width: winW } = useWindowDimensions();
+  const searchBarH = Math.round(Math.max(48, 38 * Math.min(fontScale, 1.6)));
+  const numCols = winW >= 500 ? 3 : 2;
   const { user, isReady, authLoading, userChecked } = useApp();
   const isSeller = user?.role === 'seller' || user?.role === 'super_admin' || user?.role === 'staff' || user?.isSeller === true;
   const router = useRouter();
@@ -553,14 +556,12 @@ export default function HomeScreen() {
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#4C1CEA' }]}>
       <View style={{ flex: 1, backgroundColor: colors.background }}>
           {/* Sticky Search Bar — always visible at top */}
-          <LinearGradient
-            colors={['#4C1CEA', '#3B7FD4', '#10B981']}
-            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-            style={[styles.stickySearchWrap, { paddingTop: 2 }]}
+          <View
+            style={[styles.stickySearchWrap, { backgroundColor: '#4C1CEA', paddingTop: 2 }]}
             onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}
           >
             {/* Collapsible Sokchad header row */}
-            <View style={[styles.headerRow, { height: 56, position: 'relative', justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[styles.headerRow, { height: Math.max(52, Math.min(56, 54 * Math.min(fontScale, 1.15))), position: 'relative', justifyContent: 'center', alignItems: 'center' }]}>
               {/* TipTob-style side icons: bell + cart LEFT, hamburger RIGHT, logo centered */}
               <View style={[styles.headerSideIcons, isAr && { flexDirection: 'row-reverse' }]}>
                 <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)}>
@@ -570,19 +571,12 @@ export default function HomeScreen() {
                   <MaterialIcons name="shopping-cart" size={26} color="#FFFFFF" />
                 </Pressable>
               </View>
-              {storeLogo ? (
-                <View style={[styles.logoRow]}>
-                  <Image source={{ uri: storeLogo }} style={styles.logoImage} contentFit="cover" transition={200} />
-                  <Text style={[styles.logo, { color: '#FFFFFF' }]}>Sokchad</Text>
-                </View>
-              ) : (
-                <Image 
-                  source={require('../../assets/branding/sokchad-logo-header.png')} 
-                  style={styles.logoHeaderImage}
-                  contentFit="cover" 
-                  transition={200} 
-                />
-              )}
+              <Image
+                source={require('../../assets/branding/sokchad-logo-white.png')}
+                style={styles.logoHeaderImage}
+                contentFit="contain"
+                transition={150}
+              />
               <View style={[styles.headerSideIcons, styles.headerSideRight, isAr && { flexDirection: 'row-reverse' }]}>
                 {/* Location pin — ICON ONLY, big like cart, opens city dropdown */}
                 <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }}>
@@ -602,11 +596,11 @@ export default function HomeScreen() {
             {/* Search bar — stays sticky */}
             <View style={styles.searchContainer}>
               <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
-              <View style={[styles.searchBar, { backgroundColor: "#FFFFFF" }]}>
+              <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: 16, marginHorizontal: 14 }, isAr && { flexDirection: 'row-reverse' }]}>
                 <MaterialIcons name="search" size={22} color={colors.textTertiary} />
                 <TextInput
-                  style={[styles.searchInput, { color: colors.textPrimary, textAlign: 'center' }]}
-                  placeholder={t('search')}
+                  style={[styles.searchInput, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}
+                  placeholder={isAr ? 'ابحث عن منتج…' : 'Rechercher un produit…'}
                   placeholderTextColor={colors.textTertiary}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -620,7 +614,7 @@ export default function HomeScreen() {
 
               </View>
             </View>
-          </LinearGradient>
+          </View>
 
           {/* City Picker Dropdown Modal — outside sticky so it overlays full screen */}
           <Modal
@@ -686,9 +680,9 @@ export default function HomeScreen() {
             data={paginatedProducts}
             keyExtractor={keyExtractor}
             renderItem={renderProductItem}
-            numColumns={2}
+            numColumns={numCols}
             columnWrapperStyle={[styles.grid, isAr && { flexDirection: 'row-reverse' }]}
-            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(stickyHeight - scale(48), scale(60)) : insets.top + scale(48) + SEARCH_BAR_H, paddingBottom: tabBarHeight + scale(20) }}
+            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? stickyHeight : insets.top + 54 + searchBarH, paddingBottom: tabBarHeight + scale(20) }}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
@@ -884,7 +878,7 @@ const styles = StyleSheet.create({
   headerLocationChip: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 7, paddingVertical: 4, borderRadius: 999, maxWidth: 86 },
   headerLocationChipText: { fontSize: 11, fontWeight: '700', maxWidth: 58, fontFamily: 'Cairo-Bold' },
   logoImage: { width: LOGO_IMG, height: LOGO_IMG, borderRadius: scale(6) },
-  logoHeaderImage: { width: scale(100), height: scale(28), resizeMode: 'contain' },
+  logoHeaderImage: { width: 68, height: 34, resizeMode: 'contain' },
   notifBtn: { width: NOTIF_BTN, height: NOTIF_BTN, borderRadius: Math.round(NOTIF_BTN / 2), alignItems: 'center', justifyContent: 'center' },
   searchContainer: {
     flexDirection: 'row', paddingHorizontal: scale(16), marginBottom: scale(6), gap: 0,

@@ -287,9 +287,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   info: {
-    paddingVertical: scale(6),
+    paddingVertical: scale(4),
     paddingHorizontal: scale(8),
-    gap: scale(2),
+    gap: scale(1),
   },
   discountRow: {
     flexDirection: 'row',
