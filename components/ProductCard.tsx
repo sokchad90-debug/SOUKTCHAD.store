@@ -12,6 +12,7 @@ import { scale, normalize } from '@/constants/responsive';
 import { DT } from '@/constants/designTokens';
 const SHIELD_ICON = require('@/assets/images/icons/shield.png');
 import { Animated } from 'react-native';
+import ProductImage from '@/components/ProductImage';
 
 function isDiscountActive(product: Product): boolean {
   if (!product.discountPercent || product.discountPercent <= 0) return false;
@@ -61,7 +62,6 @@ function ProductCardInner({ product, index, imageHeightRatio = 1.1 }: ProductCar
     router.push(`/product/${product.id}`);
   };
 
-  const [imgFailed, setImgFailed] = React.useState(false);
   const heartScale = React.useRef(new Animated.Value(1)).current;
   const handleFavorite = () => {
     impactLight();
@@ -88,23 +88,13 @@ function ProductCardInner({ product, index, imageHeightRatio = 1.1 }: ProductCar
       ]}
     >
       <View style={[styles.imageContainer, { height: IMAGE_HEIGHT }]}>
-        <Image
-          source={{ uri: product?.images?.[0] || '' }}
-          style={styles.image}
-          contentFit="contain"
-          transition={200}
-          placeholder={colors.backgroundSecondary}
-          recyclingKey={product?.id}
-          onError={() => setImgFailed(true)}
+        <ProductImage
+          uri={product?.images?.[0]}
+          frameWidth={CARD_WIDTH}
+          frameRatio={CARD_WIDTH / IMAGE_HEIGHT}
+          neutralBg="#F1F5F9"
+          failedText={language === 'fr' ? 'Image indisponible' : language === 'ar' ? 'الصورة غير متوفرة' : 'Image unavailable'}
         />
-        {imgFailed ? (
-          <View style={styles.imgFallback}>
-            <MaterialIcons name="image-not-supported" size={scale(28)} color={colors.textTertiary} />
-            <Text style={[styles.imgFallbackText, { color: colors.textTertiary }]}>
-              {language === 'fr' ? 'Image indisponible' : language === 'ar' ? 'الصورة غير متوفرة' : 'Image unavailable'}
-            </Text>
-          </View>
-        ) : null}
         {product.isPinned ? (
           <View style={[styles.pinnedBadge, { backgroundColor: colors.pinned }]}>
             <MaterialIcons name="push-pin" size={scale(9)} color="#FFF" />
@@ -135,16 +125,16 @@ function ProductCardInner({ product, index, imageHeightRatio = 1.1 }: ProductCar
         <View style={styles.priceTopRow}>
           {isDiscountActive(product) ? (
             <>
-              <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1}>
-                {formatPrice(getDiscountedPrice(product))}
+              <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]}>
+                {isAr ? '\u200E' : ''}{formatPrice(getDiscountedPrice(product))}{isAr ? '\u200E' : ''}
               </Text>
               <View style={[styles.discountBadge, { backgroundColor: '#EF4444' }]}>
                 <Text style={styles.discountBadgeText}>-{Math.min(30, product.discountPercent || 0)}%</Text>
               </View>
             </>
           ) : (
-            <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', flex: 1 }]} numberOfLines={1}>
-              {formatPrice(product.price)}
+            <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]}>
+              {isAr ? '\u200E' : ''}{formatPrice(product.price)}{isAr ? '\u200E' : ''}
             </Text>
           )}
           {(product?.tagLabel || ((product?.rating ?? 0) >= 4.5 && (product?.soldCount ?? 0) >= 100)) ? (

@@ -286,12 +286,18 @@ function HomeListHeader({
       ) : null}
 
       {/* Products Grid Title */}
-      <View style={[styles.sectionHeader, isAr && { alignItems: 'flex-end' }]}>
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}>
+      <View style={[styles.sectionHeaderRow, isAr && { flexDirection: 'row-reverse' }]}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
           {searchQuery || activeFilterCount > 0
             ? `${filteredProductsLength} ${lb('results', 'résultats', 'نتائج')}`
             : t('recentlyAdded')}
         </Text>
+        {!(searchQuery || activeFilterCount > 0) ? (
+          <Pressable onPress={() => router.push('/all-products' as any)} style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
+            <Text style={[styles.seeAllText, { color: colors.verified }]}>{lb('See All', 'Tout voir', 'عرض الكل')}</Text>
+            <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={18} color={colors.verified} />
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
