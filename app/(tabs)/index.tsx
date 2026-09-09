@@ -549,12 +549,12 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <View style={{ flex: 1 }}>
+    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#0E9F6E' }]}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
           {/* Sticky Search Bar — always visible at top */}
-          <View style={[styles.stickySearchWrap, { backgroundColor: colors.background, paddingTop: 2 }]} onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}>
+          <View style={[styles.stickySearchWrap, { backgroundColor: '#0E9F6E', paddingTop: 2 }]} onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}>
             {/* Collapsible Sokchad header row */}
-            <Animated.View style={[styles.headerRow, { height: headerHeight, opacity: headerOpacity, overflow: 'hidden' }, isAr && { flexDirection: 'row-reverse', paddingRight: 24 }]}>
+            <Animated.View style={[styles.headerRow, { height: headerHeight, opacity: headerOpacity, overflow: 'hidden', position: 'relative', justifyContent: 'center', alignItems: 'center' }, isAr && { paddingRight: 24 }]}>
               {storeLogo ? (
                 <View style={[styles.logoRow]}>
                   <Image source={{ uri: storeLogo }} style={styles.logoImage} contentFit="cover" transition={200} />
@@ -573,10 +573,10 @@ export default function HomeScreen() {
             {/* Search bar — stays sticky */}
             <View style={styles.searchContainer}>
               <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
-              <View style={[styles.searchBar, { backgroundColor: colors.surface }]}>
+              <View style={[styles.searchBar, { backgroundColor: "#FFFFFF" }]}>
                 <MaterialIcons name="search" size={20} color={colors.textTertiary} />
                 <TextInput
-                  style={[styles.searchInput, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', paddingLeft: isAr ? 0 : 0, paddingRight: isAr ? 8 : 0 }]}
+                  style={[styles.searchInput, { color: colors.textPrimary, textAlign: 'center' }]}
                   placeholder={t('search')}
                   placeholderTextColor={colors.textTertiary}
                   value={searchQuery}
@@ -663,6 +663,7 @@ export default function HomeScreen() {
           </Modal>
 
           <FlatList
+            style={{ backgroundColor: colors.background }}
             data={paginatedProducts}
             keyExtractor={keyExtractor}
             renderItem={renderProductItem}
