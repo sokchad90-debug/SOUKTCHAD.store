@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -8,9 +8,8 @@ import { Product, getSellerById } from '@/services/mockData';
 import { formatPrice } from '@/constants/config';
 import { shadows, borderRadius } from '@/constants/theme';
 import { impactLight } from '@/services/haptics';
-import { scale, normalize, CARD_WIDTH } from '@/constants/responsive';
+import { scale, normalize } from '@/constants/responsive';
 import { DT } from '@/constants/designTokens';
-const CROWN_ICON = require('@/assets/images/icons/crown.png');
 const SHIELD_ICON = require('@/assets/images/icons/shield.png');
 import { Animated } from 'react-native';
 
@@ -27,9 +26,13 @@ function getDiscountedPrice(product: Product): number {
 }
 
 function useCardDimensions(imageHeightRatio: number = 1.0) {
-  const cardWidth = CARD_WIDTH;
+  // CONTAINER-DERIVED width: (screen - 2*16 padding - 10 gap) / 2 — recomputed on rotation/resize
+  const { width: winW } = useWindowDimensions();
+  const pad = scale(16);
+  const gap = scale(10);
+  const cardWidth = Math.floor((winW - pad * 2 - gap) / 2);
   // SQUARE frame (owner rule): 1:1 uploads fill edge-to-edge with the ENTIRE product visible
-  const imageHeight = cardWidth * 1.0;
+  const imageHeight = Math.round(cardWidth * imageHeightRatio);
   return { cardWidth, imageHeight, scale, normalize };
 }
 
@@ -58,6 +61,7 @@ function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCa
     router.push(`/product/${product.id}`);
   };
 
+  const [imgFailed, setImgFailed] = React.useState(false);
   const heartScale = React.useRef(new Animated.Value(1)).current;
   const handleFavorite = () => {
     impactLight();
@@ -87,11 +91,20 @@ function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCa
         <Image
           source={{ uri: product?.images?.[0] || '' }}
           style={styles.image}
-          contentFit="cover"
+          contentFit="contain"
           transition={200}
           placeholder={colors.backgroundSecondary}
           recyclingKey={product?.id}
+          onError={() => setImgFailed(true)}
         />
+        {imgFailed ? (
+          <View style={styles.imgFallback}>
+            <MaterialIcons name="image-not-supported" size={scale(28)} color={colors.textTertiary} />
+            <Text style={[styles.imgFallbackText, { color: colors.textTertiary }]}>
+              {language === 'fr' ? 'Image indisponible' : language === 'ar' ? 'الصورة غير متوفرة' : 'Image unavailable'}
+            </Text>
+          </View>
+        ) : null}
         {product.isPinned ? (
           <View style={[styles.pinnedBadge, { backgroundColor: colors.pinned }]}>
             <MaterialIcons name="push-pin" size={scale(9)} color="#FFF" />
@@ -139,8 +152,8 @@ function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCa
         ) : null}
         {(product?.tagLabel || ((product?.rating ?? 0) >= 4.5 && (product?.soldCount ?? 0) >= 100)) ? (
           <View style={[styles.tagBadge, isAr && { alignSelf: 'flex-end' }]}>
-            <Image source={CROWN_ICON} style={styles.crownIcon} contentFit="contain" />
-            <Text style={styles.tagBadgeText}>{product.tagLabel || 'Top'}</Text>
+            <MaterialIcons name="workspace-premium" size={scale(12)} color="#B8860B" />
+            <Text style={styles.tagBadgeText}>{product.tagLabel || (language === 'fr' ? 'Top' : language === 'ar' ? 'الأكثر رواجاً' : 'Top')}</Text>
           </View>
         ) : null}
         {(product?.soldCount != null || product?.rating != null) ? (
@@ -233,8 +246,12 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: '100%',
     position: 'relative',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  imgFallback: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#F1F5F9' },
+  imgFallbackText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
   image: {
     width: '100%',
     height: '100%',
