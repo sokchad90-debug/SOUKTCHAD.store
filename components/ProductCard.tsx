@@ -25,14 +25,14 @@ function getDiscountedPrice(product: Product): number {
   return Math.round(product.price * (1 - discount / 100));
 }
 
-function useCardDimensions(imageHeightRatio: number = 1/1.5) {
+function useCardDimensions(imageHeightRatio: number = 1.1) {
   // CONTAINER-DERIVED width: (screen - 2*16 padding - 10 gap) / 2 — recomputed on rotation/resize
   const { width: winW } = useWindowDimensions();
   const pad = scale(16);
   const gap = scale(10);
   const cardWidth = Math.floor((winW - pad * 2 - gap) / 2);
   // SQUARE frame (owner rule): 1:1 uploads fill edge-to-edge with the ENTIRE product visible
-  const imageHeight = Math.round(cardWidth / 1.5); // 1.5:1 wide frame (contain, no crop)
+  const imageHeight = Math.round(cardWidth * 1.1); // 1.1:1 frame (spec)
   return { cardWidth, imageHeight, scale, normalize };
 }
 
@@ -42,7 +42,7 @@ interface ProductCardProps {
   imageHeightRatio?: number;
 }
 
-function ProductCardInner({ product, index, imageHeightRatio = 1/1.5 }: ProductCardProps) {
+function ProductCardInner({ product, index, imageHeightRatio = 1.1 }: ProductCardProps) {
   const router = useRouter();
   const { colors, language, isFavorite, toggleFavorite } = useApp();
   const isAr = language === 'ar';
@@ -135,7 +135,7 @@ function ProductCardInner({ product, index, imageHeightRatio = 1/1.5 }: ProductC
         <View style={styles.priceTopRow}>
           {isDiscountActive(product) ? (
             <>
-              <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]}>
+              <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1}>
                 {formatPrice(getDiscountedPrice(product))}
               </Text>
               <View style={[styles.discountBadge, { backgroundColor: '#EF4444' }]}>
@@ -143,7 +143,7 @@ function ProductCardInner({ product, index, imageHeightRatio = 1/1.5 }: ProductC
               </View>
             </>
           ) : (
-            <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]}>
+            <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', flex: 1 }]} numberOfLines={1}>
               {formatPrice(product.price)}
             </Text>
           )}
