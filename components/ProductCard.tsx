@@ -25,14 +25,14 @@ function getDiscountedPrice(product: Product): number {
   return Math.round(product.price * (1 - discount / 100));
 }
 
-function useCardDimensions(imageHeightRatio: number = 1.0) {
+function useCardDimensions(imageHeightRatio: number = 1.1) {
   // CONTAINER-DERIVED width: (screen - 2*16 padding - 10 gap) / 2 — recomputed on rotation/resize
   const { width: winW } = useWindowDimensions();
   const pad = scale(16);
   const gap = scale(10);
   const cardWidth = Math.floor((winW - pad * 2 - gap) / 2);
   // SQUARE frame (owner rule): 1:1 uploads fill edge-to-edge with the ENTIRE product visible
-  const imageHeight = Math.round(cardWidth * imageHeightRatio);
+  const imageHeight = Math.round(cardWidth * 1.1); // 1.1:1 frame (spec)
   return { cardWidth, imageHeight, scale, normalize };
 }
 
@@ -42,7 +42,7 @@ interface ProductCardProps {
   imageHeightRatio?: number;
 }
 
-function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCardProps) {
+function ProductCardInner({ product, index, imageHeightRatio = 1.1 }: ProductCardProps) {
   const router = useRouter();
   const { colors, language, isFavorite, toggleFavorite } = useApp();
   const isAr = language === 'ar';
@@ -131,41 +131,41 @@ function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCa
       </View>
 
       <View style={styles.info}>
-        {isDiscountActive(product) ? (
-          <View style={styles.discountRow}>
-            <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardFont(14) }]} numberOfLines={1}>
-              {formatPrice(getDiscountedPrice(product))}
-            </Text>
-            <View style={[styles.discountBadge, { backgroundColor: '#EF4444' }]}>
-              <Text style={[styles.discountBadgeText, { fontSize: cardFont(9) }]}>-{Math.min(30, product.discountPercent || 0)}%</Text>
-            </View>
-          </View>
-        ) : (
-          <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardFont(14) }]} numberOfLines={1}>
-            {formatPrice(product.price)}
-          </Text>
-        )}
-        {isDiscountActive(product) ? (
-          <Text style={[styles.oldPrice, { color: colors.textTertiary, textAlign: isAr ? 'right' : 'left', fontSize: cardFont(11) }]}>
-            {formatPrice(product.price)}
-          </Text>
-        ) : null}
-        {(product?.tagLabel || ((product?.rating ?? 0) >= 4.5 && (product?.soldCount ?? 0) >= 100)) ? (
-          <View style={[styles.tagBadge, isAr && { alignSelf: 'flex-end' }]}>
-            <MaterialIcons name="workspace-premium" size={scale(12)} color="#B8860B" />
-            <Text style={styles.tagBadgeText}>{product.tagLabel || (language === 'fr' ? 'Top' : language === 'ar' ? 'الأكثر رواجاً' : 'Top')}</Text>
-          </View>
-        ) : null}
-        {(product?.soldCount != null || product?.rating != null) ? (
-          <View style={[styles.soldRatingRow, isAr && { flexDirection: 'row-reverse' }]}>
-            {product?.soldCount != null ? (
-              <Text style={[styles.soldText, { color: colors.textTertiary, fontSize: cardFont(10) }]} numberOfLines={1}>
-                {product.soldCount >= 1000 ? `${(product.soldCount / 1000).toFixed(0)}K+` : product.soldCount} {language === 'fr' ? 'vendus' : language === 'ar' ? 'مبيع' : 'sold'}
+        {/* Row 1: price + Top badge (same row when it fits) */}
+        <View style={styles.priceTopRow}>
+          {isDiscountActive(product) ? (
+            <>
+              <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1}>
+                {formatPrice(getDiscountedPrice(product))}
               </Text>
-            ) : null}
-            {product?.soldCount != null && product?.rating != null ? (
-              <Text style={{ color: colors.textTertiary, fontSize: cardFont(10) }}> | </Text>
-            ) : null}
+              <View style={[styles.discountBadge, { backgroundColor: '#EF4444' }]}>
+                <Text style={styles.discountBadgeText}>-{Math.min(30, product.discountPercent || 0)}%</Text>
+              </View>
+            </>
+          ) : (
+            <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', flex: 1 }]} numberOfLines={1}>
+              {formatPrice(product.price)}
+            </Text>
+          )}
+          {(product?.tagLabel || ((product?.rating ?? 0) >= 4.5 && (product?.soldCount ?? 0) >= 100)) ? (
+            <View style={[styles.tagBadge, isAr && { alignSelf: 'auto' }]}>
+              <MaterialIcons name="workspace-premium" size={scale(12)} color="#B8860B" />
+              <Text style={styles.tagBadgeText}>{product.tagLabel || (language === 'fr' ? 'Top' : language === 'ar' ? 'الأكثر رواجاً' : 'Top')}</Text>
+            </View>
+          ) : null}
+        </View>
+        {isDiscountActive(product) ? (
+          <Text style={[styles.oldPrice, { color: colors.textTertiary, textAlign: isAr ? 'right' : 'left' }]}>
+            {formatPrice(product.price)}
+          </Text>
+        ) : null}
+        {/* Row 2: title — up to 2 lines */}
+        <Text style={[styles.title, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={2}>
+          {title}
+        </Text>
+        {/* Row 3: rating + sold count in one row */}
+        {(product?.soldCount != null || product?.rating != null) ? (
+          <View style={[styles.metaRow, isAr && { flexDirection: 'row-reverse' }]}>
             {product?.rating != null ? (
               <View style={[styles.ratingInline, isAr && { flexDirection: 'row-reverse' }]}>
                 <MaterialIcons name="star" size={cardScale(11)} color="#FFB400" />
@@ -174,47 +174,56 @@ function ProductCardInner({ product, index, imageHeightRatio = 0.49 }: ProductCa
                 </Text>
               </View>
             ) : null}
+            {product?.soldCount != null ? (
+              <Text style={[styles.soldText, { color: colors.textTertiary, fontSize: cardFont(10) }]} numberOfLines={1}>
+                {product?.rating != null ? ' · ' : ''}{product.soldCount >= 1000 ? `${(product.soldCount / 1000).toFixed(0)}K+` : product.soldCount} {language === 'fr' ? 'vendus' : language === 'ar' ? 'مبيع' : 'sold'}
+              </Text>
+            ) : null}
           </View>
         ) : null}
-        <Text style={[styles.title, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', fontSize: cardFont(11), lineHeight: cardFont(15) }]} numberOfLines={1} adjustsFontSizeToFit={true} minimumFontScale={0.7}>
-          {title}
-        </Text>
-        <View style={[styles.meta, isAr && { flexDirection: 'row-reverse' }]}>
-          <MaterialIcons name="location-on" size={cardScale(10)} color={colors.textSecondary} />
-          <Text style={[styles.location, { color: colors.textTertiary, fontSize: cardFont(12), textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1}>
-            {product?.location || ''}
-          </Text>
-        </View>
-        {product?.warrantyDays ? (
-          <View style={[styles.warrantyRow, isAr && { flexDirection: 'row-reverse' }]}>
-            <Image source={SHIELD_ICON} style={styles.shieldIcon} contentFit="contain" />
-            <Text style={[styles.warrantyText, { color: colors.textSecondary, fontSize: cardFont(10) }]}>
-              {language === 'fr' ? 'Garantie de retour' : language === 'ar' ? 'ضمان استرجاع' : 'Return guarantee'} {product.warrantyDays}{language === 'fr' ? 'j' : language === 'ar' ? 'ي' : 'd'}
+        {/* Row 4: location */}
+        {product?.location ? (
+          <View style={[styles.meta, isAr && { flexDirection: 'row-reverse' }]}>
+            <MaterialIcons name="location-on" size={cardScale(10)} color={colors.textSecondary} />
+            <Text style={[styles.location, { color: colors.textTertiary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1}>
+              {product.location}
             </Text>
           </View>
         ) : null}
-        {product?.deliveryType === 'free' || product?.freeShipping ? (
-          <View style={[styles.freeShipRow, isAr && { flexDirection: 'row-reverse' }]}>
-            <MaterialIcons name="local-shipping" size={cardScale(10)} color={DT.color.success} />
-            <Text style={[styles.freeShipText, { color: DT.color.success, fontSize: cardFont(10), fontWeight: '600' }]}>
-              {language === 'fr' ? 'Livraison gratuite' : language === 'ar' ? 'توصيل مجاني' : 'Free delivery'}
-            </Text>
-          </View>
-        ) : null}
-        {product?.deliveryType === 'paid' && product?.deliveryFee ? (
-          <View style={[styles.freeShipRow, isAr && { flexDirection: 'row-reverse' }]}>
-            <MaterialIcons name="local-shipping" size={cardScale(10)} color={colors.textSecondary} />
-            <Text style={{ color: colors.textTertiary, fontSize: cardFont(10) }}>
-              {language === 'fr' ? 'Livraison' : language === 'ar' ? 'التوصيل' : 'Delivery'}: {formatPrice(product.deliveryFee)}
-            </Text>
-          </View>
-        ) : null}
-        {(product.stock ?? 0) > 0 ? (
-          <View style={[styles.stockRow, isAr && { flexDirection: 'row-reverse' }]}>
-            <MaterialIcons name="inventory" size={cardScale(9)} color={DT.color.success} />
-            <Text style={[styles.stockText, { color: isDark ? DT.dark.success : DT.color.success, fontSize: cardFont(9), textAlign: isAr ? 'right' : 'left' }]}>
-              {language === 'fr' ? 'En stock' : language === 'ar' ? 'متوفر' : 'In Stock'}: {product.stock}
-            </Text>
+        {/* Row 5: delivery + stock in one row; warranty when present */}
+        {(product?.deliveryType === 'free' || product?.freeShipping || product?.deliveryType === 'paid' || (product.stock ?? 0) > 0 || product?.warrantyDays) ? (
+          <View style={[styles.logisticsRow, isAr && { flexDirection: 'row-reverse' }]}>
+            {product?.deliveryType === 'free' || product?.freeShipping ? (
+              <View style={styles.logItem}>
+                <MaterialIcons name="local-shipping" size={cardScale(10)} color={DT.color.success} />
+                <Text style={[styles.freeShipText, { color: DT.color.success }]} numberOfLines={1}>
+                  {language === 'fr' ? 'Livraison offerte' : language === 'ar' ? 'توصيل مجاني' : 'Free delivery'}
+                </Text>
+              </View>
+            ) : product?.deliveryType === 'paid' && product?.deliveryFee ? (
+              <View style={styles.logItem}>
+                <MaterialIcons name="local-shipping" size={cardScale(10)} color={colors.textSecondary} />
+                <Text style={{ color: colors.textTertiary, fontSize: cardFont(10) }} numberOfLines={1}>
+                  {language === 'fr' ? 'Livraison' : language === 'ar' ? 'التوصيل' : 'Delivery'}: {formatPrice(product.deliveryFee)}
+                </Text>
+              </View>
+            ) : null}
+            {(product.stock ?? 0) > 0 ? (
+              <View style={styles.logItem}>
+                <MaterialIcons name="inventory" size={cardScale(9)} color={DT.color.success} />
+                <Text style={[styles.stockText, { color: isDark ? DT.dark.success : DT.color.success }]} numberOfLines={1}>
+                  {language === 'fr' ? 'Stock' : language === 'ar' ? 'مخزون' : 'Stock'}: {product.stock}
+                </Text>
+              </View>
+            ) : null}
+            {product?.warrantyDays ? (
+              <View style={styles.logItem}>
+                <Image source={SHIELD_ICON} style={styles.shieldIcon} contentFit="contain" />
+                <Text style={[styles.warrantyText, { color: colors.textSecondary }]} numberOfLines={1}>
+                  {language === 'fr' ? 'Garantie' : language === 'ar' ? 'ضمان' : 'Warranty'} {product.warrantyDays}{language === 'fr' ? 'j' : language === 'ar' ? 'ي' : 'd'}
+                </Text>
+              </View>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -237,6 +246,10 @@ const styles = StyleSheet.create({
   warrantyText: { fontFamily: 'Cairo-Regular' },
   freeShipRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
   freeShipText: { fontFamily: 'Cairo-SemiBold' },
+  priceTopRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 2, flexWrap: 'wrap' },
+  logisticsRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 2 },
+  logItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   container: {
     borderRadius: DT.card.radius,
     borderWidth: 1,
@@ -287,9 +300,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   info: {
-    paddingVertical: scale(4),
+    paddingVertical: scale(5),
     paddingHorizontal: scale(8),
-    gap: scale(1),
+    gap: scale(4),
   },
   discountRow: {
     flexDirection: 'row',
@@ -313,15 +326,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Cairo-Regular',
   },
   price: {
-    fontSize: scale(14),
+    fontSize: scale(17),
     fontWeight: '800',
     fontFamily: 'Cairo-Bold',
     letterSpacing: -0.3,
   },
   title: {
-    fontSize: scale(11),
-    fontWeight: '500',
-    lineHeight: 15,
+    fontSize: scale(12),
+    fontWeight: '600',
+    lineHeight: 17,
+    fontFamily: 'Cairo-SemiBold',
   },
   meta: {
     flexDirection: 'row',

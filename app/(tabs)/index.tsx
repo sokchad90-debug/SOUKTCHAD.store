@@ -19,7 +19,6 @@ import {
   DEFAULT_FILTERS, CHAD_CITIES, FilterState, SortOption, ConditionFilter,
 } from '@/contexts/AppContext';
 import { categories, sellers, Product } from '@/services/mockData';
-import { FlashDealsBanner } from '@/components/FlashDealsBanner';
 import { formatPrice } from '@/constants/config';
 import ProductCard from '@/components/ProductCard';
 import { ProductGridSkeleton, CategorySkeleton } from '@/components/Skeleton';
@@ -100,8 +99,6 @@ function HomeListHeader({
     <View>
       {/* City Picker in HomeScreen sticky area. Banner below in HomeListHeader. */}
 
-      {/* Flash Deals Banner — between city selector and categories */}
-      <FlashDealsBanner colors={colors} language={language} router={router} lb={lb} products={products} />
 
       {/* Categories - Grid (only show when "all" is selected, hidden when a category is chosen) */}
       {selectedCategory === 'all' ? (
@@ -169,8 +166,8 @@ function HomeListHeader({
       {verifiedSellers.length > 0 && showHeaderContent && !IS_VERY_SHORT_SCREEN ? (
         <View style={{ marginBottom: 4 }}>
           <View style={[styles.sectionHeaderRow, isAr && { flexDirection: 'row-reverse' }]}>
-            <Text style={[styles.sectionTitle, { color: colors.verified, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
-              {lb('Verified Stores', 'Boutiques vérifiées', 'متاجر موثقة')}
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
+              {lb('Verified Stores', 'Boutiques vérifiées', 'متاجر موثّقة')}
             </Text>
             <Pressable onPress={() => router.push('/verified-stores' as any)} style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
               <Text style={[styles.seeAllText, { color: colors.verified }]}>{lb('See All', 'Voir tout', 'عرض الكل')}</Text>
@@ -224,7 +221,7 @@ function HomeListHeader({
       {pinnedProducts.length > 0 && showHeaderContent ? (
         <View>
           <Pressable onPress={() => router.push('/promoted')} style={[styles.sectionHeaderRow, isAr && { flexDirection: 'row-reverse' }]}>
-            <Text style={[styles.sectionTitle, { color: colors.pinned, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>{t('pinnedProducts')}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>{t('pinnedProducts')}</Text>
             <View style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
               <Text style={[styles.seeAllText, { color: colors.primary }]}>{lb('See All', 'Voir tout', 'عرض الكل')}</Text>
               <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.primary} />
@@ -676,6 +673,7 @@ export default function HomeScreen() {
           </Modal>
 
           <FlatList
+            key={`grid-${numCols}`}
             style={{ backgroundColor: colors.background }}
             data={paginatedProducts}
             keyExtractor={keyExtractor}
