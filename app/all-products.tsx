@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -13,6 +14,7 @@ export default function AllProductsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, language, products } = useApp();
+  const isDark = (colors as any).background === '#0B1120' || (colors as any).surface === '#161E2E';
   const isAr = language === 'ar';
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -63,7 +65,8 @@ export default function AllProductsScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: '#4C1CEA' }]}>
-      {/* Header: back + title + search (identity-consistent) */}
+      <StatusBar style="light" backgroundColor="#4C1CEA" />
+      {/* Header: back + title + search (identity-consistent — purple like home) */}
       <View style={[styles.header, isAr && { flexDirection: 'row-reverse' }]}>
         <Pressable hitSlop={10} onPress={() => router.back()}>
           <MaterialIcons name={isAr ? 'chevron-right' : 'chevron-left'} size={28} color="#FFF" />
@@ -90,8 +93,13 @@ export default function AllProductsScreen() {
           ) : null}
         </View>
       </View>
-      <Text style={[styles.countText, { color: colors.textTertiary, textAlign: isAr ? 'right' : 'left' }]}>
-        {language === 'fr' ? `${filtered.length} produits` : language === 'ar' ? `${filtered.length} منتج` : `${filtered.length} products`}
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+            <Text style={[styles.countText, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}>
+        {language === 'fr'
+          ? filtered.length === 1 ? '1 produit' : `${filtered.length} produits`
+          : language === 'ar'
+            ? filtered.length === 1 ? 'منتج واحد' : filtered.length === 2 ? 'منتجان' : `${filtered.length} منتجًا`
+            : filtered.length === 1 ? '1 product' : `${filtered.length} products`}
       </Text>
       <FlatList
         key={`all-grid-2`}
@@ -116,6 +124,7 @@ export default function AllProductsScreen() {
           </View>
         }
       />
+      </View>
     </SafeAreaView>
   );
 }
@@ -127,9 +136,9 @@ const styles = StyleSheet.create({
   searchWrap: { paddingHorizontal: 12, paddingBottom: 8 },
   searchBar: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FFFFFF', height: 44, borderRadius: 999, paddingHorizontal: 14 },
   searchInput: { flex: 1, fontSize: 14, color: '#0F172A', fontFamily: 'Cairo-Regular' },
-  countText: { fontSize: 12, paddingHorizontal: 16, marginBottom: 6, fontFamily: 'Cairo-Regular' },
-  gridRow: { paddingHorizontal: 12, justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 },
-  gridContent: { paddingHorizontal: 4, paddingTop: 4 },
+  countText: { fontSize: 13, fontWeight: '700', paddingHorizontal: 16, marginBottom: 6, fontFamily: 'Cairo-Bold' },
+  gridRow: { paddingHorizontal: 16, justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 },
+  gridContent: { paddingHorizontal: 0, paddingTop: 4 },
   moreBtn: { marginHorizontal: 16, marginVertical: 10, paddingVertical: 10, borderRadius: 12, borderWidth: 1, alignItems: 'center' },
   moreText: { fontSize: 13, fontWeight: '700', fontFamily: 'Cairo-Bold' },
   endText: { textAlign: 'center', paddingVertical: 12, fontSize: 12, fontFamily: 'Cairo-Regular' },

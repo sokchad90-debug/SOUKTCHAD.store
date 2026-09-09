@@ -33,7 +33,7 @@ function useCardDimensions(imageHeightRatio: number = 1.1) {
   const gap = scale(10);
   const cardWidth = Math.floor((winW - pad * 2 - gap) / 2);
   // SQUARE frame (owner rule): 1:1 uploads fill edge-to-edge with the ENTIRE product visible
-  const imageHeight = Math.round(cardWidth * 1.1); // 1.1:1 frame (spec)
+  const imageHeight = Math.round(cardWidth / 1.1); // 1.1:1 (width:height) — landscape-ish, minimal neutral bars
   return { cardWidth, imageHeight, scale, normalize };
 }
 
@@ -230,13 +230,13 @@ const styles = StyleSheet.create({
   crownIcon: { width: 12, height: 12 },
   shieldIcon: { width: 11, height: 11 },
   soldRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 2 },
-  soldText: { fontFamily: 'Cairo-Regular' },
+  soldText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
   ratingInline: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   warrantyRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
-  warrantyText: { fontFamily: 'Cairo-Regular' },
+  warrantyText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
   freeShipRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
-  freeShipText: { fontFamily: 'Cairo-SemiBold' },
-  priceTopRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  freeShipText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
+  priceTopRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 2, flexWrap: 'wrap' },
   logisticsRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 2 },
   logItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   info: {
     paddingVertical: scale(5),
     paddingHorizontal: scale(8),
-    gap: scale(4),
+    gap: scale(3),
   },
   discountRow: {
     flexDirection: 'row',
@@ -345,8 +345,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   stockText: {
-    fontSize: scale(9),
-    fontWeight: '600',
-    fontFamily: 'Cairo-SemiBold',
+    fontSize: scale(10),
+    fontWeight: '500',
+    fontFamily: 'Cairo-Regular',
   },
 });

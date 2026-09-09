@@ -7,6 +7,7 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
+import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -557,6 +558,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#4C1CEA' }]}>
+      <StatusBar style="light" backgroundColor="#4C1CEA" />
       <View style={{ flex: 1, backgroundColor: colors.background }}>
           {/* Sticky Search Bar — always visible at top */}
           <View

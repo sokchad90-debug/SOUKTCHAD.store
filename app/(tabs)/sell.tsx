@@ -15,6 +15,7 @@ import LoginModal from '@/components/LoginModal';
 import { impactLight, impactMedium, selection, notifySuccess, notifyWarning } from '@/services/haptics';
 import { scale } from '@/constants/responsive';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 // Extracted sub-component to replace IIFE which causes "addViewAt" view tree crashes
 function SellerDiscountSection({ products, userId, language, colors, lb, removeProductDiscount, setDiscountProductId, setDiscountPercent, setDiscountDays, setShowDiscountModal }: {
@@ -110,6 +111,9 @@ export default function SellScreen() {
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [activePreview, setActivePreview] = useState(0);
+  const [pendingImages, setPendingImages] = useState<SelectedImage[]>([]);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [cropMode, setCropMode] = useState<'full' | 'square'>('full');
 
   const [stock, setStock] = useState('');
   const [maxOrderQty, setMaxOrderQty] = useState('');
@@ -144,11 +148,12 @@ export default function SellScreen() {
     const remaining = MAX_IMAGES - images.length;
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') { Alert.alert(lb('Permission Required', 'Permission requise', 'إذن مطلوب')); return; }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: remaining, quality: 0.8, aspect: [1, 1] });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: remaining, quality: 0.9 });
     if (!result.canceled && result.assets.length > 0) {
       impactLight();
       const newImages: SelectedImage[] = result.assets.slice(0, remaining).map((asset, i) => ({ id: `img_${Date.now()}_${i}`, uri: asset.uri }));
-      setImages(prev => [...prev, ...newImages]);
+      setPendingImages(newImages);
+      setPreviewIndex(0);
     }
   }, [images.length]);
 
@@ -156,12 +161,29 @@ export default function SellScreen() {
     if (images.length >= MAX_IMAGES) { Alert.alert(lb('Limit Reached', 'Limite atteinte', 'تم بلوغ الحد الأقصى')); return; }
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') { Alert.alert(lb('Permission Required', 'Permission requise', 'إذن مطلوب')); return; }
-    const result = await ImagePicker.launchCameraAsync({ quality: 0.8, aspect: [1, 1] });
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.9 });
     if (!result.canceled && result.assets.length > 0) {
       impactLight();
       setImages(prev => [...prev, { id: `img_${Date.now()}`, uri: result.assets[0].uri }]);
     }
   }, [images.length]);
+  const commitImages = useCallback(async (mode: 'full' | 'square') => {
+    const list: SelectedImage[] = [];
+    for (const img of pendingImages) {
+      if (mode === 'square') {
+        try {
+          // center-crop to square preserving max area (optional — original still shown full in feed via contain)
+          const ctx = await (ImageManipulator as any).manipulateAsync(img.uri, [{ resize: { width: 1080 } }], { compress: 0.9 });
+          const w = (ctx as any).width || 1080; const h = (ctx as any).height || 1080;
+          const side = Math.min(w, h);
+          const cx = (await (ImageManipulator as any).manipulateAsync(ctx.uri, [{ crop: { originX: Math.round((w - side) / 2), originY: Math.round((h - side) / 2), width: side, height: side } }], { compress: 0.9 }));
+          list.push({ ...img, uri: cx.uri });
+        } catch { list.push(img); }
+      } else list.push(img);
+    }
+    setImages(prev => [...prev, ...list].slice(0, MAX_IMAGES));
+    setPendingImages([]);
+  }, [pendingImages]);
 
   const removeImage = useCallback((id: string) => {
     impactMedium();
@@ -586,6 +608,40 @@ export default function SellScreen() {
       </Modal>
 
       <LoginModal visible={showLogin} onClose={() => setShowLogin(false)} />
+    
+      {/* Optional image preview: keep full (default) or optional square crop — original always preserved */}
+      <Modal visible={pendingImages.length > 0} transparent animationType="fade" onRequestClose={() => setPendingImages([])}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 }}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, alignItems: 'center' }}>
+            <Image
+              source={{ uri: pendingImages[previewIndex]?.uri || pendingImages[0]?.uri }}
+              style={{ width: 260, height: 260, borderRadius: 12, backgroundColor: '#F1F5F9', resizeMode: 'contain' }}
+              contentFit="contain"
+            />
+            <Text style={{ marginTop: 10, fontSize: 14, fontWeight: '800', color: '#0F172A', fontFamily: 'Cairo-Bold' }}>
+              {lb('Product image preview', 'Aperçu de l\'image', 'معاينة صورة المنتج')}
+            </Text>
+            <Text style={{ marginTop: 4, fontSize: 12, color: '#64748B', textAlign: 'center', fontFamily: 'Cairo-Regular' }}>
+              {lb('Full view (recommended) or optional square crop — original is kept either way.', 'Vue complète (recommandée) ou recadrage carré optionnel — l\'original est conservé.', 'عرض كامل (موصى به) أو قصّ مربع اختياري — الأصل يُحفظ في الحالتين.')}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+              <Pressable onPress={() => commitImages('full')} style={{ paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10, backgroundColor: '#10B981' }}>
+                <Text style={{ color: '#FFF', fontWeight: '700', fontFamily: 'Cairo-Bold' }}>{lb('Use full', 'Vue complète', 'استخدام كاملة')}</Text>
+              </Pressable>
+              <Pressable onPress={() => commitImages('square')} style={{ paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10, backgroundColor: '#4C1CEA' }}>
+                <Text style={{ color: '#FFF', fontWeight: '700', fontFamily: 'Cairo-Bold' }}>{lb('Square crop', 'Recadrage carré', 'قصّ مربع')}</Text>
+              </Pressable>
+            </View>
+            {pendingImages.length > 1 ? (
+              <Pressable onPress={() => setPreviewIndex((i) => (i + 1) % pendingImages.length)} hitSlop={8} style={{ marginTop: 10 }}>
+                <Text style={{ color: '#4C1CEA', fontWeight: '700', fontFamily: 'Cairo-Bold' }}>
+                  {lb('Next image', 'Image suivante', 'الصورة التالية')} ({previewIndex + 1}/{pendingImages.length})
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
