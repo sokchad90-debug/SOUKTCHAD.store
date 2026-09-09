@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sokchad — لوحة الإدارة</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --red-primary: #DC2626;
+            --red-dark: #991B1B;
+            --red-light: #EF4444;
+            --red-glow: rgba(220, 38, 38, 0.3);
+            --bg-dark: #0F0F0F;
+            --bg-card: #1A1A1A;
+            --bg-hover: #252525;
+            --text-primary: #FAFAFA;
+            --text-secondary: #A1A1AA;
+            --text-muted: #71717A;
+            --green: #10B981;
+            --yellow: #F59E0B;
+            --blue: #3B82F6;
+            --purple: #8B5CF6;
+            --border: rgba(255,255,255,0.08);
+            --radius: 12px;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* === LOGIN === */
+        .login-screen {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 20px;
+            background: radial-gradient(ellipse at center, #1a0a0a 0%, var(--bg-dark) 70%);
+        }
+        .login-box {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 40px; max-width: 420px; width: 100%;
+            box-shadow: 0 0 60px var(--red-glow);
+        }
+        .login-box h1 { text-align: center; font-size: 28px; margin-bottom: 8px; }
+        .login-box .subtitle { text-align: center; color: var(--text-muted); margin-bottom: 32px; font-size: 14px; }
+        .login-box .logo {
+            width: 64px; height: 64px; margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+            border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: bold; color: white;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary); }
+        .form-group input {
+            width: 100%; padding: 14px 16px; background: var(--bg-dark);
+            border: 1px solid var(--border); border-radius: var(--radius);
+            color: var(--text-primary); font-size: 15px; transition: border-color 0.2s;
+        }
+        .form-group input:focus { outline: none; border-color: var(--red-primary); }
+        .btn-login {
+            width: 100%; padding: 14px; background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+            border: none; border-radius: var(--radius); color: white;
+            font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.1s;
+        }
+        .btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--red-glow); }
+        .btn-login:active { transform: translateY(0); }
+        .login-error {
+            background: rgba(220,38,38,0.1); border: 1px solid var(--red-primary);
+            border-radius: var(--radius); padding: 12px; margin-bottom: 16px;
+            color: var(--red-light); font-size: 14px; display: none;
+        }
+
+        /* === DASHBOARD === */
+        .dashboard { display: none; }
+        .sidebar {
+            position: fixed; right: 0; top: 0; bottom: 0; width: 260px;
+            background: var(--bg-card); border-left: 1px solid var(--border);
+            padding: 24px 0; z-index: 100;
+        }
+        .sidebar .brand {
+            padding: 0 24px 24px; display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid var(--border); margin-bottom: 16px;
+        }
+        .sidebar .brand-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 18px; color: white;
+        }
+        .sidebar .brand-text h2 { font-size: 18px; }
+        .sidebar .brand-text p { font-size: 12px; color: var(--text-muted); }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 24px; cursor: pointer; color: var(--text-secondary);
+            font-size: 14px; transition: all 0.2s; border-right: 3px solid transparent;
+        }
+        .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .nav-item.active {
+            background: rgba(220,38,38,0.1); color: var(--red-light);
+            border-right-color: var(--red-primary);
+        }
+        .nav-item .icon { font-size: 20px; width: 24px; text-align: center; }
+        .main-content { margin-right: 260px; padding: 32px; }
+
+        /* === STATS CARDS === */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px; margin-bottom: 32px;
+        }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+        .stat-card .stat-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; margin-bottom: 16px;
+        }
+        .stat-card .stat-value { font-size: 32px; font-weight: 700; }
+        .stat-card .stat-label { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+        .stat-card .stat-trend { font-size: 13px; margin-top: 8px; }
+        .stat-trend.up { color: var(--green); }
+        .stat-trend.down { color: var(--red-light); }
+
+        /* === CHARTS === */
+        .chart-container {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px; margin-bottom: 24px;
+        }
+        .chart-title { font-size: 18px; margin-bottom: 20px; }
+        .bar-chart { display: flex; align-items: flex-end; gap: 12px; height: 200px; padding-top: 20px; }
+        .bar {
+            flex: 1; background: linear-gradient(180deg, var(--red-light), var(--red-dark));
+            border-radius: 6px 6px 0 0; position: relative; min-height: 4px;
+            transition: height 0.5s ease; cursor: pointer;
+        }
+        .bar:hover { opacity: 0.8; }
+        .bar .bar-label {
+            position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%);
+            font-size: 12px; color: var(--text-muted); white-space: nowrap;
+        }
+        .bar .bar-value {
+            position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
+            font-size: 12px; color: var(--text-primary); font-weight: 600;
+        }
+
+        /* === TABLE === */
+        .table-container {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); overflow: hidden; margin-bottom: 24px;
+        }
+        .table-container .table-header {
+            padding: 20px 24px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .table-container .table-header h3 { font-size: 18px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: right; padding: 14px 24px; font-size: 13px; color: var(--text-muted); font-weight: 600; }
+        td { padding: 14px 24px; border-top: 1px solid var(--border); font-size: 14px; }
+        tr:hover { background: var(--bg-hover); }
+        .badge {
+            padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+        }
+        .badge.green { background: rgba(16,185,129,0.15); color: var(--green); }
+        .badge.red { background: rgba(220,38,38,0.15); color: var(--red-light); }
+        .badge.yellow { background: rgba(245,158,11,0.15); color: var(--yellow); }
+        .badge.blue { background: rgba(59,130,246,0.15); color: var(--blue); }
+
+        /* === LIVE INDICATOR === */
+        .live-indicator {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; color: var(--green);
+        }
+        .live-dot {
+            width: 8px; height: 8px; background: var(--green);
+            border-radius: 50%; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* === ANIMATIONS === */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease; }
+        .stat-value { animation: countUp 0.8s ease; }
+        @keyframes countUp { from { opacity: 0; } to { opacity: 1; } }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .sidebar { width: 70px; }
+            .sidebar .brand-text, .nav-item span:not(.icon) { display: none; }
+            .main-content { margin-right: 70px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- === LOGIN SCREEN === -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-box fade-in">
+        <div class="logo">S</div>
+        <h1>Sokchad</h1>
+        <p class="subtitle">لوحة الإدارة — تسجيل الدخول</p>
+        <div class="login-error" id="loginError"></div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>البريد الإلكتروني</label>
+                <input type="email" id="loginEmail" placeholder="admin@sokchad.com" required>
+            </div>
+            <div class="form-group">
+                <label>كلمة المرور</label>
+                <input type="password" id="loginPassword" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-login">دخول</button>
+        </form>
+    </div>
+</div>
+
+<!-- === DASHBOARD === -->
+<div class="dashboard" id="dashboard">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">S</div>
+            <div class="brand-text">
+                <h2>Sokchad</h2>
+                <p>لوحة الإدارة</p>
+            </div>
+        </div>
+        <div class="nav-item active" onclick="showTab('overview')">
+            <span class="icon">📊</span><span>نظرة عامة</span>
+        </div>
+        <div class="nav-item" onclick="showTab('users')">
+            <span class="icon">👥</span><span>المستخدمون</span>
+        </div>
+        <div class="nav-item" onclick="showTab('products')">
+            <span class="icon">📦</span><span>المنتجات</span>
+        </div>
+        <div class="nav-item" onclick="showTab('orders')">
+            <span class="icon">🛒</span><span>الطلبات</span>
+        </div>
+        <div class="nav-item" onclick="showTab('disputes')">
+            <span class="icon">⚖️</span><span>النزاعات</span>
+        </div>
+        <div class="nav-item" onclick="showTab('staff')">
+            <span class="icon">🔧</span><span>الموظفون</span>
+        </div>
+        <div class="nav-item" onclick="logout()" style="margin-top: auto; color: var(--red-light);">
+            <span class="icon">🚪</span><span>خروج</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Overview Tab -->
+        <div id="tab-overview" class="tab-content fade-in">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;">
+                <h1 style="font-size:28px;">نظرة عامة</h1>
+                <div class="live-indicator"><div class="live-dot"></div> مباشر</div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:rgba(220,38,38,0.15);color:var(--red-light);">💰</div>
+                    <div class="stat-value" id="stat-revenue">0</div>
+                    <div class="stat-label">إجمالي الإيرادات (FCFA)</div>
+                    <div class="stat-trend up">▲ +12% هذا الشهر</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:rgba(59,130,246,0.15);color:var(--blue);">🛒</div>
+                    <div class="stat-value" id="stat-orders">0</div>
+                    <div class="stat-label">إجمالي الطلبات</div>
+                    <div class="stat-trend up">▲ +8% هذا الأسبوع</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:rgba(16,185,129,0.15);color:var(--green);">📦</div>
+                    <div class="stat-value" id="stat-products">0</div>
+                    <div class="stat-label">المنتجات النشطة</div>
+                    <div class="stat-trend up">▲ +5 جديد</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:var(--yellow);">👥</div>
+                    <div class="stat-value" id="stat-users">0</div>
+                    <div class="stat-label">إجمالي المستخدمين</div>
+                    <div class="stat-trend up">▲ +23 هذا الأسبوع</div>
+                </div>
+            </div>
+
+            <!-- Order Status Chart -->
+            <div class="chart-container">
+                <h3 class="chart-title">حالة الطلبات</h3>
+                <div class="bar-chart" id="orderChart"></div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>أحدث الطلبات</h3>
+                    <span class="badge blue" id="recentCount">0</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr><th>#</th><th>المنتج</th><th>المشتري</th><th>البائع</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th></tr>
+                    </thead>
+                    <tbody id="recentOrdersBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="tab-users" class="tab-content" style="display:none;">
+            <h1 style="font-size:28px;margin-bottom:32px;">إدارة المستخدمين</h1>
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>قائمة المستخدمين</h3>
+                    <input type="text" placeholder="🔍 بحث..." style="background:var(--bg-dark);border:1px solid var(--border);border-radius:8px;padding:8px 16px;color:var(--text-primary);" onkeyup="searchUsers(this.value)">
+                </div>
+                <table>
+                    <thead>
+                        <tr><th>الاسم</th><th>البريد</th><th>الهاتف</th><th>الدور</th><th>موثّق</th><th>محظور</th><th>إجراءات</th></tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="tab-products" class="tab-content" style="display:none;">
+            <h1 style="font-size:28px;margin-bottom:32px;">إدارة المنتجات</h1>
+            <div class="table-container">
+                <div class="table-header"><h3>جميع المنتجات</h3></div>
+                <table>
+                    <thead><tr><th>#</th><th>العنوان</th><th>البائع</th><th>السعر</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+                    <tbody id="productsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Orders Tab -->
+        <div id="tab-orders" class="tab-content" style="display:none;">
+            <h1 style="font-size:28px;margin-bottom:32px;">الطلبات</h1>
+            <div class="table-container">
+                <div class="table-header"><h3>جميع الطلبات</h3></div>
+                <table>
+                    <thead><tr><th>#</th><th>المنتج</th><th>المشتري</th><th>البائع</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+                    <tbody id="ordersTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Disputes Tab -->
+        <div id="tab-disputes" class="tab-content" style="display:none;">
+            <h1 style="font-size:28px;margin-bottom:32px;">النزاعات</h1>
+            <div class="table-container">
+                <div class="table-header"><h3>النزاعات المفتوحة</h3></div>
+                <table>
+                    <thead><tr><th>#</th><th>المنتج</th><th>المشتري</th><th>البائع</th><th>المبلغ</th><th>إجراء</th></tr></thead>
+                    <tbody id="disputesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Staff Tab -->
+        <div id="tab-staff" class="tab-content" style="display:none;">
+            <h1 style="font-size:28px;margin-bottom:32px;">إدارة الموظفين</h1>
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>قائمة الموظفين</h3>
+                    <button onclick="addStaffForm()" style="background:var(--red-primary);border:none;border-radius:8px;padding:8px 16px;color:white;cursor:pointer;">+ إضافة موظف</button>
+                </div>
+                <table>
+                    <thead><tr><th>الاسم</th><th>البريد</th><th>الصلاحيات</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+                    <tbody id="staffTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let authToken = localStorage.getItem('sokchad_admin_token') || '';
+let API_BASE = window.location.origin + '/admin';
+let currentTab = 'overview';
+let refreshInterval = null;
+
+// ============================================================
+// LOGIN
+// ============================================================
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const errorBox = document.getElementById('loginError');
+
+    try {
+        const res = await fetch(API_BASE + '/api_login.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Login failed');
+
+        authToken = data.data.token;
+        localStorage.setItem('sokchad_admin_token', authToken);
+        showDashboard();
+    } catch (err) {
+        errorBox.textContent = err.message;
+        errorBox.style.display = 'block';
+    }
+});
+
+// ============================================================
+// SHOW DASHBOARD
+// ============================================================
+function showDashboard() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadOverview();
+    // Auto-refresh every 30 seconds
+    refreshInterval = setInterval(() => {
+        if (currentTab === 'overview') loadOverview();
+    }, 30000);
+}
+
+// ============================================================
+// API CALL HELPER
+// ============================================================
+async function apiCall(endpoint, method = 'GET', body = null) {
+    const opts = {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + authToken,
+        },
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API_BASE + '/' + endpoint, opts);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'API error');
+    return data.data;
+}
+
+// ============================================================
+// LOAD OVERVIEW
+// ============================================================
+async function loadOverview() {
+    try {
+        const stats = await apiCall('api_stats.php');
+        // Animate numbers
+        animateNumber('stat-revenue', stats.total_revenue || 0);
+        animateNumber('stat-orders', stats.orders || 0);
+        animateNumber('stat-products', stats.products || 0);
+        animateNumber('stat-users', (stats.sellers || 0) + (stats.buyers || 0));
+        document.getElementById('recentCount').textContent = stats.recent_orders?.length || 0;
+
+        // Order status chart
+        const dist = stats.order_status_dist || {};
+        renderChart(dist);
+
+        // Recent orders
+        renderRecentOrders(stats.recent_orders || []);
+    } catch (err) {
+        if (err.message.includes('401') || err.message.includes('token')) {
+            logout();
+        }
+    }
+}
+
+// ============================================================
+// ANIMATE NUMBERS
+// ============================================================
+function animateNumber(id, target) {
+    const el = document.getElementById(id);
+    const start = parseInt(el.textContent.replace(/[^0-9]/g, '')) || 0;
+    const duration = 800;
+    const startTime = performance.now();
+    function update(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const value = Math.floor(start + (target - start) * progress);
+        el.textContent = value.toLocaleString('fr-FR');
+        if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+}
+
+// ============================================================
+// RENDER CHART
+// ============================================================
+function renderChart(dist) {
+    const colors = { pending: '#F59E0B', confirmed: '#10B981', completed: '#3B82F6', disputed: '#EF4444', cancelled: '#71717A', delivered: '#8B5CF6' };
+    const labels = { pending: 'قيد الانتظار', confirmed: 'مؤكد', completed: 'مكتمل', disputed: 'نزاع', cancelled: 'ملغى', delivered: 'تم التسليم' };
+    const chart = document.getElementById('orderChart');
+    const maxVal = Math.max(...Object.values(dist), 1);
+    chart.innerHTML = '';
+    for (const [status, count] of Object.entries(dist)) {
+        const heightPct = (count / maxVal) * 100;
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = heightPct + '%';
+        bar.style.background = `linear-gradient(180deg, ${colors[status] || '#666'}, ${colors[status] || '#333'})`;
+        bar.innerHTML = `<span class="bar-value">${count}</span><span class="bar-label">${labels[status] || status}</span>`;
+        chart.appendChild(bar);
+    }
+}
+
+// ============================================================
+// RENDER RECENT ORDERS
+// ============================================================
+function renderRecentOrders(orders) {
+    const tbody = document.getElementById('recentOrdersBody');
+    tbody.innerHTML = '';
+    const statusColors = { pending: 'yellow', confirmed: 'green', completed: 'blue', disputed: 'red', cancelled: 'red', delivered: 'blue' };
+    for (const order of orders.slice(0, 10)) {
+        const tr = document.createElement('tr');
+        const status = order.status || 'pending';
+        tr.innerHTML = `
+            <td>#${order.id}</td>
+            <td>${order.product_title || '—'}</td>
+            <td>${order.buyer_name || '—'}</td>
+            <td>${order.seller_name || '—'}</td>
+            <td>${(order.amount || 0).toLocaleString('fr-FR')} FCFA</td>
+            <td><span class="badge ${statusColors[status] || 'yellow'}">${status}</span></td>
+            <td style="color:var(--text-muted);font-size:12px;">${order.created_at || ''}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+    if (orders.length === 0) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px;">لا توجد طلبات بعد</td></tr>';
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function showTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.getElementById('tab-' + tab).style.display = 'block';
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    if (tab === 'overview') loadOverview();
+    if (tab === 'users') loadUsers();
+    if (tab === 'products') loadProducts();
+    if (tab === 'orders') loadOrders();
+    if (tab === 'disputes') loadDisputes();
+    if (tab === 'staff') loadStaff();
+}
+
+// ============================================================
+// LOAD USERS
+// ============================================================
+async function loadUsers(search = '') {
+    try {
+        const params = search ? '?search=' + encodeURIComponent(search) : '';
+        const users = await apiCall('api_users.php' + params);
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '';
+        for (const u of (Array.isArray(users) ? users : users.data || [])) {
+            const roleBadge = { super_admin: 'red', admin: 'blue', staff: 'yellow', seller: 'green', buyer: 'blue' };
+            tbody.innerHTML += `<tr>
+                <td>${u.full_name || u.username || '—'}</td>
+                <td>${u.email || '—'}</td>
+                <td>${u.phone || '—'}</td>
+                <td><span class="badge ${roleBadge[u.role] || 'blue'}">${u.role}</span></td>
+                <td>${u.is_verified ? '✅' : '❌'}</td>
+                <td>${u.is_banned ? '<span class="badge red">محظور</span>' : '—'}</td>
+                <td>
+                    <button onclick="toggleBan(${u.id}, ${u.is_banned ? 0 : 1})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:${u.is_banned ? 'var(--green)' : 'var(--red-light)'};cursor:pointer;font-size:12px;">${u.is_banned ? 'رفع الحظر' : 'حظر'}</button>
+                    <button onclick="toggleVerify(${u.id}, ${u.is_verified ? 0 : 1})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:${u.is_verified ? 'var(--red-light)' : 'var(--green)'};cursor:pointer;font-size:12px;">${u.is_verified ? 'إلغاء التوثيق' : 'توثيق'}</button>
+                </td>
+            </tr>`;
+        }
+    } catch (err) { console.error(err); }
+}
+function searchUsers(val) { loadUsers(val); }
+async function toggleBan(id, ban) { await apiCall('api_users.php?id=' + id, 'PUT', { is_banned: !!ban }); loadUsers(); }
+async function toggleVerify(id, verify) { await apiCall('api_users.php?id=' + id, 'PUT', { is_verified: !!verify }); loadUsers(); }
+
+// ============================================================
+// LOAD PRODUCTS
+// ============================================================
+async function loadProducts() {
+    try {
+        const products = await apiCall('api_products.php');
+        const tbody = document.getElementById('productsTableBody');
+        tbody.innerHTML = '';
+        for (const p of (Array.isArray(products) ? products : products.data || [])) {
+            const statusBadge = { active: 'green', inactive: 'yellow', sold: 'blue', banned: 'red' };
+            tbody.innerHTML += `<tr>
+                <td>#${p.id}</td>
+                <td>${p.title_en || p.title_fr || p.title_ar || '—'}</td>
+                <td>${p.seller_name || '—'}</td>
+                <td>${(p.price || 0).toLocaleString('fr-FR')} FCFA</td>
+                <td><span class="badge ${statusBadge[p.status] || 'yellow'}">${p.status}</span></td>
+                <td><button onclick="deleteProduct(${p.id})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--red-light);cursor:pointer;font-size:12px;">حذف</button></td>
+            </tr>`;
+        }
+    } catch (err) { console.error(err); }
+}
+async function deleteProduct(id) { if(confirm('حذف هذا المنتج؟')) { await apiCall('api_products.php?id=' + id, 'DELETE'); loadProducts(); } }
+
+// ============================================================
+// LOAD ORDERS
+// ============================================================
+async function loadOrders() {
+    try {
+        const orders = await apiCall('api_orders.php');
+        const tbody = document.getElementById('ordersTableBody');
+        tbody.innerHTML = '';
+        const statusColors = { pending: 'yellow', confirmed: 'green', completed: 'blue', disputed: 'red', cancelled: 'red', delivered: 'blue' };
+        for (const o of (Array.isArray(orders) ? orders : orders.data || [])) {
+            tbody.innerHTML += `<tr>
+                <td>#${o.id}</td>
+                <td>${o.product_title || '—'}</td>
+                <td>${o.buyer_name || '—'}</td>
+                <td>${o.seller_name || '—'}</td>
+                <td>${(o.amount || 0).toLocaleString('fr-FR')} FCFA</td>
+                <td><span class="badge ${statusColors[o.status] || 'yellow'}">${o.status}</span></td>
+                <td style="font-size:12px;color:var(--text-muted);">${o.created_at || ''}</td>
+            </tr>`;
+        }
+    } catch (err) { console.error(err); }
+}
+
+// ============================================================
+// LOAD DISPUTES
+// ============================================================
+async function loadDisputes() {
+    try {
+        const disputes = await apiCall('api_orders.php?scope=disputes');
+        const tbody = document.getElementById('disputesTableBody');
+        tbody.innerHTML = '';
+        for (const o of (Array.isArray(disputes) ? disputes : disputes.data || [])) {
+            tbody.innerHTML += `<tr>
+                <td>#${o.id}</td>
+                <td>${o.product_title || '—'}</td>
+                <td>${o.buyer_name || '—'}</td>
+                <td>${o.seller_name || '—'}</td>
+                <td>${(o.amount || 0).toLocaleString('fr-FR')} FCFA</td>
+                <td>
+                    <button onclick="resolveDispute(${o.id}, 'completed')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--green);cursor:pointer;font-size:12px;">حل لصالح المشتري</button>
+                    <button onclick="resolveDispute(${o.id}, 'cancelled')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--red-light);cursor:pointer;font-size:12px;">حل لصالح البائع</button>
+                </td>
+            </tr>`;
+        }
+    } catch (err) { console.error(err); }
+}
+async function resolveDispute(id, resolution) { await apiCall('api_orders.php?id=' + id, 'PUT', { action: 'resolve_dispute', resolution }); loadDisputes(); }
+
+// ============================================================
+// LOAD STAFF
+// ============================================================
+async function loadStaff() {
+    try {
+        const staff = await apiCall('api_staff.php');
+        const tbody = document.getElementById('staffTableBody');
+        tbody.innerHTML = '';
+        for (const s of (Array.isArray(staff) ? staff : staff.data || [])) {
+            const perms = Array.isArray(s.permissions) ? s.permissions : JSON.parse(s.permissions || '[]');
+            tbody.innerHTML += `<tr>
+                <td>${s.name || '—'}</td>
+                <td>${s.email || '—'}</td>
+                <td>${perms.map(p => `<span class="badge blue" style="margin:2px;">${p}</span>`).join('') || '—'}</td>
+                <td>${s.is_active ? '<span class="badge green">نشط</span>' : '<span class="badge red">معطّل</span>'}</td>
+                <td><button onclick="toggleStaff(${s.id}, ${s.is_active ? 0 : 1})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">${s.is_active ? 'تعطيل' : 'تفعيل'}</button></td>
+            </tr>`;
+        }
+    } catch (err) { console.error(err); }
+}
+async function toggleStaff(id, active) { await apiCall('api_staff.php?id=' + id, 'PUT', { is_active: !!active }); loadStaff(); }
+
+// ============================================================
+// LOGOUT
+// ============================================================
+function logout() {
+    authToken = '';
+    localStorage.removeItem('sokchad_admin_token');
+    if (refreshInterval) clearInterval(refreshInterval);
+    location.reload();
+}
+
+// ============================================================
+// INIT — check if already logged in
+// ============================================================
+if (authToken) showDashboard();
+</script>
+</body>
+</html>

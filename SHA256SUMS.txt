@@ -1,0 +1,2 @@
+5fbe4cd9f1671ed997f2596cb89ab82a8a32e7afbbb1dd2e287f1e9b2559b65e  android/app/build/outputs/apk/release/app-release.apk
+51d363089c02add8f495ecdc922cb3fd4d6fef606b8fd8e594fb29549e500d79  /opt/data/projects/SOKCHAD_v8.03.tar.gz

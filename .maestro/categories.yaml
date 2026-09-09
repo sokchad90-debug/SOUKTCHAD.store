@@ -1,0 +1,10 @@
+appId: com.anonymous.sokchadapp
+---
+- launchApp:
+    appId: com.anonymous.sokchadapp
+    clearState: true
+- waitForAnimationToEnd
+- takeScreenshot: categories_loaded
+
+- assertVisible: "Tout"
+- assertVisible: "Catégories"

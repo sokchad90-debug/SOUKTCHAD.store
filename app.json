@@ -1,0 +1,94 @@
+{
+  "expo": {
+    "name": "Sokchad",
+    "slug": "sokchad",
+    "version": "5.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logo.png",
+    "scheme": "sokchad",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sokchad.app"
+    },
+    "android": {
+      "package": "com.sokchad.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo.png",
+        "backgroundColor": "#f9fafc"
+      },
+      "edgeToEdgeEnabled": true,
+      "jsEngine": "hermes",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": false,
+          "data": {
+            "scheme": "sokchad",
+            "host": "seller"
+          },
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": false,
+          "data": {
+            "scheme": "https",
+            "host": "souktchad.shop",
+            "pathPrefix": "/seller"
+          },
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/logo.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/logo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#f9fafc"
+        }
+      ],
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Sokchad to access your photos."
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/Cairo-Regular.ttf",
+            "./assets/fonts/Cairo-Medium.ttf",
+            "./assets/fonts/Cairo-SemiBold.ttf",
+            "./assets/fonts/Cairo-Bold.ttf"
+          ]
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "sokchad"
+      },
+      "assetOptimization": {
+        "maxBundleSize": "60MB",
+        "imageFormat": "webp",
+        "compressionQuality": 0.8
+      }
+    },
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

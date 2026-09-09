@@ -1,0 +1,41 @@
+# Sokchad Backend — Apache Configuration
+# =======================================
+# Place this in /var/www/html/api/ or your VPS web root
+
+# Security headers
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "DENY"
+Header set X-XSS-Protection "1; mode=block"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+# CORS headers are handled by PHP config files
+
+# Enable CORS for preflight requests
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
+
+# Disable directory listing
+Options -Indexes
+
+# Hide sensitive files
+<FilesMatch "^\.(htaccess|htpasswd|ini|log|sh|bak)$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "^(database\.php|config\.php|\.env)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# PHP configuration
+php_value upload_max_filesize 50M
+php_value post_max_size 50M
+php_value max_execution_time 300
+php_value max_input_time 300
+php_value memory_limit 256M

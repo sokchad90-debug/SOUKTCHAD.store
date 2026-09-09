@@ -1,0 +1,13 @@
+appId: com.anonymous.sokchadapp
+---
+- launchApp:
+    appId: com.anonymous.sokchadapp
+    clearState: true
+- waitForAnimationToEnd
+- takeScreenshot: login_loaded
+
+- runFlow:
+    when:
+      visible: "Connexion"
+    commands:
+      - takeScreenshot: login_modal_visible

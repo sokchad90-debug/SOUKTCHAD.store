@@ -1,0 +1,13 @@
+appId: com.anonymous.sokchadapp
+---
+- launchApp:
+    appId: com.anonymous.sokchadapp
+    clearState: true
+- waitForAnimationToEnd
+- takeScreenshot: rtl_loaded
+
+- runFlow:
+    when:
+      visible: "بحث..."
+    commands:
+      - takeScreenshot: rtl_arabic_visible

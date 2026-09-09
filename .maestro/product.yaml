@@ -1,0 +1,13 @@
+appId: com.anonymous.sokchadapp
+---
+- launchApp:
+    appId: com.anonymous.sokchadapp
+    clearState: true
+- waitForAnimationToEnd
+- takeScreenshot: product_loaded
+
+- runFlow:
+    when:
+      visible: "Détails"
+    commands:
+      - takeScreenshot: product_detail_visible
