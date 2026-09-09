@@ -578,6 +578,17 @@ export default function HomeScreen() {
                 />
               )}
               <View style={[styles.headerSideIcons, styles.headerSideRight, isAr && { flexDirection: 'row-reverse' }]}>
+                {/* Location pin — opens city dropdown (same as filter) */}
+                <Pressable
+                  hitSlop={10}
+                  onPress={() => { selection(); setShowCityDropdown(true); }}
+                  style={({ pressed }) => [styles.headerLocationChip, { backgroundColor: 'rgba(255,255,255,0.18)', opacity: pressed ? 0.85 : 1 }]}
+                >
+                  <MaterialIcons name="location-on" size={16} color="#FFFFFF" />
+                  <Text numberOfLines={1} style={[styles.headerLocationChipText, { color: '#FFFFFF' }]}>
+                    {selectedCity === 'all' ? lb('Location', 'Localisation', 'الموقع') : selectedCity}
+                  </Text>
+                </Pressable>
                 <Pressable hitSlop={10} onPress={() => router.push('/(tabs)/categories' as any)}>
                   <MaterialIcons name="menu" size={28} color="#FFFFFF" />
                 </Pressable>
@@ -601,16 +612,6 @@ export default function HomeScreen() {
                   </Pressable>
                 ) : null}
               </View>
-              {/* Location chip inside search bar — opens same city dropdown as filter */}
-              <Pressable
-                onPress={() => { selection(); setShowCityDropdown(true); }}
-                style={({ pressed }) => [styles.headerLocationChip, { backgroundColor: colors.backgroundSecondary, opacity: pressed ? 0.85 : 1, marginHorizontal: 6 }]}
-              >
-                <MaterialIcons name="location-on" size={14} color={colors.primary} />
-                <Text numberOfLines={1} style={[styles.headerLocationChipText, { color: colors.textPrimary }]}>
-                  {selectedCity === 'all' ? lb('Location', 'Localisation', 'الموقع') : selectedCity}
-                </Text>
-              </Pressable>
               <Pressable
                 onPress={openFilters}
                 style={({ pressed }) => [styles.searchBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.88 : 1 }]}
@@ -891,21 +892,21 @@ const styles = StyleSheet.create({
   logoHeaderImage: { width: scale(100), height: scale(28), resizeMode: 'contain' },
   notifBtn: { width: NOTIF_BTN, height: NOTIF_BTN, borderRadius: Math.round(NOTIF_BTN / 2), alignItems: 'center', justifyContent: 'center' },
   searchContainer: {
-    flexDirection: 'row', paddingHorizontal: scale(16), marginBottom: 0, gap: 0,
+    flexDirection: 'row', paddingHorizontal: scale(16), marginBottom: scale(6), gap: 0,
   },
   searchWrapper: {
-    flexDirection: 'row', borderRadius: scale(12), overflow: 'hidden', width: '100%',
+    flexDirection: 'row', alignItems: 'center', width: '100%', gap: scale(8),
   },
   searchBar: {
     flex: 1, flexDirection: 'row', alignItems: 'center', height: SEARCH_BAR_H,
-    borderRadius: 0, paddingHorizontal: scale(12),
+    borderRadius: 999, paddingHorizontal: scale(14),
     borderWidth: 0,
     gap: scale(8),
   },
   searchInput: { flex: 1, fontSize: scale(13), height: '100%' },
   searchBtn: {
-    width: SEARCH_BTN_W, height: SEARCH_BAR_H,
-    borderRadius: 0,
+    width: SEARCH_BAR_H, height: SEARCH_BAR_H,
+    borderRadius: 999,
     alignItems: 'center', justifyContent: 'center',
   },
   searchBtnRTL: {
