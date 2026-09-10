@@ -773,9 +773,7 @@ const styles = StyleSheet.create({
   logoImage: { width: LOGO_IMG, height: LOGO_IMG, borderRadius: scale(6) },
   logoHeaderImage: { width: 68, height: 34, resizeMode: 'contain' },
   notifBtn: { width: NOTIF_BTN, height: NOTIF_BTN, borderRadius: Math.round(NOTIF_BTN / 2), alignItems: 'center', justifyContent: 'center' },
-  searchContainer: {
-    flexDirection: 'row', paddingHorizontal: scale(16), marginBottom: scale(6), gap: 0,
-  },
+  searchContainer: { flexDirection: 'row', paddingHorizontal: scale(16), marginBottom: 0, gap: 0 },
   searchWrapper: {
     flexDirection: 'row', alignItems: 'center', width: '100%', gap: scale(8),
   },
