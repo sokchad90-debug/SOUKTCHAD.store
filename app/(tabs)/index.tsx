@@ -451,8 +451,8 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#FFFFFF' }]}>
-      <StatusBar style="dark" backgroundColor="#FFFFFF" />
+    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#4C1CEA' }]}>
+      <StatusBar style="light" backgroundColor="#4C1CEA" />
       <View style={[styles.homeBackdrop, { backgroundColor: colors.background }]}>
         <View style={[styles.homeSurface, { width: layout.surfaceWidth, backgroundColor: colors.background }]}>
           {/* Sticky Search Bar — always visible at top */}
@@ -508,18 +508,7 @@ export default function HomeScreen() {
                     <MaterialIcons name="close" size={18} color={colors.textTertiary} />
                   </Pressable>
                 ) : null}
-              
-                <Pressable
-                  onPress={openFilters}
-                  style={({ pressed }) => [styles.searchBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.88 : 1 }]}
-                >
-                  <MaterialIcons name="tune" size={20} color="#FFF" />
-                  {activeFilterCount > 0 ? (
-                    <View style={styles.filterBadge}>
-                      <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-                    </View>
-                  ) : null}
-                </Pressable></View>
+              </View>
 
               </View>
             </View>
@@ -807,10 +796,9 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: scale(15), height: '100%' },
   searchBtn: {
-    width: 44, height: SEARCH_BAR_H - 8,
-    borderRadius: 12,
+    width: SEARCH_BAR_H, height: SEARCH_BAR_H,
+    borderRadius: 999,
     alignItems: 'center', justifyContent: 'center',
-    marginRight: 4,
   },
   searchBtnRTL: {
     borderRadius: 0,
