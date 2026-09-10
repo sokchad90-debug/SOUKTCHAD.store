@@ -488,7 +488,7 @@ export default function HomeScreen() {
                 <MaterialIcons name="search" size={22} color={colors.textTertiary} />
                 <TextInput
                   style={[styles.searchInput, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}
-                  placeholder={isAr ? 'ابحث عن منتج…' : 'Rechercher un produit…'}
+                  placeholder={isAr ? 'ما المنتج الذي تبحث عنه؟' : 'Quel produit recherchez-vous ?'}
                   placeholderTextColor={colors.textTertiary}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -572,7 +572,7 @@ export default function HomeScreen() {
             renderItem={renderProductItem}
             numColumns={numCols}
             columnWrapperStyle={[styles.grid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
-            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? stickyHeight : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: tabBarHeight + layout.smallGap }}
+            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(stickyHeight - 8, 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: tabBarHeight + layout.smallGap }}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
