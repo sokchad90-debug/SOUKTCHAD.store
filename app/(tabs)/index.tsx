@@ -457,31 +457,22 @@ export default function HomeScreen() {
             style={[styles.stickySearchWrap, { backgroundColor: '#4C1CEA', paddingTop: 2 }]}
             onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}
           >
-            {/* Collapsible Sokchad header row */}
-            <View style={[styles.headerRow, { height: layout.headerHeight }]}>
-              {/* TipTob-style side icons: bell + cart LEFT, hamburger RIGHT, logo centered */}
+            {/* Compact icon row — logo space cut, content pulled up */}
+            <View style={[styles.headerRow, { height: 40, position: 'relative', justifyContent: 'center', alignItems: 'center' }]}>
               <View style={[styles.headerSideIcons, isAr && styles.headerSideRight, isAr && { flexDirection: 'row-reverse' }]}>
                 <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)}>
-                  <MaterialIcons name="notifications-none" size={26} color="#FFFFFF" />
+                  <MaterialIcons name="notifications-none" size={24} color="#FFFFFF" />
                 </Pressable>
                 <Pressable hitSlop={10} onPress={() => router.push('/checkout' as any)}>
-                  <MaterialIcons name="shopping-cart" size={26} color="#FFFFFF" />
+                  <MaterialIcons name="shopping-cart" size={24} color="#FFFFFF" />
                 </Pressable>
               </View>
-              <Image
-                source={require('../../assets/branding/sokchad-logo-white.png')}
-                style={styles.logoHeaderImage}
-                contentFit="contain"
-                transition={150}
-              />
               <View style={[styles.headerSideIcons, !isAr && styles.headerSideRight, isAr && { flexDirection: 'row-reverse' }]}>
-                {/* Location pin — ICON ONLY, big like cart, opens city dropdown */}
                 <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }}>
-                  <MaterialIcons name="location-on" size={26} color="#FFFFFF" />
+                  <MaterialIcons name="location-on" size={24} color="#FFFFFF" />
                 </Pressable>
-                {/* Menu (3 lines) opens the filter sheet directly */}
                 <Pressable hitSlop={12} onPress={() => { selection(); openFilters(); }}>
-                  <MaterialIcons name="menu" size={28} color="#FFFFFF" />
+                  <MaterialIcons name="menu" size={26} color="#FFFFFF" />
                   {activeFilterCount > 0 ? (
                     <View style={styles.filterBadge}>
                       <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
