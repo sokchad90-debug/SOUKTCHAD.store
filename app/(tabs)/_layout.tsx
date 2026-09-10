@@ -2,10 +2,10 @@ import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Tabs, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Platform, View, Pressable, PressableProps, StyleSheet, ActivityIndicator, LayoutChangeEvent, Dimensions } from 'react-native';
+import { View, Pressable, PressableProps, StyleSheet, ActivityIndicator, LayoutChangeEvent, useWindowDimensions } from 'react-native';
 import { BottomTabBar, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useApp } from '@/contexts/AppContext';
-import { scale } from '@/constants/responsive';
+import { CANONICAL_MAX_SURFACE_WIDTH, scale } from '@/constants/responsive';
 import { IS_SHORT_SCREEN } from '@/ui/responsive';
 
 // ─── Tab Bar Measurement ───
@@ -17,14 +17,17 @@ export function getMeasuredTabBarBottom() { return _tabBarY; }
 export function getMeasuredTabBarHeight() { return _tabBarHeight; }
 
 export function useTabBarLayout() {
-  const [, forceUpdate] = useState(0);
-  if (!_setters.length) {
-    _setters.push((y: number, h: number) => {
-      _tabBarY = y; _tabBarHeight = h;
-      forceUpdate((n: number) => n + 1);
-    });
-  }
-  return { y: _tabBarY, height: _tabBarHeight };
+  const [layout, setLayout] = useState(() => ({ y: _tabBarY, height: _tabBarHeight }));
+
+  useEffect(() => {
+    const update = (y: number, height: number) => setLayout({ y, height });
+    _setters.push(update);
+    return () => {
+      _setters = _setters.filter(setter => setter !== update);
+    };
+  }, []);
+
+  return layout;
 }
 
 function TabIcon({ name, color, size }: { name: any; color: string; size: number }) {
@@ -83,6 +86,8 @@ const styles = StyleSheet.create({
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const tabSurfaceWidth = Math.min(windowWidth, CANONICAL_MAX_SURFACE_WIDTH);
   const { colors, t, language, user, chatBadgeCount, profileBadgeCount, isReady, authLoading, userChecked } = useApp();
   const isSeller = user?.role === 'seller' || user?.role === 'super_admin' || user?.role === 'staff' || user?.isSeller === true;
   const isAr = language === 'ar';
@@ -123,6 +128,8 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: (props) => <StableTabButton {...props} />,
         tabBarStyle: {
+          width: tabSurfaceWidth,
+          alignSelf: 'center',
           height: insets.bottom + (IS_SHORT_SCREEN ? scale(52) : scale(56)),
           paddingTop: scale(6),
           paddingBottom: insets.bottom + scale(6),

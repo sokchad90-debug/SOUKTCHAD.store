@@ -1,7 +1,7 @@
 # Sokchad Design System
 
-> **Source of Truth:** GOLDEN_PHONE_REFERENCE_FINAL.png + golden-layout.json
-> **Authority:** Golden Reference (user-approved) > this file > any other design assumption
+> **Source of Truth:** the user-provided French and Arabic phone references + `golden-layout.json`
+> **Authority:** latest user references > this file > any earlier design assumption
 > **Platform:** React Native / Expo (Android + iOS)
 > **Languages:** AR (RTL) + FR (LTR) + EN (LTR)
 > **Theme:** Light + Dark
@@ -21,36 +21,33 @@
 | Section | Top (dp) | Height (dp) | Gap from prev (dp) |
 |---|---|---|---|
 | Status bar | 0 | 52 | — |
-| Header (Sokchad title) | 52 | 39 | 0 |
-| Search bar | 92 | 43 | 0 |
-| **Offers Banner** | 136 | 116 | 1 |
-| Categories (4 icons) | 252 | 57 | 0 |
-| Gap | 311 | 8 | — |
-| Verified Stores | 319 | 103 | 8 |
-| Sponsored Products | 422 | — | 0 |
-| Recently Added | 435 | — | — |
-| Bottom Navigation | 799 | 14 | ~4 |
+| Header | — | 50–58 | 0 |
+| Search bar | — | 44–50 | 4–8 |
+| Categories | — | one row, 4 items | 0 |
+| Verified Stores | — | 3 equal items | 6–12 |
+| Sponsored Products | — | 3 visible cards | 0 |
+| Recently Added | — | 2-column grid | — |
+| Bottom Navigation | — | 56 + safe area | 4–8 |
 
 ## Key Formulas
 
 ```
-BANNER_HEIGHT = clamp(100, contentWidth * 0.32, 130)  // 116dp on 361dp
-SEARCH_BAR_H = scale(40)
-HEADER_HEIGHT = screenHeight * 0.025
+SURFACE_WIDTH = min(windowWidth - safeInsets, 480)
+SEARCH_BAR_H = clamp(44, widthFactor * 46, 50)
+HEADER_HEIGHT = clamp(50, widthFactor * 54, 58)
 cardWidth = (contentWidth - cardGap) / 2
-recentImageHeight = recentCardWidth * 0.65
+recentImageHeight = recentCardWidth * 0.78
 ```
 
 ## Section Order (immutable)
 
 1. Sokchad header (collapsible)
 2. Search bar + Filter button (sticky)
-3. Offers Banner (FlashDealsBanner)
-4. Categories (4 icons: Tout, Électronique, Vêtements, Chaussures)
-5. Boutiques vérifiées (3 stores)
-6. Produits sponsorisés (horizontal scroll)
-7. Récemment ajoutés (2-column grid)
-8. Bottom Navigation (fixed, outside scroll)
+3. Categories (4 icons: Tout, Électronique, Vêtements, Chaussures)
+4. Boutiques vérifiées (3 stores)
+5. Produits sponsorisés (3 visible cards)
+6. Récemment ajoutés (2-column grid)
+7. Bottom Navigation (fixed, outside scroll)
 
 ## Typography
 
@@ -77,23 +74,21 @@ recentImageHeight = recentCardWidth * 0.65
 
 - Use `useWindowDimensions()` + `useSafeAreaInsets()` — NEVER device model checks
 - `scale()` = clamp(0.88, width / 390, 1.12) × value
-- Banner = width-based (contentWidth × 0.32), NOT screen-height based
 - 2-column layout always on phone portrait
-- `maxContentWidth = 480dp` for tablets/wide screens
+- The complete phone surface is capped at `480dp` and centered on tablets/wide screens
 - `paddingBottom = tabBarHeight + scale(2)` (minimal bottom gap)
 
 ## First Viewport Rule
 
 In HOME TOP (scroll = 0):
-- ✅ Must show: Banner + Categories + Verified + Sponsored + Recently Row 1 (complete)
+- ✅ Must show: Categories + Verified + Sponsored + the start of Recently Added
 - ❌ Must NOT show: Row 2 of Recently Added (not even 1px)
 - Bottom Nav must not overlap content
 - Safe gap between Row 1 and Bottom Nav: 4–8dp
 
 ## Image Rules
 
-- Product images: `resizeMode: cover`, `aspectRatio: 0.65` (height/width)
-- Banner background: `contentFit: cover`, fills 100% of container
+- Product images: `contentFit: cover`, `aspectRatio: 0.78` (height/width)
 - All images: `overflow: hidden`, consistent `borderRadius`
 
 ## Golden Reference Policy

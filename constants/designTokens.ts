@@ -16,6 +16,6 @@ export const DT = {
     primary:  '#818CF8',
   },
   card: {
-    radius: 14,
+    radius: 10,
   },
 } as const;

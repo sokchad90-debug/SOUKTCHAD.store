@@ -1,10 +1,10 @@
 /**
  * Sokchad — Canonical Phone Layout Engine
  * Re-export bridge: constants/responsive.ts → ui/responsive.ts
- * 
+ *
  * ALL exports now come from the Canonical Phone Layout Engine.
  * This file exists ONLY for backward import compatibility.
- * 
+ *
  * For new code: import from '@/ui/responsive' directly.
  * For existing code: keep importing from '@/constants/responsive' — it works.
  */
@@ -12,10 +12,11 @@
 export {
   // Core
   clamp,
+  CANONICAL_MAX_SURFACE_WIDTH,
   getPhoneLayoutMetrics,
   usePhoneLayout,
   PhoneLayoutMetrics,
-  
+
   // Unified (pure width ratio)
   scale,
   scaleFont,

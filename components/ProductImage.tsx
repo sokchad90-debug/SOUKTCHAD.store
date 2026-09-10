@@ -5,10 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { scale } from '@/constants/responsive';
 
 /**
- * Unified product image: always `contain` inside a fixed-ratio frame derived
- * from the card width — full product visible, no stretch, no blur fill.
- * Ratio mismatch (tall/short source vs frame) produces neutral side margins,
- * never a crop.
+ * Unified product image: fills the fixed-ratio product frame without stretching.
+ * The source is cropped only at its edges, matching the marketplace reference.
  */
 interface Props {
   uri?: string;
@@ -29,7 +27,7 @@ function ProductImageInner({ uri, frameWidth, frameRatio = 1.1, neutralBg = '#F1
         <Image
           source={{ uri }}
           style={styles.image}
-          contentFit="contain"
+          contentFit="cover"
           transition={200}
           recyclingKey={uri}
           onError={() => setFailed(true)}

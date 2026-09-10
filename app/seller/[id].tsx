@@ -205,7 +205,8 @@ export default function SellerStoreScreen() {
         : isAr
         ? `اكتشف متجر "${effectiveSeller?.name}" على تطبيق سوق تشاد - سوق تشاد للتجارة!\n\n${effectiveSeller?.sellerId} • ${effectiveSeller?.location} • ⭐ ${avgRating.toFixed(1)}`
         : `Check out "${effectiveSeller?.name}" store on Sokchad App - Chad's P2P Marketplace!\n\n${effectiveSeller?.sellerId} • ${effectiveSeller?.location} • ⭐ ${avgRating.toFixed(1)}`;
-      var sUrl="https://souktchad.shop/seller/"+effectiveSeller?.id; await Share.share({ message: msg+"\n"+sUrl });
+      const sellerUrl = `https://souktchad.shop/seller/${effectiveSeller?.id}`;
+      await Share.share({ message: `${msg}\n${sellerUrl}` });
     } catch (_e) { /* cancelled */ }
   };
 

@@ -442,7 +442,7 @@ export default function HomeScreen() {
   // Reset to "all" ONLY when user taps the Home tab button (not when navigating from categories)
   const navigation = useNavigation();
   useEffect(() => {
-    const unsub = navigation.addListener('tabPress', () => {
+    const unsub = navigation.addListener('tabPress' as any, () => {
       setSelectedCategory('all');
     });
     return unsub;

@@ -10,12 +10,13 @@ import { useApp } from '@/contexts/AppContext';
 import ProductCard from '@/components/ProductCard';
 import { borderRadius } from '@/constants/theme';
 import { impactLight } from '@/services/haptics';
-import { scale } from '@/constants/responsive';
+import { scale, usePhoneLayout } from '@/constants/responsive';
 
 export default function FavoritesScreen() {
   const router = useRouter();
   const { colors, language, isFavorite, products, productsLoading, refreshProducts, isReady } = useApp();
   const insets = useSafeAreaInsets();
+  const layout = usePhoneLayout();
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
@@ -27,7 +28,7 @@ export default function FavoritesScreen() {
     setLoadError(false);
     try {
       await refreshProducts();
-    } catch (e) {
+    } catch {
       setLoadError(true);
     }
   }, [refreshProducts]);
@@ -42,7 +43,7 @@ export default function FavoritesScreen() {
     try {
       await refreshProducts();
       setLoadError(false);
-    } catch (e) {
+    } catch {
       setLoadError(true);
     } finally {
       setRefreshing(false);
@@ -80,7 +81,7 @@ export default function FavoritesScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header — always visible with title and count */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { width: layout.surfaceWidth, borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
           {label('Favorites', 'Favoris', 'المفضلة')}
         </Text>
@@ -90,10 +91,10 @@ export default function FavoritesScreen() {
       </View>
 
       <ScrollView
-        style={{ flex: 1 }}
+        style={{ flex: 1, width: layout.surfaceWidth }}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: insets.bottom + scale(80) },
+          { paddingHorizontal: layout.horizontalPadding, paddingBottom: insets.bottom + scale(80) },
         ]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
@@ -167,7 +168,7 @@ export default function FavoritesScreen() {
           </View>
         ) : (
           /* ─── Product grid ─── */
-          <View style={styles.grid}>
+          <View style={[styles.grid, isAr && { flexDirection: 'row-reverse' }]}>
             {favoriteProducts.map((product: any, index: number) => (
               <ProductCard key={product.id} product={product} index={index} />
             ))}
@@ -179,7 +180,7 @@ export default function FavoritesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, alignItems: 'center' },
 
   header: {
     paddingHorizontal: scale(16),

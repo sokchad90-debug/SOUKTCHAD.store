@@ -285,7 +285,7 @@ export default function SellerAnalyticsScreen() {
                     <Text style={[aStyles.ratingBarStar, { color: colors.textSecondary }]}>{star}</Text>
                     <MaterialIcons name="star" size={scale(10)} color={C.gold} />
                     <View style={[aStyles.ratingBarTrack, { backgroundColor: colors.border + '40' }]}>
-                      <View style={[aStyles.ratingBarFill, { width: pct + '%', backgroundColor: C.gold }]} />
+                      <View style={[aStyles.ratingBarFill, { width: `${pct}%` as `${number}%`, backgroundColor: C.gold }]} />
                     </View>
                     <Text style={[aStyles.ratingBarCount, { color: colors.textSecondary }]}>{count}</Text>
                   </View>
@@ -307,7 +307,7 @@ export default function SellerAnalyticsScreen() {
                     {cat.name}
                   </Text>
                   <View style={[aStyles.categoryBar, { backgroundColor: colors.border + '40' }]}>
-                    <View style={[aStyles.categoryBarFill, { width: cat.percentage + '%', backgroundColor: cat.color }]} />
+                    <View style={[aStyles.categoryBarFill, { width: `${cat.percentage}%` as `${number}%`, backgroundColor: cat.color }]} />
                   </View>
                   <Text style={[aStyles.categoryCount, { color: cat.color }]}>
                     {cat.count}
@@ -411,7 +411,7 @@ function StatusBar({ label, count, total, color, colors }: {
       <View style={[aStyles.statusBarDot, { backgroundColor: color }]} />
       <Text style={[aStyles.statusBarLabel, { color: colors.textSecondary }]}>{label}</Text>
       <View style={[aStyles.statusBarTrack, { backgroundColor: 'rgba(128,128,128,0.12)' }]}>
-        <View style={[aStyles.statusBarFill, { width: pct + '%', backgroundColor: color }]} />
+        <View style={[aStyles.statusBarFill, { width: `${pct}%` as `${number}%`, backgroundColor: color }]} />
       </View>
       <Text style={[aStyles.statusBarValue, { color }]}>{count} ({pct}%)</Text>
     </View>

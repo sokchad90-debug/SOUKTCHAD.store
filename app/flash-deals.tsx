@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useApp } from '@/contexts/AppContext';
 import { products, Product } from '@/services/mockData';
-import { formatPrice } from '@/constants/config';
 import ProductCard from '@/components/ProductCard';
-import { scale } from '@/constants/responsive';
+import { scale, usePhoneLayout } from '@/constants/responsive';
 
 function formatCountdown(ms: number, language: string = 'en'): string {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -32,8 +29,8 @@ function formatCountdown(ms: number, language: string = 'en'): string {
 }
 
 export default function FlashDealsScreen() {
-  const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
+  const layout = usePhoneLayout(tabBarHeight);
   const router = useRouter();
   const { colors, language } = useApp();
   const isFr = language === 'fr';
@@ -41,7 +38,7 @@ export default function FlashDealsScreen() {
   const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
 
   const [deals, setDeals] = useState<Product[]>([]);
-  const [tick, setTick] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const now = Date.now();
@@ -55,7 +52,7 @@ export default function FlashDealsScreen() {
 
   // Tick every second for countdown
   useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 1000);
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -72,13 +69,13 @@ export default function FlashDealsScreen() {
       const t = new Date(d.discountUntil || '').getTime();
       return t < min ? t : min;
     }, Infinity);
-    return formatCountdown(earliest - Date.now(), language);
-  }, [deals, tick, language]);
+    return formatCountdown(earliest - now, language);
+  }, [deals, now, language]);
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { width: layout.surfaceWidth, backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
            <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(22)} color={colors.textPrimary} />
         </Pressable>
@@ -94,7 +91,7 @@ export default function FlashDealsScreen() {
       </View>
 
       {deals.length === 0 ? (
-        <View style={styles.emptyState}>
+        <View style={[styles.emptyState, { width: layout.surfaceWidth }]}>
           <MaterialIcons name="flash-off" size={scale(48)} color={colors.textTertiary} />
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             {lb('No active flash deals', 'Aucune offre flash active', 'لا توجد عروض سريعة حاليا')}
@@ -102,11 +99,12 @@ export default function FlashDealsScreen() {
         </View>
       ) : (
         <FlatList
+          style={{ width: layout.surfaceWidth }}
           data={deals}
           keyExtractor={keyExtractor}
           renderItem={renderProduct}
           numColumns={2}
-          columnWrapperStyle={styles.grid}
+          columnWrapperStyle={[styles.grid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
           contentContainerStyle={{ paddingTop: 8, paddingBottom: tabBarHeight + 16 }}
           showsVerticalScrollIndicator={false}
         />
@@ -116,7 +114,7 @@ export default function FlashDealsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
+  safeArea: { flex: 1, alignItems: 'center' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

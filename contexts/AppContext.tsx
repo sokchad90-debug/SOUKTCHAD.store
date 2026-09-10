@@ -1,11 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
 import { Platform, I18nManager } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SplashScreen from 'expo-splash-screen';
-
-// Prevent splash from auto-hiding — we hide it from the Home screen
-// after products have rendered, to prevent an empty home flash.
-SplashScreen.preventAutoHideAsync().catch(() => {});
 
 import { useAuth } from '@/template';
 import { lightColors, darkColors, ThemeColors } from '@/constants/theme';
@@ -313,6 +308,7 @@ interface User {
   phone: string;
   avatar: string;
   coverImage: string;
+  location?: string;
   role: UserRole;
   isSeller: boolean;
   sellerId?: string;
@@ -1547,7 +1543,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const isFavorite = useCallback((productId: string) => favorites.includes(productId), [favorites]);
 
   // ─── Follow System ───
-  const apiAuthHeaders = useCallback(async () => {
+  const apiAuthHeaders = useCallback(async (): Promise<Record<string, string>> => {
     const token = await AsyncStorage.getItem('sokchad_auth_token') || '';
     return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
   }, []);

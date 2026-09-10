@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
-import { scale } from '@/constants/responsive';
+import { usePhoneLayout } from '@/constants/responsive';
 import ProductCard from '@/components/ProductCard';
 
 const PAGE_SIZE = 10;
@@ -13,8 +13,8 @@ const PAGE_SIZE = 10;
 export default function AllProductsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const layout = usePhoneLayout();
   const { colors, language, products } = useApp();
-  const isDark = (colors as any).background === '#0B1120' || (colors as any).surface === '#161E2E';
   const isAr = language === 'ar';
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -67,7 +67,7 @@ export default function AllProductsScreen() {
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: '#4C1CEA' }]}>
       <StatusBar style="light" backgroundColor="#4C1CEA" />
       {/* Header: back + title + search (identity-consistent — purple like home) */}
-      <View style={[styles.header, isAr && { flexDirection: 'row-reverse' }]}>
+      <View style={[styles.header, { width: layout.surfaceWidth }, isAr && { flexDirection: 'row-reverse' }]}>
         <Pressable hitSlop={10} onPress={() => router.back()}>
           <MaterialIcons name={isAr ? 'chevron-right' : 'chevron-left'} size={28} color="#FFF" />
         </Pressable>
@@ -76,7 +76,7 @@ export default function AllProductsScreen() {
         </Text>
         <View style={{ width: 28 }} />
       </View>
-      <View style={styles.searchWrap}>
+      <View style={[styles.searchWrap, { width: layout.surfaceWidth }]}>
         <View style={[styles.searchBar, isAr && { flexDirection: 'row-reverse' }]}>
           <MaterialIcons name="search" size={20} color="#64748B" />
           <TextInput
@@ -93,7 +93,7 @@ export default function AllProductsScreen() {
           ) : null}
         </View>
       </View>
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, width: layout.surfaceWidth, backgroundColor: colors.background }}>
             <Text style={[styles.countText, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}>
         {language === 'fr'
           ? filtered.length === 1 ? '1 produit' : `${filtered.length} produits`
@@ -107,7 +107,7 @@ export default function AllProductsScreen() {
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         numColumns={2}
-        columnWrapperStyle={[styles.gridRow, isAr && { flexDirection: 'row-reverse' }]}
+        columnWrapperStyle={[styles.gridRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
         contentContainerStyle={[styles.gridContent, { paddingBottom: insets.bottom + 90 }]}
         showsVerticalScrollIndicator={false}
         refreshing={refreshing}
@@ -130,7 +130,7 @@ export default function AllProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F8FAFC' },
+  safe: { flex: 1, alignItems: 'center', backgroundColor: '#F8FAFC' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 48, paddingHorizontal: 12 },
   headerTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', fontFamily: 'Cairo-Bold' },
   searchWrap: { paddingHorizontal: 12, paddingBottom: 8 },

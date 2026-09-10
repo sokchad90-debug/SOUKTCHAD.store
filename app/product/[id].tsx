@@ -97,6 +97,20 @@ export default function ProductDetailScreen() {
 
   const product = getProductById(id);
   const productReviews = useMemo(() => product ? getReviewsForProduct(id) : [], [id, product, getReviewsForProduct]);
+  const [savedSellerProfile, setSavedSellerProfile] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    if (product?.sellerId) {
+      AsyncStorage.getItem(`sokchad_seller_profile_${product.sellerId}`).then(data => {
+        if (data) { try { setSavedSellerProfile(JSON.parse(data)); } catch {} }
+      }).catch(() => {});
+    }
+  }, [product?.sellerId]);
+
+  const similar = useMemo(
+    () => product ? getProductsByCategory(product.categoryId).filter(p => p.id !== product.id).slice(0, 8) : [],
+    [product, getProductsByCategory],
+  );
 
   const avgRating = useMemo(() => {
     if (productReviews.length === 0) return 0;
@@ -144,9 +158,9 @@ export default function ProductDetailScreen() {
   }
 
   // Use seller from AppContext (real DB data) first, then fallback to mockData
-  const seller = ctxGetSellerById(product.sellerId) || getSellerById(product.sellerId) || (product.sellerName ? {
+  const seller = ctxGetSellerById(product.sellerId) || getSellerById(product.sellerId) || {
     id: product.sellerId,
-    name: product.sellerName,
+    name: product.sellerName || lb('Seller', 'Vendeur', 'البائع'),
     avatar: (product as any).sellerAvatar || 'https://images.unsplash.com/photo-1599566150163-29194dcabd9c?w=200',
     sellerId: product.sellerId,
     isVerified: product.sellerVerified || false,
@@ -158,16 +172,8 @@ export default function ProductDetailScreen() {
     isOnline: false,
     coverImage: '',
     bio: '',
-  } : null);
-  // Load saved seller profile (uploaded logo/banner) — overrides stale data
-  const [savedSellerProfile, setSavedSellerProfile] = React.useState<any>(null);
-  React.useEffect(() => {
-    if (product?.sellerId) {
-      AsyncStorage.getItem(`sokchad_seller_profile_${product.sellerId}`).then(data => {
-        if (data) { try { setSavedSellerProfile(JSON.parse(data)); } catch (e) {} }
-      }).catch(() => {});
-    }
-  }, [product?.sellerId]);
+  };
+  // Merge locally saved seller branding over the latest seller record.
   // Merge saved profile into seller
   const effectiveSeller = seller && savedSellerProfile
     ? { ...seller, avatar: savedSellerProfile.avatar || seller.avatar }
@@ -175,11 +181,6 @@ export default function ProductDetailScreen() {
   const category = getCategoryById(product.categoryId);
   const title = product.title[language] || product.title.en;
   const description = product.description[language] || product.description.en;
-  // Similar products — same category only (no random cross-category items).
-  const similar = useMemo(
-    () => getProductsByCategory(product.categoryId).filter(p => p.id !== product.id).slice(0, 8),
-    [product, getProductsByCategory],
-  );
   const conditionLabel = product.condition === 'new' ? t('brandNew') : product.condition === 'like_new' ? t('likeNew') : t('used');
   const isRealEstate = product.categoryId === 'real_estate';
 
