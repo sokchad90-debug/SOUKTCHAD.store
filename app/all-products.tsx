@@ -64,8 +64,8 @@ export default function AllProductsScreen() {
   ) : null;
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: '#10B981' }]}>
-      <StatusBar style="light" backgroundColor="#10B981" />
+    <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: '#4C1CEA' }]}>
+      <StatusBar style="light" backgroundColor="#4C1CEA" />
       {/* Header: back + title + search (identity-consistent — purple like home) */}
       <View style={[styles.header, { width: layout.surfaceWidth }, isAr && { flexDirection: 'row-reverse' }]}>
         <Pressable hitSlop={10} onPress={() => router.back()}>

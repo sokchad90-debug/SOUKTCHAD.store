@@ -448,13 +448,13 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#10B981' }]}>
-      <StatusBar style="light" backgroundColor="#10B981" />
+    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#4C1CEA' }]}>
+      <StatusBar style="light" backgroundColor="#4C1CEA" />
       <View style={[styles.homeBackdrop, { backgroundColor: colors.background }]}>
         <View style={[styles.homeSurface, { width: layout.surfaceWidth, backgroundColor: colors.background }]}>
           {/* Sticky Search Bar — always visible at top */}
           <View
-            style={[styles.stickySearchWrap, { backgroundColor: '#10B981', paddingTop: 2 }]}
+            style={[styles.stickySearchWrap, { backgroundColor: '#4C1CEA', paddingTop: 2 }]}
             onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}
           >
             {/* Compact icon row — logo space cut, content pulled up */}
