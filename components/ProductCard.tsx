@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   freeShipText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
   priceTopRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 2, flexWrap: 'wrap' },
-  logisticsRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 2 },
+  logisticsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: 2 },
   logItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   container: {
     borderRadius: DT.card.radius,

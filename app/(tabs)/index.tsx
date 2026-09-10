@@ -448,8 +448,8 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#4C1CEA' }]}>
-      <StatusBar style="light" backgroundColor="#4C1CEA" />
+    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#FFFFFF' }]}>
+      <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <View style={[styles.homeBackdrop, { backgroundColor: colors.background }]}>
         <View style={[styles.homeSurface, { width: layout.surfaceWidth, backgroundColor: colors.background }]}>
           {/* Sticky Search Bar — always visible at top */}
