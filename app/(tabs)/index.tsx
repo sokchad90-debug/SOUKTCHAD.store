@@ -454,11 +454,11 @@ export default function HomeScreen() {
         <View style={[styles.homeSurface, { width: layout.surfaceWidth, backgroundColor: colors.background }]}>
           {/* Sticky Search Bar — always visible at top */}
           <View
-            style={[styles.stickySearchWrap, { backgroundColor: '#4C1CEA', paddingTop: 2 }]}
+            style={[styles.stickySearchWrap, { backgroundColor: '#4C1CEA', paddingTop: 0 }]}
             onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}
           >
             {/* Compact icon row — logo space cut, content pulled up */}
-            <View style={[styles.headerRow, { height: 40, position: 'relative', justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[styles.headerRow, { height: 34, position: 'relative', justifyContent: 'center', alignItems: 'center' }]}>
               <View style={[styles.headerSideIcons, isAr && styles.headerSideRight, isAr && { flexDirection: 'row-reverse' }]}>
                 <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)}>
                   <MaterialIcons name="notifications-none" size={24} color="#FFFFFF" />
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(20), borderWidth: 1, gap: scale(4),
   },
   activeFilterText: { fontSize: scale(11), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(16), paddingTop: scale(10), paddingBottom: scale(4), gap: 0 },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(16), paddingTop: scale(6), paddingBottom: scale(4), gap: 0 },
   categoryGridItem: { alignItems: 'center', width: '25%', marginBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4) },
   categoryCircleScroll: { paddingHorizontal: scale(16), gap: scale(10), paddingBottom: scale(2), marginBottom: 0, paddingTop: scale(2) },
   categoryCircleItem: { alignItems: 'center', width: scale(68) },
