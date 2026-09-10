@@ -491,7 +491,7 @@ export default function HomeScreen() {
               </View>
             </View>
 {/* Search bar — stays sticky */}
-            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: 8 }]}>
+            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: 2 }]}>
               <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
               <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: 16 }, isAr && { flexDirection: 'row-reverse' }]}>
                 <MaterialIcons name="search" size={22} color={colors.textTertiary} />
