@@ -49,7 +49,7 @@ MemoProductCard.displayName = 'MemoProductCard';
 function HomeListHeader({
   colors, t, searchQuery, activeFilterCount, language, showHeaderContent, selectedCategory,
   setSelectedCategory, pinnedProducts, filteredProductsLength, router, verifiedSellers,
-  layout,
+  layout, setShowCityDropdown, openFilters, selection,
 }: { [key: string]: any; layout: PhoneLayoutMetrics }) {
   const isFr = language === 'fr';
   const isAr = language === 'ar';
@@ -68,6 +68,30 @@ function HomeListHeader({
   return (
     <View>
       {/* Categories - Grid (only show when "all" is selected, hidden when a category is chosen) */}
+      {/* Action icons row on WHITE — clear of the purple block */}
+      <View style={[styles.actionIconsRow, isAr && { flexDirection: 'row-reverse' }]}>
+        <View style={styles.actionIconsGroup}>
+          <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)}>
+            <MaterialIcons name="notifications-none" size={26} color={colors.primary} />
+          </Pressable>
+          <Pressable hitSlop={10} onPress={() => router.push('/checkout' as any)}>
+            <MaterialIcons name="shopping-cart" size={26} color={colors.primary} />
+          </Pressable>
+        </View>
+        <View style={[styles.actionIconsGroup, isAr && { flexDirection: 'row-reverse' }]}>
+          <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }}>
+            <MaterialIcons name="location-on" size={26} color={colors.primary} />
+          </Pressable>
+          <Pressable hitSlop={12} onPress={() => { selection(); openFilters(); }}>
+            <MaterialIcons name="menu" size={28} color={colors.primary} />
+            {activeFilterCount > 0 ? (
+              <View style={styles.filterBadge}>
+                <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+              </View>
+            ) : null}
+          </Pressable>
+        </View>
+      </View>
       {selectedCategory === 'all' ? (
       <View style={[styles.categoryGrid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
         {categories.map(cat => {
@@ -407,6 +431,9 @@ export default function HomeScreen() {
       router={router}
       verifiedSellers={verifiedSellers}
       layout={layout}
+      setShowCityDropdown={setShowCityDropdown}
+      openFilters={openFilters}
+      selection={selection}
     />
   ), [colors, t, searchQuery, activeFilterCount, language, showHeaderContent,
       selectedCategory, setSelectedCategory, stablePinnedProducts, filteredProducts.length,
@@ -457,30 +484,6 @@ export default function HomeScreen() {
             style={[styles.stickySearchWrap, { backgroundColor: '#4C1CEA', paddingTop: 0 }]}
             onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}
           >
-            {/* Compact icon row — logo space cut, content pulled up */}
-            <View style={[styles.headerRow, { height: 34, position: 'relative', justifyContent: 'center', alignItems: 'center' }]}>
-              <View style={[styles.headerSideIcons, isAr && styles.headerSideRight, isAr && { flexDirection: 'row-reverse' }]}>
-                <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)}>
-                  <MaterialIcons name="notifications-none" size={24} color="#FFFFFF" />
-                </Pressable>
-                <Pressable hitSlop={10} onPress={() => router.push('/checkout' as any)}>
-                  <MaterialIcons name="shopping-cart" size={24} color="#FFFFFF" />
-                </Pressable>
-              </View>
-              <View style={[styles.headerSideIcons, !isAr && styles.headerSideRight, isAr && { flexDirection: 'row-reverse' }]}>
-                <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }}>
-                  <MaterialIcons name="location-on" size={24} color="#FFFFFF" />
-                </Pressable>
-                <Pressable hitSlop={12} onPress={() => { selection(); openFilters(); }}>
-                  <MaterialIcons name="menu" size={26} color="#FFFFFF" />
-                  {activeFilterCount > 0 ? (
-                    <View style={styles.filterBadge}>
-                      <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-                    </View>
-                  ) : null}
-                </Pressable>
-              </View>
-            </View>
             {/* Search bar — stays sticky */}
             <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: layout.searchGap }]}>
               <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
@@ -767,6 +770,8 @@ const styles = StyleSheet.create({
   logo: { fontSize: scale(18), fontWeight: '800', letterSpacing: -0.3, fontFamily: 'Cairo-Bold' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: scale(6) },
   headerSideIcons: { position: 'absolute', left: 12, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: scale(14) },
+  actionIconsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(16), paddingTop: scale(10), paddingBottom: scale(8) },
+  actionIconsGroup: { flexDirection: 'row', alignItems: 'center', gap: scale(18) },
   headerSideRight: { left: undefined, right: 12 },
   headerLocationChip: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 7, paddingVertical: 4, borderRadius: 999, maxWidth: 86 },
   headerLocationChipText: { fontSize: 11, fontWeight: '700', maxWidth: 58, fontFamily: 'Cairo-Bold' },
