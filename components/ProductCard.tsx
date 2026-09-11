@@ -26,9 +26,15 @@ function getDiscountedPrice(product: Product): number {
   return Math.round(product.price * (1 - discount / 100));
 }
 
-function useCardDimensions(imageHeightRatio: number = PRODUCT_IMAGE_RATIO) {
+/**
+ * Card width comes from the CONTAINER when the parent provides it (Phase 3 rule:
+ * "اجعل حاوية الشبكة تحدد عرض البطاقة"). Falls back to the canonical
+ * (contentWidth - cardGap) / 2 — identical at 393dp reference.
+ */
+function useCardDimensions(imageHeightRatio: number = PRODUCT_IMAGE_RATIO, containerWidth?: number) {
   const layout = usePhoneLayout();
-  const cardWidth = Math.floor((layout.contentWidth - layout.cardGap) / 2);
+  const canonicalWidth = Math.floor((layout.contentWidth - layout.cardGap) / 2);
+  const cardWidth = containerWidth && containerWidth > 0 ? Math.floor(containerWidth) : canonicalWidth;
   const imageHeight = Math.round(cardWidth * clamp(0.68, imageHeightRatio, 0.88));
   const cardScale = (value: number) => Math.round(value * layout.widthFactor);
   return { cardWidth, imageHeight, cardScale };
@@ -38,14 +44,16 @@ interface ProductCardProps {
   product: Product;
   index?: number;
   imageHeightRatio?: number;
+  /** Optional container-provided width (grid parent measures itself). */
+  containerWidth?: number;
 }
 
-function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO }: ProductCardProps) {
+function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, containerWidth }: ProductCardProps) {
   const router = useRouter();
   const { colors, language, isFavorite, toggleFavorite } = useApp();
   const isAr = language === 'ar';
   const isDark = (colors as any).background === '#0B1120' || (colors as any).surface === '#161E2E';
-  const { cardWidth: CARD_WIDTH, imageHeight: IMAGE_HEIGHT, cardScale } = useCardDimensions(imageHeightRatio);
+  const { cardWidth: CARD_WIDTH, imageHeight: IMAGE_HEIGHT, cardScale } = useCardDimensions(imageHeightRatio, containerWidth);
   const heartScale = React.useRef(new Animated.Value(1)).current;
 
   // Guard: if product is undefined/null, render nothing to prevent white screen crashes
@@ -72,6 +80,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO }: P
   return (
     <Pressable
       onPress={handlePress}
+      testID={`product-card-${product.id}`}
       style={({ pressed }) => [
         styles.container,
         {
@@ -117,7 +126,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO }: P
         </Pressable>
       </View>
 
-      <View style={styles.info}>
+      <View style={styles.info} testID="product-card-info">
         {/* Row 1: price + Top badge (same row when it fits) */}
         <View style={[styles.priceTopRow, isAr && styles.rowRTL]}>
           {isDiscountActive(product) ? (
@@ -130,7 +139,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO }: P
               </View>
             </>
           ) : (
-            <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]}>
+            <Text testID="product-card-price" style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]}>
               {isAr ? '\u200E' : ''}{formatPrice(product.price)}{isAr ? '\u200E' : ''}
             </Text>
           )}

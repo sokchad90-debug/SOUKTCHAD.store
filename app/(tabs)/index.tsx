@@ -25,9 +25,9 @@ import {
   scale,
   CATEGORY_CIRCLE, AVATAR_SIZE, AVATAR_RADIUS, AVATAR_BORDER,
   VERIFIED_STORE_ITEM_W, VERIFIED_BADGE, PINNED_CARD_W,
-  SEARCH_BAR_H, EMPTY_IMG,
+  EMPTY_IMG,
   NOTIF_BTN, LOGO_IMG, IS_VERY_SHORT_SCREEN, PhoneLayoutMetrics,
-  PRODUCT_IMAGE_RATIO, usePhoneLayout,
+  PRODUCT_IMAGE_RATIO, usePhoneLayout, LIST_TOP_PULL, BOTTOM_NAV_CONTENT_GAP,
 } from '@/constants/responsive';
 
 const PAGE_SIZE = 10;
@@ -69,7 +69,9 @@ function HomeListHeader({
     <View>
       {/* Categories - Grid (only show when "all" is selected, hidden when a category is chosen) */}
             {selectedCategory === 'all' ? (
-      <View style={[styles.categoryGrid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
+      <View style={[styles.categoryGrid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
+        testID="home-categories"
+      >
         {categories.map(cat => {
           const isSelected = selectedCategory === cat.id;
           return (
@@ -133,7 +135,12 @@ function HomeListHeader({
               <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.verified} />
             </Pressable>
           </View>
-          <View style={[styles.verifiedStoresRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[{ paddingHorizontal: layout.horizontalPadding, gap: scale(8) }, isAr && { flexDirection: 'row-reverse' }]}
+            testID="home-verified-stores"
+          >
             {verifiedSellers.map((seller: any) => (
               <Pressable
                 key={seller.id}
@@ -172,7 +179,7 @@ function HomeListHeader({
                 </Text>
               </Pressable>
             ))}
-          </View>
+          </ScrollView>
         </View>
       ) : null}
 
@@ -523,6 +530,7 @@ export default function HomeScreen() {
               <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: 16 }, isAr && { flexDirection: 'row-reverse' }]}>
                 <MaterialIcons name="search" size={18} color={colors.textTertiary} />
                 <TextInput
+                  testID="home-search-input"
                   style={[styles.searchInput, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}
                   placeholder={isAr ? 'ما المنتج الذي تبحث عنه؟' : 'Quel produit recherchez-vous ?'}
                   placeholderTextColor={colors.textTertiary}
@@ -602,13 +610,14 @@ export default function HomeScreen() {
 
           <FlatList
             key="home-grid-2"
+            testID="home-products-list"
             style={{ backgroundColor: colors.background }}
             data={paginatedProducts}
             keyExtractor={keyExtractor}
             renderItem={renderProductItem}
             numColumns={numCols}
             columnWrapperStyle={[styles.grid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
-            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(stickyHeight - 8, 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: tabBarHeight + layout.smallGap + 14 }}
+            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(stickyHeight - LIST_TOP_PULL, 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: tabBarHeight + layout.smallGap + BOTTOM_NAV_CONTENT_GAP }}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
@@ -815,14 +824,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', width: '100%', gap: scale(8),
   },
   searchBar: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', height: SEARCH_BAR_H,
+    flex: 1, flexDirection: 'row', alignItems: 'center',
     borderRadius: 999, paddingHorizontal: scale(14),
     borderWidth: 0,
     gap: scale(8),
   },
   searchInput: { flex: 1, fontSize: scale(15), height: '100%' },
   searchBtn: {
-    width: SEARCH_BAR_H, height: SEARCH_BAR_H,
+    width: NOTIF_BTN, height: NOTIF_BTN,
     borderRadius: 999,
     alignItems: 'center', justifyContent: 'center',
   },

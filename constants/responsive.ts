@@ -57,4 +57,7 @@ export {
   NOTIF_BTN,
   LOGO_IMG,
   CARD_WIDTH,
+  SEARCH_BAR_H_BASE,
+  LIST_TOP_PULL,
+  BOTTOM_NAV_CONTENT_GAP,
 } from '../ui/responsive';

@@ -162,6 +162,12 @@ export const getPhoneLayoutMetrics = (params: {
   const maxContentWidth = CANONICAL_MAX_SURFACE_WIDTH - horizontalPadding * 2;
 
   const headerHeight = clamp(50, Math.round(widthFactor * 54), 58);
+
+  /**
+   * SEARCH HEIGHT — canonical value.
+   * APPROVED REFERENCE (v8.9.28+ user-approved screenshots @393dp): 44dp.
+   * Single formula; ALL usages and docs derive from THIS definition.
+   */
   const searchHeight = clamp(42, Math.round(widthFactor * 44), 48);
   const searchGap = clamp(4, Math.round(heightFactor * 6), 8);
 
@@ -257,6 +263,11 @@ const _surfaceWidth = () => Math.min(_w, CANONICAL_MAX_SURFACE_WIDTH);
 const _horizontalPadding = () => clamp(12, Math.round(_surfaceWidth() * 0.04), 18);
 const _contentWidth = () => _surfaceWidth() - _horizontalPadding() * 2;
 
+/** Reference gap between sticky search bottom and the first list section (approved v8.9.29). */
+export const LIST_TOP_PULL = 8;
+/** Design gap between the last product card and the bottom navigation bar (approved v8.9.30). */
+export const BOTTOM_NAV_CONTENT_GAP = 14;
+
 /** Legacy scale — capped at 1.12x. Use usePhoneLayout() for new code. */
 export const scale = (n: number): number => Math.round(n * _ratio());
 
@@ -292,9 +303,14 @@ export const CARD_GAP = scale(10);
 export const PRODUCT_IMAGE_RATIO = REFERENCE_IMAGE_RATIO;
 export const getCardWidth = () => Math.floor((_contentWidth() - scale(10)) / 2);
 
-export const SEARCH_BAR_H_BASE = 46;
+/**
+ * SEARCH BAR — derives from the canonical engine value (44dp @393dp, v8.9.28+ approved).
+ * The static SEARCH_BAR_H below is a legacy module-eval snapshot kept ONLY for
+ * styles that cannot re-evaluate; reactive code MUST use usePhoneLayout().searchHeight.
+ */
+export const SEARCH_BAR_H_BASE = 44;
 export const getSearchBarH = (fontScale: number = 1) =>
-  clamp(44, Math.round(46 * _ratio() * Math.min(fontScale, 1.12)), 52);
+  clamp(44, Math.round(44 * _ratio() * Math.min(fontScale, 1.12)), 48);
 export const getSearchBarHeight = getSearchBarH;
 export const SEARCH_BAR_H = getSearchBarH();
 export const getBannerHeight = () => clamp(100, Math.round(_contentWidth() * REFERENCE_BANNER_RATIO), 130);
