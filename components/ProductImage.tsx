@@ -2,39 +2,46 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
-import { scale } from '@/constants/responsive';
+import { DS } from '@/ui/designSystem';
 
 /**
- * Unified product image: fills the fixed-ratio product frame without stretching.
- * The source is cropped only at its edges, matching the marketplace reference.
+ * Unified product image — FULL image always visible (contentFit="contain"),
+ * fixed frame held during load AND failure (no list jump), neutral gap when
+ * the image ratio differs from the frame. No server-crop dependency.
+ * Never stretched, never blurred, never flipped in RTL.
  */
 interface Props {
   uri?: string;
   frameWidth: number;
-  frameRatio?: number; // width / height of the FRAME (e.g. 1.1 => square-ish)
+  frameRatio?: number; // width / height of the FRAME
   neutralBg?: string;
   failedText?: string;
+  loadingText?: string;
 }
 
-function ProductImageInner({ uri, frameWidth, frameRatio = 1.1, neutralBg = '#F1F5F9', failedText }: Props) {
+function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.product, neutralBg = DS.colors.imageNeutral, failedText, loadingText }: Props) {
   const [failed, setFailed] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
   const height = Math.round(frameWidth / frameRatio);
-  React.useEffect(() => { setFailed(false); }, [uri]);
+  React.useEffect(() => { setFailed(false); setLoading(true); }, [uri]);
 
   return (
-    <View style={[styles.frame, { width: frameWidth, height, backgroundColor: neutralBg }]}>
+    <View style={[styles.frame, { width: frameWidth, height, backgroundColor: neutralBg }]}
+      testID="product-image-frame"
+    >
       {uri && !failed ? (
         <Image
           source={{ uri }}
           style={styles.image}
-          contentFit="cover"
-          transition={200}
+          contentFit="contain"
+          transition={150}
           recyclingKey={uri}
-          onError={() => setFailed(true)}
+          onLoadEnd={() => setLoading(false)}
+          onError={() => { setFailed(true); setLoading(false); }}
         />
       ) : (
         <View style={styles.fallback}>
-          <MaterialIcons name={failed ? 'image-not-supported' : 'shopping-bag'} size={scale(26)} color="#94A3B8" />
+          <MaterialIcons name={failed ? 'image-not-supported' : 'shopping-bag'} size={Math.round(frameWidth * 0.16)} color="#94A3B8" />
           {failed && failedText ? (
             <Text style={styles.fallbackText}>{failedText}</Text>
           ) : null}
@@ -51,5 +58,5 @@ const styles = StyleSheet.create({
   frame: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   fallback: { alignItems: 'center', justifyContent: 'center', gap: 6 },
-  fallbackText: { fontSize: scale(10), color: '#64748B', fontFamily: 'Cairo-Regular' },
+  fallbackText: { fontSize: 10, color: DS.colors.textTertiary, fontFamily: DS.fontFamily.regular },
 });
