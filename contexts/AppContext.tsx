@@ -1399,14 +1399,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
               const sorted = [...shData.data]
                 .filter((c: any) => c.is_active === 1 || c.is_active === true || c.is_active === '1')
                 .sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+              const fixMojibake = (t: string) => {
+                if (!t) return t;
+                if (/Ã|Ø|Ù/.test(t)) {
+                  try { return decodeURIComponent(escape(t)); } catch (e) { return t; }
+                }
+                return t;
+              };
               const apiCategories: Category[] = sorted.map((c: any) => ({
                 id: String(c.id),
                 parentId: c.parent_id || undefined,
                 hasChildren: c.has_children || false,
                 name: {
-                  en: c.name_en || c.name?.en || String(c.id),
-                  fr: c.name_fr || c.name?.fr || c.name_en || String(c.id),
-                  ar: c.name_ar || c.name?.ar || c.name_en || String(c.id),
+                  en: fixMojibake(c.name_en || c.name?.en || String(c.id)),
+                  fr: fixMojibake(c.name_fr || c.name?.fr || c.name_en || String(c.id)),
+                  ar: fixMojibake(c.name_ar || c.name?.ar || c.name_en || String(c.id)),
                 },
                 icon: c.icon || 'category',
                 color: c.color || '#FF7A00',
