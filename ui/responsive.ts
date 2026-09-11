@@ -168,7 +168,7 @@ export const getPhoneLayoutMetrics = (params: {
    * APPROVED REFERENCE (v8.9.28+ user-approved screenshots @393dp): 44dp.
    * Single formula; ALL usages and docs derive from THIS definition.
    */
-  const searchHeight = clamp(42, Math.round(widthFactor * 44), 48);
+  const searchHeight = clamp(41, Math.round(widthFactor * 43), 47);
   const searchGap = clamp(4, Math.round(heightFactor * 6), 8);
 
   // Banner: proportion of contentWidth, clamped
@@ -264,7 +264,7 @@ const _horizontalPadding = () => clamp(12, Math.round(_surfaceWidth() * 0.04), 1
 const _contentWidth = () => _surfaceWidth() - _horizontalPadding() * 2;
 
 /** Reference gap between sticky search bottom and the first list section (approved v8.9.29). */
-export const LIST_TOP_PULL = 8;
+export const LIST_TOP_PULL = 12;
 /** Design gap between the last product card and the bottom navigation bar (approved v8.9.30). */
 export const BOTTOM_NAV_CONTENT_GAP = 14;
 
@@ -308,9 +308,9 @@ export const getCardWidth = () => Math.floor((_contentWidth() - scale(10)) / 2);
  * The static SEARCH_BAR_H below is a legacy module-eval snapshot kept ONLY for
  * styles that cannot re-evaluate; reactive code MUST use usePhoneLayout().searchHeight.
  */
-export const SEARCH_BAR_H_BASE = 44;
+export const SEARCH_BAR_H_BASE = 43;
 export const getSearchBarH = (fontScale: number = 1) =>
-  clamp(44, Math.round(44 * _ratio() * Math.min(fontScale, 1.12)), 48);
+  clamp(43, Math.round(43 * _ratio() * Math.min(fontScale, 1.12)), 47);
 export const getSearchBarHeight = getSearchBarH;
 export const SEARCH_BAR_H = getSearchBarH();
 export const getBannerHeight = () => clamp(100, Math.round(_contentWidth() * REFERENCE_BANNER_RATIO), 130);

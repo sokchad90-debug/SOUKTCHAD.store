@@ -33,11 +33,11 @@
 
 ```
 SURFACE_WIDTH = min(windowWidth - safeInsets, 480)
-SEARCH_BAR_H = clamp(42, widthFactor * 44, 48)   // canonical = 44dp @393dp (v8.9.28+ approved)
+SEARCH_BAR_H = clamp(41, widthFactor * 43, 47)   // canonical = 43dp @393dp (v8.9.36, user-requested -2%)
 HEADER_HEIGHT = clamp(50, widthFactor * 54, 58)
 cardWidth = (contentWidth - cardGap) / 2         // or containerWidth when the grid parent measures itself
 recentImageHeight = recentCardWidth * 0.78
-LIST_TOP_PULL = 8                                // gap: sticky search bottom → first section (v8.9.29 approved)
+LIST_TOP_PULL = 12                               // gap: sticky bottom → first section = scale(14)-12 = 2dp net (v8.9.36, pull products up ~0.5%)
 BOTTOM_NAV_CONTENT_GAP = 14                      // design gap: last card → bottom nav (v8.9.30 approved)
 ```
 

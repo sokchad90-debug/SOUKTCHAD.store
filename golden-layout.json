@@ -17,10 +17,10 @@
     "mirrors_in_rtl": true
   },
   "searchBar": {
-    "height_formula": "clamp(42, widthFactor * 44, 48)",
-    "canonical_dp_at_393": 44,
+    "height_formula": "clamp(41, widthFactor * 43, 47)",
+    "canonical_dp_at_393": 43,
     "horizontal_inset": "horizontalPadding",
-    "gap_after_dp": 6
+    "gap_after_dp": 2
   },
   "offersBanner": {
     "visible_on_home": false
@@ -61,8 +61,11 @@
       "recentlyAdded",
       "bottomNav"
     ],
-    "reference_languages": ["fr", "ar"],
-    "list_top_pull_dp": 8,
+    "reference_languages": [
+      "fr",
+      "ar"
+    ],
+    "list_top_pull_dp": 12,
     "bottom_nav_content_gap_dp": 14,
     "verified_stores_overflow": "horizontal_scroll_3_visible",
     "row2_hidden_at_scroll0_bound_to_reference_state": true
