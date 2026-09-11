@@ -518,7 +518,7 @@ export default function HomeScreen() {
               )}
             </View>
 {/* Search bar — stays sticky */}
-            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: 0 }]}>
+            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: 6 }]}>
               <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
               <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: 16 }, isAr && { flexDirection: 'row-reverse' }]}>
                 <MaterialIcons name="search" size={18} color={colors.textTertiary} />
@@ -840,7 +840,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(20), borderWidth: 1, gap: scale(4),
   },
   activeFilterText: { fontSize: scale(11), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(16), paddingTop: scale(12), paddingBottom: scale(4), gap: 0 },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(16), paddingTop: scale(10), paddingBottom: scale(4), gap: 0 },
   categoryGridItem: { alignItems: 'center', width: '25%', marginBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4) },
   categoryCircleScroll: { paddingHorizontal: scale(16), gap: scale(10), paddingBottom: scale(2), marginBottom: 0, paddingTop: scale(2) },
   categoryCircleItem: { alignItems: 'center', width: scale(68) },
