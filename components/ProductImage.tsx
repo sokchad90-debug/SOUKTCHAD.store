@@ -22,8 +22,21 @@ interface Props {
 function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.product, neutralBg = DS.colors.imageNeutral, failedText, loadingText }: Props) {
   const [failed, setFailed] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
+  const [retried, setRetried] = React.useState(false);
   const height = Math.round(frameWidth / frameRatio);
-  React.useEffect(() => { setFailed(false); setLoading(true); }, [uri]);
+  React.useEffect(() => { setFailed(false); setLoading(true); setRetried(false); }, [uri]);
+
+  // One automatic retry: distinguishes transient network failure from a truly
+  // missing image (a deliberate 404 shows fallback immediately after retry).
+  const handleError = React.useCallback(() => {
+    if (!retried) {
+      setRetried(true);
+      setLoading(true);
+    } else {
+      setFailed(true);
+      setLoading(false);
+    }
+  }, [retried]);
 
   return (
     <View style={[styles.frame, { width: frameWidth, height, backgroundColor: neutralBg }]}
@@ -37,7 +50,7 @@ function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.pr
           transition={150}
           recyclingKey={uri}
           onLoadEnd={() => setLoading(false)}
-          onError={() => { setFailed(true); setLoading(false); }}
+          onError={handleError}
         />
       ) : (
         <View style={styles.fallback}>

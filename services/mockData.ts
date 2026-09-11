@@ -153,7 +153,7 @@ export const paymentMethods: PaymentMethod[] = [
 export const sellers: Seller[] = [
   {
     id: 'seller1', name: 'Moussa Electronics', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=75&fm=jpg', storeBg: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=800&q=75&fm=jpg',
-    sellerId: 'Sok-84729', isVerified: true, verifiedUntil: '2025-06-15', isBanned: false, location: "N'Djamena", rating: 4.8, totalSales: 156,
+    sellerId: 'Sok-84729', isVerified: true, verifiedUntil: '2027-06-15', isBanned: false, location: "N'Djamena", rating: 4.8, totalSales: 156,
     joinedDate: '2023-03-15', phone: '+235 66 XX XX XX', isOnline: true, followersCount: 234,
     paymentMethods: [{ methodId: 'airtel', receivingNumber: '66 12 34 56' }, { methodId: 'moov', receivingNumber: '99 78 90 12' }],
   },
@@ -198,15 +198,15 @@ export const products: Product[] = [
     description: { en: 'Brand new Samsung Galaxy A54 with 128GB storage, 6GB RAM. Sealed box with warranty.', fr: 'Samsung Galaxy A54 neuf avec 128Go de stockage, 6Go RAM. Boîte scellée avec garantie.', ar: 'سامسونج جالاكسي A54 جديد بسعة تخزين 128 جيجا، 6 جيجا رام. صندوق مغلق مع ضمان.' },
     price: 185000, images: ['https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=800&q=75&fm=jpg'],
     categoryId: 'electronics', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
-    postedDate: '2024-12-15', isPinned: true, pinnedUntil: '2025-03-15', isFeatured: true, views: 342,
-    discountPercent: 15, discountUntil: '2026-08-15', stock: 8, maxOrderQty: 5,
+    postedDate: '2024-12-15', isPinned: true, pinnedUntil: '2027-03-15', isFeatured: true, views: 342,
+    discountPercent: 15, discountUntil: '2027-08-15', stock: 8, maxOrderQty: 5,
   },
   {
     id: 'p2', title: { en: 'iPhone 14 Pro Max', fr: 'iPhone 14 Pro Max', ar: 'آيفون 14 برو ماكس' },
     description: { en: 'iPhone 14 Pro Max 256GB Deep Purple. Excellent condition, barely used for 2 months.', fr: 'iPhone 14 Pro Max 256Go Violet Intense. Excellent état, à peine utilisé pendant 2 mois.', ar: 'آيفون 14 برو ماكس 256 جيجا بنفسجي عميق. حالة ممتازة، استخدم لمدة شهرين فقط.' },
     price: 650000, images: ['https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=800&q=75&fm=jpg'],
     categoryId: 'electronics', sellerId: 'seller1', condition: 'like_new', location: "N'Djamena",
-    postedDate: '2024-12-10', isPinned: true, pinnedUntil: '2025-02-10', isFeatured: true, views: 518, stock: 1,
+    postedDate: '2024-12-10', isPinned: true, pinnedUntil: '2027-02-10', isFeatured: true, views: 518, stock: 1,
   },
   {
     id: 'p3', title: { en: 'Toyota Corolla 2019', fr: 'Toyota Corolla 2019', ar: 'تويوتا كورولا 2019' },
@@ -236,8 +236,8 @@ export const products: Product[] = [
     description: { en: 'Original Nike Air Max, Size 42 EU. Brand new in box, multiple colors available.', fr: 'Nike Air Max original, Taille 42 EU. Neuf dans la boîte, plusieurs couleurs disponibles.', ar: 'نايك اير ماكس أصلي، مقاس 42 أوروبي. جديد في العلبة، عدة ألوان متاحة.' },
     price: 45000, images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=75&fm=jpg'],
     categoryId: 'shoes', sellerId: 'seller2', condition: 'new', location: 'Moundou',
-    postedDate: '2024-12-13', isPinned: true, pinnedUntil: '2025-01-13', isFeatured: false, views: 176,
-    discountPercent: 25, discountUntil: '2026-08-10', stock: 15, maxOrderQty: 5,
+    postedDate: '2024-12-13', isPinned: true, pinnedUntil: '2027-01-13', isFeatured: false, views: 176,
+    discountPercent: 25, discountUntil: '2027-08-10', stock: 15, maxOrderQty: 5,
   },
   {
     id: 'p7', title: { en: '3-Bedroom House', fr: 'Maison 3 Chambres', ar: 'منزل 3 غرف نوم' },
@@ -259,7 +259,7 @@ export const products: Product[] = [
     price: 150000, images: ['https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=75&fm=jpg'],
     categoryId: 'home_garden', sellerId: 'seller4', condition: 'new', location: 'Abéché',
     postedDate: '2024-12-11', isPinned: false, isFeatured: true, views: 145,
-    discountPercent: 10, discountUntil: '2026-08-05', stock: 5, maxOrderQty: 3,
+    discountPercent: 10, discountUntil: '2027-08-05', stock: 5, maxOrderQty: 3,
   },
   {
     id: 'p10', title: { en: 'Leather Sofa Set (3+2)', fr: 'Ensemble Canapé Cuir (3+2)', ar: 'طقم كنب جلد (3+2)' },
@@ -350,7 +350,7 @@ export const products: Product[] = [
     description: { en: 'Reliable 5KVA generator, diesel powered. Automatic voltage regulator. Perfect for homes and shops.', fr: 'Groupe électrogène fiable 5KVA, diesel. Régulateur de tension automatique.', ar: 'مولد كهربائي 5 كيلو فولت أمبير موثوق، يعمل بالديزل.' },
     price: 275000, images: ['https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=75&fm=jpg'],
     categoryId: 'home_garden', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
-    postedDate: '2024-12-14', isPinned: true, pinnedUntil: '2025-02-14', isFeatured: false, views: 110,
+    postedDate: '2024-12-14', isPinned: true, pinnedUntil: '2027-02-14', isFeatured: false, views: 110,
   },
 ];
 
