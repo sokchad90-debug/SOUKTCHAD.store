@@ -493,7 +493,7 @@ export default function HomeScreen() {
 {/* Search bar — stays sticky */}
             <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: 2 }]}>
               <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
-              <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: 20 }, isAr && { flexDirection: 'row-reverse' }]}>
+              <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: 16 }, isAr && { flexDirection: 'row-reverse' }]}>
                 <MaterialIcons name="search" size={22} color={colors.textTertiary} />
                 <TextInput
                   style={[styles.searchInput, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}
@@ -581,7 +581,7 @@ export default function HomeScreen() {
             renderItem={renderProductItem}
             numColumns={numCols}
             columnWrapperStyle={[styles.grid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
-            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? stickyHeight : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: tabBarHeight + layout.smallGap + 24 }}
+            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? stickyHeight : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: tabBarHeight + layout.smallGap }}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
@@ -818,8 +818,12 @@ const styles = StyleSheet.create({
   categoryGridItem: { alignItems: 'center', width: '25%', marginBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4) },
   categoryCircleScroll: { paddingHorizontal: scale(16), gap: scale(10), paddingBottom: scale(2), marginBottom: 0, paddingTop: scale(2) },
   categoryCircleItem: { alignItems: 'center', width: scale(68) },
-  categoryCircle: { width: CATEGORY_CIRCLE, height: CATEGORY_CIRCLE, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  categoryCircle: {
+    width: CATEGORY_CIRCLE, height: CATEGORY_CIRCLE, borderRadius: scale(12),
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2,
+    overflow: 'hidden',
+  },
   categoryCircleLabel: { fontSize: scale(10), marginTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4), textAlign: 'center', fontFamily: 'Cairo-Regular' },
   // Verified Stores section
   verifiedStoresRow: { flexDirection: 'row', paddingHorizontal: scale(16), paddingBottom: scale(2), paddingTop: 0 },
@@ -845,10 +849,10 @@ const styles = StyleSheet.create({
   verifiedStoreName: { fontSize: scale(9), fontWeight: '600', marginTop: scale(4), textAlign: 'center', width: VERIFIED_STORE_ITEM_W, overflow: 'hidden', lineHeight: 12, fontFamily: 'Cairo-SemiBold' },
 
   sectionHeader: { paddingHorizontal: scale(16), paddingTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(3), paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
-  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', width: '100%', paddingHorizontal: scale(16), paddingTop: 0, paddingBottom: scale(8) },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', width: '100%', paddingHorizontal: scale(16), paddingTop: 0, paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
   seeAllRow: { flexDirection: 'row', alignItems: 'center', gap: scale(2) },
   seeAllText: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
-  sectionTitle: { fontSize: scale(20), fontWeight: '800', fontFamily: 'Cairo-Bold' },
+  sectionTitle: { fontSize: scale(15), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
   pinnedScroll: { paddingHorizontal: scale(16), gap: scale(6), paddingBottom: 0 },
   pinnedCard: { width: PINNED_CARD_W, borderRadius: scale(8), overflow: 'hidden', borderWidth: 1 },
   pinnedImage: { width: PINNED_CARD_W, height: PINNED_CARD_W },
@@ -859,7 +863,7 @@ const styles = StyleSheet.create({
   pinnedDiscountBadge: { position: 'absolute', top: scale(4), right: scale(4), backgroundColor: '#EF4444', paddingHorizontal: scale(5), paddingVertical: scale(2), borderRadius: scale(4) },
   pinnedDiscountText: { color: '#FFF', fontSize: scale(9), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   grid: {
-    paddingHorizontal: scale(16), justifyContent: 'space-between',
+    paddingHorizontal: scale(16), justifyContent: 'space-between', alignItems: 'flex-start',
     paddingBottom: scale(2),
   },
   emptyState: { alignItems: 'center', paddingVertical: scale(48), paddingHorizontal: scale(32) },
