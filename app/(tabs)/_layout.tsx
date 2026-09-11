@@ -2,7 +2,7 @@ import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Tabs, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { View, Pressable, PressableProps, StyleSheet, ActivityIndicator, LayoutChangeEvent, useWindowDimensions } from 'react-native';
+import { View, Text, Pressable, PressableProps, StyleSheet, ActivityIndicator, LayoutChangeEvent, useWindowDimensions } from 'react-native';
 import { BottomTabBar, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useApp } from '@/contexts/AppContext';
 import { CANONICAL_MAX_SURFACE_WIDTH, scale } from '@/constants/responsive';
@@ -84,9 +84,32 @@ const styles = StyleSheet.create({
   },
 });
 
+/**
+ * Adaptive tab label: shrinks to fit the tab width at large OS font sizes
+ * (fs200: "الملف الشخصي" stays fully visible instead of "الملف الش…").
+ */
+function AdaptiveTabLabel({ label, color }: { label: string; color: string }) {
+  const { width } = useWindowDimensions();
+  const tabW = Math.min(width, CANONICAL_MAX_SURFACE_WIDTH) / 4 - scale(8);
+  return (
+    <Text
+      numberOfLines={1}
+      adjustsFontSizeToFit
+      minimumFontScale={0.6}
+      allowFontScaling
+      style={{ fontSize: scale(9), fontWeight: '700', color, textAlign: 'center' }}
+    >
+      {label}
+    </Text>
+  );
+}
+
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  // Large OS font: bar needs more room so labels (الملف الشخصي) don't clip
+  const fs = Math.max(1, Math.min(fontScale || 1, 2));
+  const tabBarBase = Math.round((IS_SHORT_SCREEN ? 52 : 56) * Math.max(1, 1 + (fs - 1) * 0.45));
   const tabSurfaceWidth = Math.min(windowWidth, CANONICAL_MAX_SURFACE_WIDTH);
   const { colors, t, language, user, chatBadgeCount, profileBadgeCount, isReady, authLoading, userChecked } = useApp();
   const isSeller = user?.role === 'seller' || user?.role === 'super_admin' || user?.role === 'staff' || user?.isSeller === true;
@@ -130,7 +153,7 @@ export default function TabLayout() {
         tabBarStyle: {
           width: tabSurfaceWidth,
           alignSelf: 'center',
-          height: insets.bottom + (IS_SHORT_SCREEN ? scale(52) : scale(56)),
+          height: insets.bottom + tabBarBase,
           paddingTop: scale(6),
           paddingBottom: insets.bottom + scale(6),
           paddingHorizontal: scale(8),
@@ -146,7 +169,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.tabBarInactive,
         tabBarIconStyle: { width: scale(28), height: scale(28), marginBottom: 0 },
-        tabBarLabelStyle: { fontSize: scale(9), fontWeight: '700' as const, marginTop: -2 },
+        tabBarLabelStyle: { fontSize: scale(9), fontWeight: '700' as const, marginTop: -2, maxWidth: '100%' },
         tabBarBadgeStyle: { backgroundColor: '#EF4444', color: '#FFF', fontSize: scale(9), minWidth: scale(16), height: scale(16), borderRadius: scale(8), top: -2 },
       }}
     >
@@ -181,44 +204,44 @@ export default function TabLayout() {
       {/* BUYER/PUBLIC TABS — order reverses in Arabic (RTL) so "home" sits at the right */}
       {(isAr ? [
         <Tabs.Screen key="profile" name="profile" options={{
-          tabBarLabel: t('profile'),
+          tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('profile')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="person" size={size} color={color} />,
           tabBarBadge: profileBadgeCount > 0 ? profileBadgeCount : undefined,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
         <Tabs.Screen key="chats" name="chats" options={{
-          tabBarLabel: t('messages'),
+          tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('messages')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="chat" size={size} color={color} />,
           tabBarBadge: chatBadgeCount > 0 ? chatBadgeCount : undefined,
         }} />,
         <Tabs.Screen key="categories" name="categories" options={{
-          tabBarLabel: t('categories'),
+          tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('categories')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="grid-view" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
         <Tabs.Screen key="index" name="index" options={{
-          tabBarLabel: t('home'),
+          tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('home')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="storefront" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
       ] : [
         <Tabs.Screen key="index" name="index" options={{
-          tabBarLabel: t('home'),
+          tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('home')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="storefront" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
         <Tabs.Screen key="categories" name="categories" options={{
-          tabBarLabel: t('categories'),
+          tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('categories')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="grid-view" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
         <Tabs.Screen key="chats" name="chats" options={{
-          tabBarLabel: t('messages'),
+          tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('messages')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="chat" size={size} color={color} />,
           tabBarBadge: chatBadgeCount > 0 ? chatBadgeCount : undefined,
         }} />,
         <Tabs.Screen key="profile" name="profile" options={{
-          tabBarLabel: t('profile'),
+          tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('profile')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="person" size={size} color={color} />,
           tabBarBadge: profileBadgeCount > 0 ? profileBadgeCount : undefined,
           href: isSeller ? HIDDEN : VISIBLE,
