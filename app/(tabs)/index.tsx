@@ -460,69 +460,65 @@ export default function HomeScreen() {
             style={[styles.stickySearchWrap, { backgroundColor: '#4C1CEA', paddingTop: 0 }]}
             onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}
           >
-                        {/* Mockup header: bell+cart LEFT — logo CENTER — pin+menu RIGHT */}
-            <View style={[styles.headerRow, { height: 44, position: 'relative', justifyContent: 'center', alignItems: 'center' }]}>
-              <View style={[styles.headerSideIcons, isAr && styles.headerSideRight]}>
-                {isAr ? (
-                  <>
-                    <Pressable hitSlop={10} onPress={() => router.push('/checkout' as any)}>
-                      <MaterialIcons name="shopping-cart" size={26} color="#FFFFFF" />
-                    </Pressable>
-                    <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)}>
-                      <MaterialIcons name="notifications-none" size={26} color="#FFFFFF" />
-                    </Pressable>
-                  </>
-                ) : (
-                  <>
-                    <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)}>
-                      <MaterialIcons name="notifications-none" size={26} color="#FFFFFF" />
-                    </Pressable>
-                    <Pressable hitSlop={10} onPress={() => router.push('/checkout' as any)}>
-                      <MaterialIcons name="shopping-cart" size={26} color="#FFFFFF" />
-                    </Pressable>
-                  </>
-                )}
-              </View>
+                        {/* Mockup header — order swapped per language; groups are equal flex, sides fixed */}
+            <View style={styles.headerRow}>
+              {isAr ? (
+                <View style={styles.headerFlexGroup}>
+                  <Pressable hitSlop={12} onPress={() => { selection(); openFilters(); }} style={styles.headerTouch44}>
+                    <MaterialIcons name="menu" size={28} color="#FFFFFF" />
+                    {activeFilterCount > 0 ? (
+                      <View style={styles.filterBadge}>
+                        <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+                      </View>
+                    ) : null}
+                  </Pressable>
+                  <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }} style={styles.headerTouch44}>
+                    <MaterialIcons name="location-on" size={26} color="#FFFFFF" />
+                  </Pressable>
+                </View>
+              ) : (
+                <View style={styles.headerFlexGroup}>
+                  <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)} style={styles.headerTouch44}>
+                    <MaterialIcons name="notifications-none" size={26} color="#FFFFFF" />
+                  </Pressable>
+                  <Pressable hitSlop={10} onPress={() => router.push('/checkout' as any)} style={styles.headerTouch44}>
+                    <MaterialIcons name="shopping-cart" size={26} color="#FFFFFF" />
+                  </Pressable>
+                </View>
+              )}
               <Image
                 source={require('../../assets/branding/sokchad-logo-white.png')}
                 style={styles.logoHeaderImage}
                 contentFit="contain"
                 transition={150}
               />
-              <View style={[styles.headerSideIcons, !isAr && styles.headerSideRight]}>
-                {isAr ? (
-                  <>
-                    <Pressable hitSlop={12} onPress={() => { selection(); openFilters(); }}>
-                      <MaterialIcons name="menu" size={28} color="#FFFFFF" />
-                      {activeFilterCount > 0 ? (
-                        <View style={styles.filterBadge}>
-                          <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-                        </View>
-                      ) : null}
-                    </Pressable>
-                    <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }}>
-                      <MaterialIcons name="location-on" size={26} color="#FFFFFF" />
-                    </Pressable>
-                  </>
-                ) : (
-                  <>
-                    <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }}>
-                      <MaterialIcons name="location-on" size={26} color="#FFFFFF" />
-                    </Pressable>
-                    <Pressable hitSlop={12} onPress={() => { selection(); openFilters(); }}>
-                      <MaterialIcons name="menu" size={28} color="#FFFFFF" />
-                      {activeFilterCount > 0 ? (
-                        <View style={styles.filterBadge}>
-                          <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-                        </View>
-                      ) : null}
-                    </Pressable>
-                  </>
-                )}
-              </View>
+              {isAr ? (
+                <View style={[styles.headerFlexGroup, { justifyContent: 'flex-end' }]}>
+                  <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)} style={styles.headerTouch44}>
+                    <MaterialIcons name="notifications-none" size={26} color="#FFFFFF" />
+                  </Pressable>
+                  <Pressable hitSlop={10} onPress={() => router.push('/checkout' as any)} style={styles.headerTouch44}>
+                    <MaterialIcons name="shopping-cart" size={26} color="#FFFFFF" />
+                  </Pressable>
+                </View>
+              ) : (
+                <View style={[styles.headerFlexGroup, { justifyContent: 'flex-end' }]}>
+                  <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }} style={styles.headerTouch44}>
+                    <MaterialIcons name="location-on" size={26} color="#FFFFFF" />
+                  </Pressable>
+                  <Pressable hitSlop={12} onPress={() => { selection(); openFilters(); }} style={styles.headerTouch44}>
+                    <MaterialIcons name="menu" size={28} color="#FFFFFF" />
+                    {activeFilterCount > 0 ? (
+                      <View style={styles.filterBadge}>
+                        <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+                      </View>
+                    ) : null}
+                  </Pressable>
+                </View>
+              )}
             </View>
 {/* Search bar — stays sticky */}
-            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: 2 }]}>
+            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: 0 }]}>
               <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
               <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: 16 }, isAr && { flexDirection: 'row-reverse' }]}>
                 <MaterialIcons name="search" size={18} color={colors.textTertiary} />
@@ -796,16 +792,15 @@ const styles = StyleSheet.create({
   stickySearchWrap: {
     position: 'absolute', top: 0, left: 0, right: 0, zIndex: 100,
   },
-  headerRow: {
-    flexDirection: 'row', justifyContent: 'center', alignItems: 'center', position: 'relative',
-    paddingHorizontal: scale(16),
-  },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: scale(16), paddingTop: scale(2), paddingBottom: scale(2),
   },
   logo: { fontSize: scale(18), fontWeight: '800', letterSpacing: -0.3, fontFamily: 'Cairo-Bold' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: scale(6) },
+  headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 },
+  headerFlexGroup: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: scale(10) },
+  headerTouch44: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerSideIcons: { position: 'absolute', left: 12, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: scale(14) },
   actionIconsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(16), paddingTop: scale(10), paddingBottom: scale(8) },
   actionIconsGroup: { flexDirection: 'row', alignItems: 'center', gap: scale(18) },
@@ -845,7 +840,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(20), borderWidth: 1, gap: scale(4),
   },
   activeFilterText: { fontSize: scale(11), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(16), paddingTop: scale(6), paddingBottom: scale(4), gap: 0 },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(16), paddingTop: scale(12), paddingBottom: scale(4), gap: 0 },
   categoryGridItem: { alignItems: 'center', width: '25%', marginBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4) },
   categoryCircleScroll: { paddingHorizontal: scale(16), gap: scale(10), paddingBottom: scale(2), marginBottom: 0, paddingTop: scale(2) },
   categoryCircleItem: { alignItems: 'center', width: scale(68) },
