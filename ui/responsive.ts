@@ -177,7 +177,7 @@ export const getPhoneLayoutMetrics = (params: {
   const categoryItemWidth = contentWidth / 4; // flex: 1 in parent
 
   // Verified stores — 3 visible
-  const storeAvatarSize = clamp(50, Math.round(widthFactor * 56), 64);
+  const storeAvatarSize = 56; // spec: circular 56
   const storeItemWidth = contentWidth / 3;
 
   // Sponsored — horizontal scroll cards
@@ -292,7 +292,7 @@ export const CARD_GAP = scale(10);
 export const PRODUCT_IMAGE_RATIO = REFERENCE_IMAGE_RATIO;
 export const getCardWidth = () => Math.floor((_contentWidth() - scale(10)) / 2);
 
-export const SEARCH_BAR_H_BASE = 46;
+export const SEARCH_BAR_H_BASE = 48;
 export const getSearchBarH = (fontScale: number = 1) =>
   clamp(44, Math.round(46 * _ratio() * Math.min(fontScale, 1.12)), 52);
 export const getSearchBarHeight = getSearchBarH;
@@ -300,10 +300,10 @@ export const SEARCH_BAR_H = getSearchBarH();
 export const getBannerHeight = () => clamp(100, Math.round(_contentWidth() * REFERENCE_BANNER_RATIO), 130);
 export const BANNER_HEIGHT = getBannerHeight();
 export const getCategoryCircleSize = () => clamp(48, Math.round(54 * _ratio()), 62);
-export const CATEGORY_CIRCLE = getCategoryCircleSize();
+export const CATEGORY_CIRCLE = 56;
 
-export const AVATAR_SIZE = clamp(50, Math.round(56 * _ratio()), 64);
-export const AVATAR_RADIUS = Math.round(AVATAR_SIZE / 2);
+export const AVATAR_SIZE = 56;
+export const AVATAR_RADIUS = 28;
 export const AVATAR_BORDER = scale(2);
 export const VERIFIED_STORE_ITEM_W = Math.floor(CONTENT_WIDTH / 3);
 export const VERIFIED_BADGE = clamp(18, scale(20), 22);
