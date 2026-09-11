@@ -843,7 +843,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // ─── Category Navigation (dynamic subcategories) ───
   const loadSubCategories = useCallback(async (parentId: string): Promise<Category[]> => {
     try {
-      const res = await fetch(`https://souktchad.shop/api/categories.php?parent=${encodeURIComponent(parentId)}`);
+      let res = await fetch(`${API_BASE}/categories.php?parent=${encodeURIComponent(parentId)}`);
+      if (!res.ok) res = await fetch(`https://souktchad.shop/api/categories.php?parent=${encodeURIComponent(parentId)}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         const subs: Category[] = data.data.map((c: any) => ({
@@ -1390,7 +1391,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             }
           } catch (e) { console.log('Payment methods load error:', e); }
           try {
-            const shRes = await fetch('https://souktchad.shop/api/categories.php');
+            let shRes = await fetch(`${API_BASE}/categories.php`);
+            if (!shRes.ok) shRes = await fetch('https://souktchad.shop/api/categories.php');
             const shData = await shRes.json();
             if (shData.success && shData.data && Array.isArray(shData.data)) {
               // Sort raw data by sort_order before mapping
