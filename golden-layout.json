@@ -2,7 +2,10 @@
   "referenceViewport": {
     "width_dp": 393,
     "height_dp": 829,
-    "horizontal_padding_dp": 16
+    "horizontal_padding_dp": 16,
+    "device_px": "1080x2280",
+    "density_dpi": 440,
+    "source": "user-approved screenshots img_598410a40fb4/img_b1194ced8103 (see docs/GOLDEN_REFERENCE_DEVICE.md)"
   },
   "surface": {
     "phone_width": "100%",
@@ -14,7 +17,8 @@
     "mirrors_in_rtl": true
   },
   "searchBar": {
-    "height_formula": "clamp(44, widthFactor * 46, 50)",
+    "height_formula": "clamp(42, widthFactor * 44, 48)",
+    "canonical_dp_at_393": 44,
     "horizontal_inset": "horizontalPadding",
     "gap_after_dp": 6
   },
@@ -57,6 +61,10 @@
       "recentlyAdded",
       "bottomNav"
     ],
-    "reference_languages": ["fr", "ar"]
+    "reference_languages": ["fr", "ar"],
+    "list_top_pull_dp": 8,
+    "bottom_nav_content_gap_dp": 14,
+    "verified_stores_overflow": "horizontal_scroll_3_visible",
+    "row2_hidden_at_scroll0_bound_to_reference_state": true
   }
 }

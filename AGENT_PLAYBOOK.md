@@ -114,12 +114,14 @@ sha256sum ... > SHA256SUMS_v8.X.X.txt
 - **INSTALL_FAILED_VERSION_DOWNGRADE**: الجهاز عليه versionCode أعلى → ارفع versionCode (لا تنزل).
 - **FlatList numColumns ديناميكي**: لازم `key={numCols}` وإلا كراش Invariant Violation عند تغيير العرض.
 - **git revert يرجع كل إصلاحات الـcommit** — إذا كان الـcommit فيه أكثر من إصلاح، أعد تطبيق ما لا تريد فقدانه بعد الrevert وتحقق بـgrep.
-- **paddingTop القائمة**: احسبها من stickyHeight المقاس بonLayout — لا أرقام تخمينية ولا عدّ مزدوج لشريط النظام (وإلا تداخل/فراغ).
-- **sticky overlap**: عند إضافة عناصر للهيدر، المحتوى يبدأ قبل نهايته → استخدم الارتفاع المقاس فعلياً.
-- **صور المنتجات**: contain دائماً داخل إطار بنسبة ثابتة محسوبة من عرض البطاقة — h = w / ratio (احذر عكس العملية!).
+- **paddingTop القائمة**: `stickyHeight - LIST_TOP_PULL(8)` من ui/responsive — لا أرقام تخمينية ولا عدّ مزدوج لشريط النظام.
+- **sticky overlap**: عند إضافة عناصر للهيدر، استخدم stickyHeight المقاس بonLayout.
+- **صور المنتجات**: frameRatio = width/height → h = w / ratio (احذر عكس العملية!). fallback يحافظ على أبعاد الإطار.
 - **العدادات**: عند انتهاء المدة أخفِ العداد، لا تترك 0s.
-- **الجمع**: pluralization عربي صحيح (منتج واحد/منتجان/22 منتجًا).
-- **الألوان**: من constants/theme.ts + designTokens — لا ألوان خارج النظام.
+- **SEARCH_BAR_H ثابت الوحدة**: لا تستخدم الثوابت القديمة (SEARCH_BAR_H/CARD_WIDTH/SCREEN_WIDTH) في كود جديد — استخدم usePhoneLayout() (تفاعلي). الجسر constants/responsive = re-export فقط، لا نظام موازٍ.
+- **المستخدم ليس مقياساً مطلقاً**: عند «ارفع/قلل» — حدد العلاقة بين العنصر وجيرانه، عدّل الـtoken المناسب (محلي أو عام)، ولا تحول الطلب لإحداثي هاتف. أعد مقارنة المرجع + الشاشة الصغيرة + الخط الكبير بعد كل تعديل، واحفظ الحالة كاختبار Maestro يمنع الرجوع.
+- **testIDs**: كل عنصر مهم للاختبار يحمل testID ثابتة (home-search-input, home-categories, home-verified-stores, home-products-list, product-card-<id>, product-card-price, product-card-info).
+- **الخط**: allowFontScaling يبقى مفعلاً — لا تقسم على fontScale ولا توقف التكبير؛ استخدم AppText/AppTextInput (maxFontSizeMultiplier=1.35).
 - **emulator ANR dialogs**: اضغط Wait أو تجاهل — لا تخلط بينها وبين كراش التطبيق.
 
 ## 9) تحديثات Codex الخارجية / EXTERNAL UPDATES (Codex/GPT)
@@ -141,6 +143,10 @@ sha256sum ... > SHA256SUMS_v8.X.X.txt
 - GitHub Release v8.0-golden — كل APKات الإصدارات
 - assets/branding/sokchad-logo-white.png — الشعار الأبيض الرسمي (S + ورقة نعناعية)
 - constants/theme.ts + ui/responsive.ts — الألوان والمقاسات الموحدة
+- docs/GOLDEN_REFERENCE_DEVICE.md — الجهاز المرجعي المعتمد بقياساته (393×829dp @440dpi)
+- docs/UI_CONSISTENCY_AUDIT.md — تدقيق اتساق الواجهات + حكم Android6
+- DESIGN.md + golden-layout.json — نظام التصميم (حدّثهما مع كل تغيير بصري معتمد)
+- components/AppText.tsx — الخط الموحد (Cairo + maxFontSizeMultiplier)
 
 ## 12) أسلوب النجاح باختصار / SUCCESS FORMULA
 > افهم بدقة من العلامات → عدّل في المكوّن المشترك → تحقق TS → ابنِ → اختبر 3 دورات FATAL=0 → فحص بعيني → غلّف → ارفع لكل مكان → سلم بأدلة → وثّق ما لم تختبره بصدق.
