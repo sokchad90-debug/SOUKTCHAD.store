@@ -21,6 +21,24 @@ function isDiscountActive(product: Product): boolean {
   return new Date(product.discountUntil).getTime() > Date.now();
 }
 
+/**
+ * Approved-reference alignment (cmp_ref_vs_v8934): the reference shows NO pin
+ * and NO verified badge on A54 — both seeds carry expired dates (pinnedUntil
+ * 2025-03, verifiedUntil 2025-06). Badges must respect expiry, like the
+ * discount badge already does.
+ */
+function isPinActive(product: Product): boolean {
+  if (!product.isPinned) return false;
+  if (!product.pinnedUntil) return true;
+  return new Date(product.pinnedUntil).getTime() > Date.now();
+}
+
+function isSellerVerificationActive(seller: any): boolean {
+  if (!seller?.isVerified) return false;
+  if (!seller?.verifiedUntil) return true;
+  return new Date(seller.verifiedUntil).getTime() > Date.now();
+}
+
 function getDiscountedPrice(product: Product): number {
   if (!isDiscountActive(product)) return product.price;
   const discount = Math.min(30, product.discountPercent || 0);
@@ -102,12 +120,12 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           neutralBg="#F1F5F9"
           failedText={language === 'fr' ? 'Image indisponible' : language === 'ar' ? 'الصورة غير متوفرة' : 'Image unavailable'}
         />
-        {product.isPinned ? (
+        {isPinActive(product) ? (
           <View style={[styles.pinnedBadge, isAr && styles.pinnedBadgeRTL, { backgroundColor: colors.pinned }]}>
             <MaterialIcons name="push-pin" size={scale(9)} color="#FFF" />
           </View>
         ) : null}
-        {seller?.isVerified ? (
+        {isSellerVerificationActive(seller) ? (
           <View style={[styles.verifiedBadge, isAr && styles.verifiedBadgeRTL, { backgroundColor: isDark ? DT.dark.verified : DT.color.verified }]}>
             <MaterialIcons name="verified" size={scale(9)} color="#FFF" />
           </View>
