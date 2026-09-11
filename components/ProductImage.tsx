@@ -19,14 +19,15 @@ interface Props {
   loadingText?: string;
 }
 
-function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.product, neutralBg = DS.colors.imageNeutral, failedText, loadingText }: Props) {
+function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.product, neutralBg = '#FFFFFF', failedText, loadingText }: Props) {
   const [failed, setFailed] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const height = Math.round(frameWidth / frameRatio);
   React.useEffect(() => { setFailed(false); setLoading(true); }, [uri]);
 
+  const innerPad = Math.min(Math.max(Math.round(frameWidth * 0.04), 6), 12);
   return (
-    <View style={[styles.frame, { width: frameWidth, height, backgroundColor: neutralBg }]}
+    <View style={[styles.frame, { width: frameWidth, height, backgroundColor: neutralBg, padding: innerPad }]}
       testID="product-image-frame"
     >
       {uri && !failed ? (

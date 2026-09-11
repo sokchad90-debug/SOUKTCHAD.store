@@ -1472,6 +1472,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, [authLogout]);
 
+  const processProductImage = useCallback(async (uploadedUrl: string): Promise<string | null> => {
+    // Server-side whitening pipeline (off the UI render path). Original kept.
+    try {
+      const token = await apiGetAuthToken();
+      const res = await fetch(`${API_BASE}/api_product_image_process.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ url: uploadedUrl }),
+      });
+      const json = await res.json();
+      if (json.success && json.data?.processed_url) return json.data.processed_url;
+      // Fallback: keep ORIGINAL displayed inside the white frame (documented fallback)
+      return uploadedUrl;
+    } catch (e) { console.log('processProductImage error:', e); return uploadedUrl; }
+  }, []);
+
   const updateUserAvatar = useCallback(async (uri: string) => {
     setUser(prev => { if (!prev) return null; return { ...prev, avatar: uri }; });
     // Always save to PHP API
@@ -1738,6 +1754,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       existing.unshift(newProduct);
       await AsyncStorage.setItem('sokchad_products_local', JSON.stringify(existing.slice(0, 50)));
     } catch (e) { console.log('persist product error:', e); }
+    // Upload + whiten product images in background; replace local uris with processed urls
+    if (user?.id) {
+      (async () => {
+        try {
+          const finalImages: string[] = [];
+          for (const uri of product.images) {
+            if (uri && !uri.startsWith('http')) {
+              const uploadedUrl = await uploadImage(uri);
+              if (uploadedUrl) {
+                const processedUrl = await processProductImage(uploadedUrl);
+                finalImages.push(processedUrl || uploadedUrl);
+                continue;
+              }
+            }
+            finalImages.push(uri);
+          }
+          const updated = { ...product, images: finalImages };
+          const { data: dbProduct2, error: dbErr2 } = await dbCreateProduct(updated, user.id);
+          if (!dbErr2 && dbProduct2?.id) {
+            setProducts(prev => prev.map(p => p.id === newProduct.id ? { ...p, id: dbProduct2.id, images: finalImages } : p));
+          }
+        } catch (e) { console.log('product image upload/process error:', e); }
+      })();
+    }
     // Try DB in background (non-blocking) — if it succeeds, update the ID
     if (user?.id) {
       dbCreateProduct(product, user.id).then(({ data: dbProduct, error }) => {

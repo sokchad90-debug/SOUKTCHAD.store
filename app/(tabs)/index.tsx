@@ -904,7 +904,7 @@ const styles = StyleSheet.create({
   pinnedDiscountBadge: { position: 'absolute', top: scale(4), right: scale(4), backgroundColor: '#EF4444', paddingHorizontal: scale(5), paddingVertical: scale(2), borderRadius: scale(4) },
   pinnedDiscountText: { color: '#FFF', fontSize: scale(9), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   grid: {
-    paddingHorizontal: scale(16), justifyContent: 'space-between', alignItems: 'flex-start',
+    paddingHorizontal: scale(16), justifyContent: 'space-between', alignItems: 'stretch',
     paddingBottom: scale(2),
   },
   emptyState: { alignItems: 'center', paddingVertical: scale(48), paddingHorizontal: scale(32) },

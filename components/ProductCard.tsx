@@ -272,15 +272,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
     marginBottom: scale(10),
+    flex: 1, // stretch to row height — both cards end on the same line
+    alignSelf: 'stretch',
   },
   imageContainer: {
     width: '100%',
     position: 'relative',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  imgFallback: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#F1F5F9' },
+  imgFallback: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#FFFFFF' },
   imgFallbackText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
   image: {
     width: '100%',
@@ -323,6 +325,7 @@ const styles = StyleSheet.create({
     paddingVertical: scale(5),
     paddingHorizontal: scale(8),
     gap: scale(3),
+    flex: 1, // info fills remaining card height → equal bottom edges
   },
   discountRow: {
     flexDirection: 'row',
