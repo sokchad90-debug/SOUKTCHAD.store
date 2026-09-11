@@ -21,23 +21,34 @@ const AVATAR_SIZE = scale(96);
 const COVER_GRADIENT: [string, string, string] = ['#F97316', '#EA580C', '#7C2D12'];
 
 // Product image with fallback placeholder for missing/failed images
-const ProductCardImage = ({ uri, colors }: { uri: string; colors: any }) => {
+// Unified with home: white frame + contain + FIXED height (w × 0.78) so the
+// image never collapses to 0 and always shows the full product clearly.
+const ProductCardImage = ({ uri, colors, frameWidth }: { uri: string; colors: any; frameWidth: number }) => {
   const [failed, setFailed] = React.useState(false);
+  const [retried, setRetried] = React.useState(false);
+  const frameH = Math.round(frameWidth * 0.78);
+  const innerPad = Math.min(Math.max(Math.round(frameWidth * 0.04), 6), 12);
   if (failed || !uri) {
     return (
-      <View style={[styles.productImage, styles.productImagePlaceholder, { backgroundColor: colors.surfaceElevated }]}>
+      <View style={[styles.productImage, styles.productImagePlaceholder, { backgroundColor: '#FFFFFF', height: frameH }]}>
         <MaterialIcons name="storefront" size={scale(40)} color={colors.textTertiary} />
       </View>
     );
   }
   return (
-    <Image
-      source={{ uri }}
-      style={styles.productImage}
-      contentFit="cover"
-      transition={200}
-      onError={() => setFailed(true)}
-    />
+    <View style={[styles.productImageFrame, { backgroundColor: '#FFFFFF', height: frameH, padding: innerPad }]}>
+      <Image
+        source={{ uri }}
+        style={styles.productImage}
+        contentFit="contain"
+        contentPosition="center"
+        transition={150}
+        onError={() => {
+          if (!retried) setRetried(true);
+          else setFailed(true);
+        }}
+      />
+    </View>
   );
 };
 
@@ -288,7 +299,7 @@ export default function SellerStoreScreen() {
           shadows.card,
         ]}
       >
-        <ProductCardImage uri={product.images[0]} colors={colors} />
+        <ProductCardImage uri={product.images[0]} colors={colors} frameWidth={CARD_WIDTH} />
         <View style={styles.productInfo}>
           <Text style={[styles.productPrice, { color: colors.primary }]}>{formatPrice(product.price)}</Text>
           <Text style={[styles.productTitle, { color: colors.textPrimary }]} numberOfLines={2}>{title}</Text>
@@ -741,15 +752,17 @@ const styles = StyleSheet.create({
   },
 
   // Products grid
-  row: { justifyContent: 'space-between', paddingHorizontal: scale(16), marginBottom: scale(12) },
+  row: { justifyContent: 'space-between', paddingHorizontal: scale(16), marginBottom: scale(12), alignItems: 'stretch' },
   productCard: {
     borderRadius: borderRadius.md, borderWidth: 1, overflow: 'hidden',
+    flex: 1, alignSelf: 'stretch', // equal-height cards per row
   },
-  productImage: { width: '100%' },
+  productImage: { width: '100%', height: '100%' },
+  productImageFrame: { width: '100%', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   productImagePlaceholder: {
     alignItems: 'center', justifyContent: 'center',
   },
-  productInfo: { padding: scale(10), gap: scale(2) },
+  productInfo: { padding: scale(10), gap: scale(2), flex: 1 },
   productPrice: { fontSize: scale(14), fontWeight: '800' },
   productTitle: { fontSize: scale(12), fontWeight: '500' },
 

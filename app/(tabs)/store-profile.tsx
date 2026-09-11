@@ -135,7 +135,9 @@ export default function StoreProfileScreen() {
       onPress={() => router.push(`/product/${item.id}` as any)}
       style={({ pressed }) => [styles.productCard, { width: CARD_W, backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.9 : 1 }, shadows.card]}
     >
-      <Image source={{ uri: item?.images?.[0] || '' }} style={[styles.productImage, { height: CARD_W }]} contentFit="cover" transition={150} />
+      <View style={[styles.productImageFrame, { height: Math.round(CARD_W * 0.78), padding: Math.min(Math.max(Math.round(CARD_W * 0.04), 6), 12) }]}>
+        <Image source={{ uri: item?.images?.[0] || '' }} style={styles.productImage} contentFit="contain" contentPosition="center" transition={150} />
+      </View>
       <Text style={[styles.productTitle, { color: colors.textPrimary }]} numberOfLines={2}>
         {item?.title?.[language] || item?.title?.en || ''}
       </Text>
@@ -290,7 +292,8 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: scale(12) },
   seeAllText: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-Medium' },
   productCard: { borderRadius: scale(14), borderWidth: 1, overflow: 'hidden' },
-  productImage: { width: '100%' },
+  productImage: { width: '100%', height: '100%' },
+  productImageFrame: { width: '100%', backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   productTitle: { fontSize: scale(13), fontWeight: '600', padding: scale(8), paddingBottom: scale(2), fontFamily: 'Cairo-Medium' },
   productPrice: { fontSize: scale(15), fontWeight: '800', paddingHorizontal: scale(8), paddingBottom: scale(8), fontFamily: 'Cairo-Bold' },
 });
