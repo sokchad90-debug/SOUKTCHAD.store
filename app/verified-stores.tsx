@@ -8,11 +8,12 @@ import { useApp } from '@/contexts/AppContext';
 import { sellers } from '@/services/mockData';
 import { borderRadius, shadows } from '@/constants/theme';
 import { impactMedium } from '@/services/haptics';
-import { scale, SCREEN_WIDTH } from '@/constants/responsive';
+import { scale, usePhoneLayout } from '@/constants/responsive';
 
-const CARD_WIDTH = (SCREEN_WIDTH - scale(48)) / 2;
 
 export default function VerifiedStoresScreen() {
+  const layoutP = usePhoneLayout();
+  const CARD_WIDTH = Math.floor((layoutP.contentWidth - scale(24)) / 2);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, language, isDark } = useApp();
@@ -28,6 +29,7 @@ export default function VerifiedStoresScreen() {
       onPress={() => { impactMedium(); router.push(`/seller/${seller.id}` as any); }}
       style={({ pressed }) => [
         styles.storeCard,
+        { width: CARD_WIDTH },
         { backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.88 : 1 },
         shadows.card,
       ]}
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: scale(18), fontWeight: '800' },
   grid: { paddingHorizontal: scale(16), justifyContent: 'space-between' },
   storeCard: {
-    width: CARD_WIDTH, borderRadius: borderRadius.lg, borderWidth: 1,
+    borderRadius: borderRadius.lg, borderWidth: 1,
     padding: scale(16), marginBottom: scale(12), alignItems: 'center',
   },
   storeAvatarWrap: { position: 'relative', marginBottom: scale(12) },

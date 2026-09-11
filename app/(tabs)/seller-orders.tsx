@@ -11,7 +11,7 @@ import { useApp } from '@/contexts/AppContext';
 import { formatPrice } from '@/constants/config';
 import { shadows } from '@/constants/theme';
 import { selection } from '@/services/haptics';
-import { scale, SCREEN_WIDTH } from '@/constants/responsive';
+import { scale } from '@/constants/responsive';
 
 type OrderTab = 'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled';
 

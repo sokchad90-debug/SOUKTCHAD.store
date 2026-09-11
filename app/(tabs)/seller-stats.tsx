@@ -11,12 +11,14 @@ import { useApp } from '@/contexts/AppContext';
 import { formatPrice } from '@/constants/config';
 import { borderRadius, shadows } from '@/constants/theme';
 import { selection, impactLight, notifySuccess } from '@/services/haptics';
-import { scale, SCREEN_WIDTH } from '@/constants/responsive';
+import { scale, usePhoneLayout } from '@/constants/responsive';
 
 const CARD_GAP = scale(10);
-const CARD_W = (SCREEN_WIDTH - scale(32) - CARD_GAP) / 2;
 
 export default function SellerStatsScreen() {
+  const layoutS = usePhoneLayout();
+  const CARD_GAP_S = scale(10);
+  const CARD_W = Math.floor((layoutS.contentWidth - CARD_GAP) / 2);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const {
@@ -438,7 +440,7 @@ const styles = StyleSheet.create({
 });
 
 const sStyles = StyleSheet.create({
-  statCard: { width: CARD_W, borderRadius: borderRadius.lg, borderWidth: 0.5, padding: scale(14), alignItems: 'center', gap: scale(6) },
+  statCard: { borderRadius: borderRadius.lg, borderWidth: 0.5, padding: scale(14), alignItems: 'center', gap: scale(6) },
   statIconWrap: { width: scale(38), height: scale(38), borderRadius: scale(19), alignItems: 'center', justifyContent: 'center' },
   statValue: { fontSize: scale(22), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   statLabel: { fontSize: scale(11), fontWeight: '600', fontFamily: 'Cairo-SemiBold', textAlign: 'center' },

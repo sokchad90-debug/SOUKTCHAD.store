@@ -11,7 +11,7 @@ import { useApp } from '@/contexts/AppContext';
 import { formatPrice } from '@/constants/config';
 import { shadows } from '@/constants/theme';
 import { selection } from '@/services/haptics';
-import { scale, SCREEN_WIDTH } from '@/constants/responsive';
+import { scale, usePhoneLayout } from '@/constants/responsive';
 import { fetchSellerStats, StatsFromAPI } from '@/services/ordersService';
 
 // Color palette — fixed, consistent, Enterprise SaaS
@@ -38,6 +38,8 @@ const C = {
 };
 
 export default function SellerAnalyticsScreen() {
+  const layoutK = usePhoneLayout();
+  const KPI_W = Math.floor((layoutK.contentWidth - scale(10)) / 2);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const {
@@ -477,7 +479,7 @@ const aStyles = StyleSheet.create({
 
   // KPI grid
   kpiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: scale(10), marginTop: scale(16) },
-  kpiCard: { width: (SCREEN_WIDTH - scale(32) - scale(10)) / 2, borderRadius: scale(16), borderWidth: 0.5, padding: scale(14), gap: scale(6) },
+  kpiCard: { borderRadius: scale(16), borderWidth: 0.5, padding: scale(14), gap: scale(6) },
   kpiIconWrap: { width: scale(36), height: scale(36), borderRadius: scale(18), alignItems: 'center', justifyContent: 'center' },
   kpiValue: { fontSize: scale(22), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   kpiLabel: { fontSize: scale(11), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },

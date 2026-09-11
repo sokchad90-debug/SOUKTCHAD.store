@@ -18,6 +18,7 @@ import {
 import { categories, sellers, Product } from '@/services/mockData';
 import { formatPrice } from '@/constants/config';
 import ProductCard from '@/components/ProductCard';
+import { AppText, AppTextInput } from '@/components/AppText';
 import { shadows } from '@/constants/theme';
 import { selection, notifySuccess } from '@/services/haptics';
 
@@ -127,9 +128,9 @@ function HomeListHeader({
       {verifiedSellers.length > 0 && showHeaderContent && !IS_VERY_SHORT_SCREEN ? (
         <View style={{ marginBottom: 4 }}>
           <View style={[styles.sectionHeaderRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
+            <AppText weight={700} style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
               {lb('Verified Stores', 'Boutiques vérifiées', 'متاجر موثّقة')}
-            </Text>
+            </AppText>
             <Pressable onPress={() => router.push('/verified-stores' as any)} style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
               <Text style={[styles.seeAllText, { color: colors.verified }]}>{lb('See All', 'Voir tout', 'عرض الكل')}</Text>
               <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.verified} />
@@ -187,7 +188,7 @@ function HomeListHeader({
       {pinnedProducts.length > 0 && showHeaderContent ? (
         <View>
           <Pressable onPress={() => router.push('/promoted')} style={[styles.sectionHeaderRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>{t('pinnedProducts')}</Text>
+            <AppText weight={700} style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>{t('pinnedProducts')}</AppText>
             <View style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
               <Text style={[styles.seeAllText, { color: colors.primary }]}>{lb('See All', 'Voir tout', 'عرض الكل')}</Text>
               <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.primary} />
@@ -253,11 +254,11 @@ function HomeListHeader({
 
       {/* Products Grid Title */}
       <View style={[styles.sectionHeaderRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
+        <AppText weight={700} style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
           {searchQuery || activeFilterCount > 0
             ? `${filteredProductsLength} ${lb('results', 'résultats', 'نتائج')}`
             : t('recentlyAdded')}
-        </Text>
+        </AppText>
         {!(searchQuery || activeFilterCount > 0) ? (
           <Pressable onPress={() => router.push('/all-products' as any)} style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
             <Text style={[styles.seeAllText, { color: colors.verified }]}>{lb('See All', 'Tout voir', 'عرض الكل')}</Text>
@@ -285,7 +286,11 @@ export default function HomeScreen() {
     }
   }, [isReady, authLoading, userChecked, isSeller, router]);
 
-  // Use the measured bar height so list content never hides behind navigation.
+  // Navigator RESERVES the tab bar height (MeasuredTabBar is in normal layout flow,
+  // not absolute) — the scrollable area already ends above the bar (verified by
+  // uiautomator bounds: list bottom 377dp < bar top 395dp on 320x427dp).
+  // So the list needs ONLY the approved design gap below its last card:
+  // paddingBottom = BOTTOM_NAV_CONTENT_GAP (+ smallGap). Do NOT re-add tabBarHeight.
   const rawTabHeight = useBottomTabBarHeight();
   const tabBarLayout = useTabBarLayout();
   const tabBarHeight = tabBarLayout.height > 0
@@ -529,14 +534,15 @@ export default function HomeScreen() {
               <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
               <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: 16 }, isAr && { flexDirection: 'row-reverse' }]}>
                 <MaterialIcons name="search" size={18} color={colors.textTertiary} />
-                <TextInput
+                <AppTextInput
                   testID="home-search-input"
+                  weight={400}
+                  maxScale={1.2}
                   style={[styles.searchInput, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}
                   placeholder={isAr ? 'ما المنتج الذي تبحث عنه؟' : 'Quel produit recherchez-vous ?'}
                   placeholderTextColor={colors.textTertiary}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
-                  maxFontSizeMultiplier={1.2}
                 />
                 {searchQuery.length > 0 ? (
                   <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
@@ -617,7 +623,7 @@ export default function HomeScreen() {
             renderItem={renderProductItem}
             numColumns={numCols}
             columnWrapperStyle={[styles.grid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
-            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(stickyHeight - LIST_TOP_PULL, 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: tabBarHeight + layout.smallGap + BOTTOM_NAV_CONTENT_GAP }}
+            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(stickyHeight - LIST_TOP_PULL, 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: layout.smallGap + BOTTOM_NAV_CONTENT_GAP }}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}

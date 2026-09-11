@@ -5,13 +5,15 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
 import { shadows } from '@/constants/theme';
-import { scale, SCREEN_WIDTH } from '@/constants/responsive';
+import { scale, usePhoneLayout } from '@/constants/responsive';
 
-const CARD_SIZE = (SCREEN_WIDTH - scale(48)) / 3;
 
 export default function CategoriesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const layout = usePhoneLayout();
+  // Reactive 3-column card size from the canonical engine (was module-eval SCREEN_WIDTH)
+  const CARD_SIZE = Math.floor((layout.contentWidth - scale(24)) / 3);
   const { colors, language, products, setSelectedCategory, categories, navigateToCategory, subCategories, currentCategoryPath, goBackCategory, resetCategoryNavigation } = useApp();
 
   const isFr = language === 'fr';
@@ -45,10 +47,10 @@ export default function CategoriesScreen() {
       <Pressable
         onPress={() => handleCategoryPress(cat)}
         style={({ pressed }) => [
-          styles.categoryCard, { backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.9 : 1 }, shadows.card,
+          styles.categoryCard, { width: CARD_SIZE, backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.9 : 1 }, shadows.card,
         ]}
       >
-        <View style={[styles.categoryIconWrap, { backgroundColor: color + '15' }]}>
+        <View style={[styles.categoryIconWrap, { width: CARD_SIZE - scale(24), height: CARD_SIZE - scale(24), backgroundColor: color + '15' }]}>
           <MaterialIcons name={icon as any} size={scale(28)} color={color} />
         </View>
         <Text style={[styles.categoryName, { color: colors.textPrimary }]} numberOfLines={2}>{name}</Text>
@@ -84,8 +86,8 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: scale(26), fontWeight: '800', letterSpacing: -0.5 },
   headerSubtitle: { fontSize: scale(13), fontWeight: '500', marginTop: scale(2) },
   row: { gap: scale(12), marginBottom: scale(12) },
-  categoryCard: { width: CARD_SIZE, borderRadius: scale(16), borderWidth: 1, padding: scale(12), alignItems: 'center', gap: scale(8) },
-  categoryIconWrap: { width: CARD_SIZE - scale(24), height: CARD_SIZE - scale(24), borderRadius: scale(14), alignItems: 'center', justifyContent: 'center' },
+  categoryCard: { borderRadius: scale(16), borderWidth: 1, padding: scale(12), alignItems: 'center', gap: scale(8) },
+  categoryIconWrap: { borderRadius: scale(14), alignItems: 'center', justifyContent: 'center' },
   categoryName: { fontSize: scale(12), fontWeight: '600', textAlign: 'center', lineHeight: 15 },
   categoryCount: { paddingHorizontal: scale(8), paddingVertical: scale(2), borderRadius: scale(10) },
   categoryCountText: { fontSize: scale(10), fontWeight: '700' },

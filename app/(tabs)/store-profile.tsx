@@ -13,14 +13,16 @@ import { formatPrice } from '@/constants/config';
 import { shadows } from '@/constants/theme';
 import * as ImagePicker from "expo-image-picker";
 import { selection, impactLight, notifySuccess } from '@/services/haptics';
-import { scale, SCREEN_WIDTH } from '@/constants/responsive';
+import { scale, usePhoneLayout } from '@/constants/responsive';
 import { fetchSellerStats as apiFetchSellerStats, StatsFromAPI } from '@/services/ordersService';
 
 const CARD_GAP = scale(10);
-const CARD_W = (SCREEN_WIDTH - scale(32) - CARD_GAP) / 2;
 const BANNER_H = scale(140);
 
 export default function StoreProfileScreen() {
+  const layoutSP = usePhoneLayout();
+  const CARD_GAP_SP = scale(10);
+  const CARD_W = Math.floor((layoutSP.contentWidth - CARD_GAP_SP) / 2);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const {
@@ -131,9 +133,9 @@ export default function StoreProfileScreen() {
   const renderProductItem = useCallback(({ item, index }: any) => (
     <Pressable
       onPress={() => router.push(`/product/${item.id}` as any)}
-      style={({ pressed }) => [styles.productCard, { backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.9 : 1 }, shadows.card]}
+      style={({ pressed }) => [styles.productCard, { width: CARD_W, backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.9 : 1 }, shadows.card]}
     >
-      <Image source={{ uri: item?.images?.[0] || '' }} style={styles.productImage} contentFit="cover" transition={150} />
+      <Image source={{ uri: item?.images?.[0] || '' }} style={[styles.productImage, { height: CARD_W }]} contentFit="cover" transition={150} />
       <Text style={[styles.productTitle, { color: colors.textPrimary }]} numberOfLines={2}>
         {item?.title?.[language] || item?.title?.en || ''}
       </Text>
@@ -152,7 +154,7 @@ export default function StoreProfileScreen() {
         
         {/* ===== STORE HEADER ===== */}
         <View style={styles.headerWrap}>
-          <Pressable onPress={handleBannerUpload} style={styles.bannerContainer}>
+          <Pressable onPress={handleBannerUpload} style={[styles.bannerContainer, { width: '100%' }]}>
             {user?.coverImage ? (
               <Image source={{ uri: user?.coverImage }} style={styles.bannerImage} contentFit="cover" transition={200} />
             ) : (
@@ -265,7 +267,7 @@ const styles = StyleSheet.create({
   headerBtn: {},
   gearWrap: { width: scale(32), height: scale(32), borderRadius: scale(16), alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.35)', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 3, elevation: 3 },
   headerWrap: { backgroundColor: HEADER_BG, paddingBottom: scale(20), borderBottomLeftRadius: scale(24), borderBottomRightRadius: scale(24) },
-  bannerContainer: { width: SCREEN_WIDTH, height: BANNER_H, position: 'relative' },
+  bannerContainer: { height: BANNER_H, position: 'relative' },
   bannerImage: { width: '100%', height: '100%' },
   bannerPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   bannerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
@@ -287,8 +289,8 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: scale(18), fontWeight: '700', marginBottom: scale(12), fontFamily: 'Cairo-Bold' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: scale(12) },
   seeAllText: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-Medium' },
-  productCard: { width: CARD_W, borderRadius: scale(14), borderWidth: 1, overflow: 'hidden' },
-  productImage: { width: '100%', height: CARD_W },
+  productCard: { borderRadius: scale(14), borderWidth: 1, overflow: 'hidden' },
+  productImage: { width: '100%' },
   productTitle: { fontSize: scale(13), fontWeight: '600', padding: scale(8), paddingBottom: scale(2), fontFamily: 'Cairo-Medium' },
   productPrice: { fontSize: scale(15), fontWeight: '800', paddingHorizontal: scale(8), paddingBottom: scale(8), fontFamily: 'Cairo-Bold' },
 });

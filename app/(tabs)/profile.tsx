@@ -18,9 +18,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Constants from 'expo-constants';
 import { changePassword, updateProfile } from '@/services/supabaseStats';
 import { getBlockedSellers, unblockSeller } from '@/services/blockedSellers';
-import { scale, SCREEN_WIDTH } from '@/constants/responsive';
+import { scale, usePhoneLayout } from '@/constants/responsive';
 
-const CARD_WIDTH = (SCREEN_WIDTH - scale(48)) / 2;
 
 // Extracted sub-components
 
@@ -190,6 +189,9 @@ function SellerVerificationCard({ user, canSellerRequestVerification, colors, lb
 }
 
 export default function ProfileScreen() {
+  const layoutP = usePhoneLayout();
+  // Reactive 2-col card width from canonical engine (was module-eval SCREEN_WIDTH)
+  const CARD_WIDTH = Math.floor((layoutP.contentWidth - scale(24)) / 2);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const {
@@ -1029,8 +1031,8 @@ export default function ProfileScreen() {
                       const title = product?.title?.[language] || product?.title?.en || '';
                       return (
                         <Pressable key={product.id} onPress={() => router.push(`/product/${product.id}`)}
-                          style={({ pressed }) => [pStyles.myProductCard, { backgroundColor: colors.surface, borderColor: product?.isPinned ? colors.pinned : colors.borderLight, opacity: pressed ? 0.92 : 1 }, shadows.card]}>
-                          <Image source={{ uri: product?.images?.[0] || '' }} style={pStyles.myProductImage} contentFit="cover" transition={200} />
+                          style={({ pressed }) => [pStyles.myProductCard, { width: CARD_WIDTH, backgroundColor: colors.surface, borderColor: product?.isPinned ? colors.pinned : colors.borderLight, opacity: pressed ? 0.92 : 1 }, shadows.card]}>
+                          <Image source={{ uri: product?.images?.[0] || '' }} style={[pStyles.myProductImage, { height: CARD_WIDTH }]} contentFit="cover" transition={200} />
                           {product?.isPinned ? (<View style={[pStyles.pinnedTag, { backgroundColor: colors.pinned }]}><MaterialIcons name="push-pin" size={scale(10)} color="#FFF" /></View>) : null}
                           <View style={pStyles.myProductInfo}>
                             <Text style={[pStyles.myProductPrice, { color: colors.primary }]}>{formatPrice(product?.price || 0)}</Text>
@@ -1341,8 +1343,8 @@ export default function ProfileScreen() {
                         const title = product?.title?.[language] || product?.title?.en || '';
                         return (
                           <Pressable key={product.id} onPress={() => router.push(`/product/${product.id}`)}
-                            style={({ pressed }) => [pStyles.myProductCard, { backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.92 : 1 }, shadows.card]}>
-                            <Image source={{ uri: product?.images?.[0] || '' }} style={pStyles.myProductImage} contentFit="cover" transition={200} />
+                            style={({ pressed }) => [pStyles.myProductCard, { width: CARD_WIDTH, backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.92 : 1 }, shadows.card]}>
+                            <Image source={{ uri: product?.images?.[0] || '' }} style={[pStyles.myProductImage, { height: CARD_WIDTH }]} contentFit="cover" transition={200} />
                             <View style={pStyles.myProductInfo}>
                               <Text style={[pStyles.myProductPrice, { color: colors.primary }]}>{formatPrice(product?.price || 0)}</Text>
                               <Text style={[pStyles.myProductTitle, { color: colors.textPrimary }]} numberOfLines={1}>{title}</Text>
@@ -1685,8 +1687,8 @@ const pStyles = StyleSheet.create({
   sellerTabChip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: scale(16), paddingVertical: scale(10), borderRadius: borderRadius.full, borderWidth: 1, gap: scale(6) },
   sellerTabText: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
   productsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  myProductCard: { width: CARD_WIDTH, borderRadius: borderRadius.lg, borderWidth: 0.5, overflow: 'hidden', marginBottom: scale(12) },
-  myProductImage: { width: '100%', height: CARD_WIDTH },
+  myProductCard: { borderRadius: borderRadius.lg, borderWidth: 0.5, overflow: 'hidden', marginBottom: scale(12) },
+  myProductImage: { width: '100%' },
   pinnedTag: { position: 'absolute', top: scale(6), left: scale(6), width: scale(22), height: scale(22), borderRadius: scale(11), alignItems: 'center', justifyContent: 'center' },
   myProductInfo: { padding: scale(8), gap: scale(2) },
   myProductPrice: { fontSize: scale(15), fontWeight: '700', fontFamily: 'Cairo-Bold' },

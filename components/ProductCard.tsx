@@ -11,6 +11,7 @@ import { impactLight } from '@/services/haptics';
 import { clamp, PRODUCT_IMAGE_RATIO, scale, usePhoneLayout } from '@/constants/responsive';
 import { DT } from '@/constants/designTokens';
 import ProductImage from '@/components/ProductImage';
+import { AppText } from '@/components/AppText';
 
 const SHIELD_ICON = require('@/assets/images/icons/shield.png');
 
@@ -139,9 +140,9 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
               </View>
             </>
           ) : (
-            <Text testID="product-card-price" style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]}>
+            <AppText testID="product-card-price" weight={800} style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]}>
               {isAr ? '\u200E' : ''}{formatPrice(product.price)}{isAr ? '\u200E' : ''}
-            </Text>
+            </AppText>
           )}
           {(product?.tagLabel || ((product?.rating ?? 0) >= 4.5 && (product?.soldCount ?? 0) >= 100)) ? (
             <View style={[styles.tagBadge, isAr && styles.rowRTL]}>
@@ -156,9 +157,9 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           </Text>
         ) : null}
         {/* Row 2: title — up to 2 lines */}
-        <Text style={[styles.title, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={2}>
+        <AppText weight={600} style={[styles.title, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={2}>
           {title}
-        </Text>
+        </AppText>
         {/* Row 3: rating + sold count in one row */}
         {(product?.soldCount != null || product?.rating != null) ? (
           <View style={[styles.metaRow, isAr && { flexDirection: 'row-reverse' }]}>

@@ -8,11 +8,12 @@ import { useApp } from '@/contexts/AppContext';
 import { formatPrice } from '@/constants/config';
 import { borderRadius, shadows } from '@/constants/theme';
 import { FlatList } from 'react-native';
-import { scale, SCREEN_WIDTH } from '@/constants/responsive';
+import { scale, usePhoneLayout } from '@/constants/responsive';
 
-const CARD_WIDTH = (SCREEN_WIDTH - scale(48)) / 2;
 
 export default function PromotedScreen() {
+  const layoutP = usePhoneLayout();
+  const CARD_WIDTH = Math.floor((layoutP.contentWidth - scale(24)) / 2);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, language, products } = useApp();
@@ -30,11 +31,11 @@ export default function PromotedScreen() {
         onPress={() => router.push(`/product/${product.id}`)}
         style={({ pressed }) => [
           styles.card,
-          { backgroundColor: colors.surface, borderColor: colors.pinnedLight, opacity: pressed ? 0.92 : 1 },
+          { width: CARD_WIDTH, backgroundColor: colors.surface, borderColor: colors.pinnedLight, opacity: pressed ? 0.92 : 1 },
           shadows.card,
         ]}
       >
-        <Image source={{ uri: product.images[0] }} style={styles.cardImage} contentFit="cover" transition={200} />
+        <Image source={{ uri: product.images[0] }} style={[styles.cardImage, { height: CARD_WIDTH }]} contentFit="cover" transition={200} />
         <View style={[styles.pinnedBadge, { backgroundColor: '#8B5CF6' }]}>
           <MaterialIcons name="push-pin" size={scale(10)} color="#FFF" />
           <Text style={styles.pinnedBadgeText}>SPONSORISÉ</Text>
@@ -96,9 +97,9 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: scale(18), fontWeight: '700' },
   row: { justifyContent: 'space-between', marginBottom: scale(12) },
   card: {
-    width: CARD_WIDTH, borderRadius: borderRadius.md, borderWidth: 1, overflow: 'hidden',
+    borderRadius: borderRadius.md, borderWidth: 1, overflow: 'hidden',
   },
-  cardImage: { width: '100%', height: CARD_WIDTH },
+  cardImage: { width: '100%' },
   pinnedBadge: {
     position: 'absolute', top: scale(8), left: scale(8), flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: scale(8), paddingVertical: scale(4), borderRadius: scale(6), gap: scale(4),

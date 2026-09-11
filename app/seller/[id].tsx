@@ -11,7 +11,7 @@ import { formatPrice } from '@/constants/config';
 import { borderRadius, shadows } from '@/constants/theme';
 import { impactMedium, notifySuccess } from '@/services/haptics';
 import { blockSeller } from '@/services/blockedSellers';
-import { scale, SCREEN_WIDTH, CARD_WIDTH } from '@/constants/responsive';
+import { scale, usePhoneLayout } from '@/constants/responsive';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const COVER_HEIGHT = scale(160);
@@ -105,6 +105,8 @@ const ReviewItem = ({
 };
 
 export default function SellerStoreScreen() {
+  const layoutSL = usePhoneLayout();
+  const CARD_WIDTH = Math.floor((layoutSL.contentWidth - scale(24)) / 2);
   const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -282,7 +284,7 @@ export default function SellerStoreScreen() {
         onPress={() => router.push(`/product/${product.id}` as any)}
         style={({ pressed }) => [
           styles.productCard,
-          { backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.92 : 1 },
+          { width: CARD_WIDTH, backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.92 : 1 },
           shadows.card,
         ]}
       >
@@ -741,9 +743,9 @@ const styles = StyleSheet.create({
   // Products grid
   row: { justifyContent: 'space-between', paddingHorizontal: scale(16), marginBottom: scale(12) },
   productCard: {
-    width: CARD_WIDTH, borderRadius: borderRadius.md, borderWidth: 1, overflow: 'hidden',
+    borderRadius: borderRadius.md, borderWidth: 1, overflow: 'hidden',
   },
-  productImage: { width: '100%', height: CARD_WIDTH },
+  productImage: { width: '100%' },
   productImagePlaceholder: {
     alignItems: 'center', justifyContent: 'center',
   },

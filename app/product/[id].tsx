@@ -13,7 +13,7 @@ import DisclaimerBanner from '@/components/DisclaimerBanner';
 import LoginModal from '@/components/LoginModal';
 import { impactLight, impactMedium, notifySuccess } from '@/services/haptics';
 import * as ImagePicker from 'expo-image-picker';
-import { scale, SCREEN_WIDTH } from '@/constants/responsive';
+import { scale, usePhoneLayout } from '@/constants/responsive';
 
 // Placeholder image shown when a similar product's image fails to load,
 // so we never render a blank white card. Uses a soft brand-tinted box.
@@ -77,6 +77,8 @@ function SimilarProductCard({ product, language, colors, onPress }: SimilarCardP
 }
 
 export default function ProductDetailScreen() {
+  const layoutD = usePhoneLayout();
+  const heroW = layoutD.windowWidth; // hero full-bleed to window (surface capped by parent on wide screens)
   const { id, orderId, showReview } = useLocalSearchParams<{ id: string; orderId?: string; showReview?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -220,7 +222,7 @@ export default function ProductDetailScreen() {
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 50 + 12 + 16 + 16 }} showsVerticalScrollIndicator={false}>
         {/* Hero Image */}
-        <View style={styles.imageContainer}>
+        <View style={[styles.imageContainer, { width: heroW, height: heroW }]}>
           <Image source={{ uri: product.images[0] }} style={styles.heroImage} contentFit="cover" transition={200} />
           <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: scale(8) }, isAr && { left: 'auto', right: scale(16) }]}>
             <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color="#FFF" />
@@ -558,7 +560,7 @@ export default function ProductDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  imageContainer: { width: SCREEN_WIDTH, height: SCREEN_WIDTH, position: 'relative' },
+  imageContainer: { position: 'relative' },
   heroImage: { width: '100%', height: '100%' },
   backBtn: { position: 'absolute', left: scale(16), width: scale(40), height: scale(40), borderRadius: scale(20), backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
   topRightBtns: { position: 'absolute', right: scale(16), flexDirection: 'row', gap: scale(8) },
