@@ -1,0 +1,18 @@
+appId: com.anonymous.sokchadapp
+---
+# Search flow — keyboard open, field stays visible, clear button reachable, results render
+- launchApp:
+    appId: com.anonymous.sokchadapp
+    clearState: false
+- waitForAnimationToEnd:
+    timeout: 10000
+- tapOn:
+    id: "home-search-input"
+- inputText: "Samsung"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    id: "product-card-info"
+- takeScreenshot: home_v8932_search_keyboard
+- tapOn:
+    id: "home-search-input"

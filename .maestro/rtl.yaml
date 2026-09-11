@@ -1,13 +1,37 @@
 appId: com.anonymous.sokchadapp
 ---
+# RTL/AR regression — switches language IN-APP via settings (real interaction), then asserts
 - launchApp:
     appId: com.anonymous.sokchadapp
-    clearState: true
-- waitForAnimationToEnd
-- takeScreenshot: rtl_loaded
+    clearState: false
+- waitForAnimationToEnd:
+    timeout: 10000
 
-- runFlow:
-    when:
-      visible: "بحث..."
-    commands:
-      - takeScreenshot: rtl_arabic_visible
+# Go to Mon Compte tab (rightmost in FR)
+- tapOn:
+    text: "Mon Compte"
+- tapOn: "Langue"
+- tapOn: "العربية"
+- waitForAnimationToEnd:
+    timeout: 8000
+
+# Back to home tab (RTL: الرئيسية is rightmost)
+- tapOn: "الرئيسية"
+- waitForAnimationToEnd:
+    timeout: 8000
+
+# Mandatory RTL assertions by testID + Arabic section title
+- assertVisible:
+    id: "home-search-input"
+- assertVisible:
+    id: "home-categories"
+- assertVisible: "متاجر موثّقة"
+- assertVisible:
+    id: "home-products-list"
+
+- takeScreenshot: home_v8932_top_ar
+
+# restore language for next flows
+- tapOn: "الملف الشخصي"
+- tapOn: "اللغة"
+- tapOn: "Français"

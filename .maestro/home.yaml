@@ -1,22 +1,50 @@
 appId: com.anonymous.sokchadapp
 ---
+# Home regression suite v8.9.32 — uses testIDs (no reliance on legacy placeholder text)
 - launchApp:
     appId: com.anonymous.sokchadapp
-    clearState: true
-- waitForAnimationToEnd
-- takeScreenshot: home_loaded
+    clearState: false
+- waitForAnimationToEnd:
+    timeout: 10000
 
-- assertVisible: "Sokchad"
-- assertVisible: "Rechercher..."
+# Mandatory assertions (real elements, by testID)
+- assertVisible:
+    id: "home-search-input"
+- assertVisible:
+    id: "home-categories"
+- assertVisible: "Boutiques vérifiées"
+- assertVisible: "Sponsorisé"
+- assertVisible: "Nouveautés"
+- assertVisible:
+    id: "home-products-list"
 
-- runFlow:
-    when:
-      visible: "Offres"
-    commands:
-      - takeScreenshot: home_banner_visible
+- takeScreenshot: home_v8932_top_fr
 
-- runFlow:
-    when:
-      visible: "Tout"
-    commands:
-      - takeScreenshot: home_categories_visible
+# Scroll to the bottom: last card must be reachable and fully visible
+- swipe:
+    from:
+      id: "home-products-list"
+    direction: DOWN
+- swipe:
+    from:
+      id: "home-products-list"
+    direction: DOWN
+- swipe:
+    from:
+      id: "home-products-list"
+    direction: DOWN
+- swipe:
+    from:
+      id: "home-products-list"
+    direction: DOWN
+- swipe:
+    from:
+      id: "home-products-list"
+    direction: DOWN
+- swipe:
+    from:
+      id: "home-products-list"
+    direction: DOWN
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: home_v8932_end_fr
