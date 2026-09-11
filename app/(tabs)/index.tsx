@@ -608,7 +608,7 @@ export default function HomeScreen() {
             renderItem={renderProductItem}
             numColumns={numCols}
             columnWrapperStyle={[styles.grid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
-            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(stickyHeight - 18, 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: tabBarHeight + layout.smallGap }}
+            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(stickyHeight - 8, 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: tabBarHeight + layout.smallGap }}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
@@ -840,9 +840,9 @@ const styles = StyleSheet.create({
     borderRadius: scale(20), borderWidth: 1, gap: scale(4),
   },
   activeFilterText: { fontSize: scale(11), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(16), paddingTop: scale(10), paddingBottom: scale(4), gap: 0 },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(16), paddingTop: scale(14), paddingBottom: scale(4), gap: 0 },
   categoryGridItem: { alignItems: 'center', width: '25%', marginBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4) },
-  categoryCircleScroll: { paddingHorizontal: scale(16), gap: scale(10), paddingBottom: scale(2), marginBottom: 0, paddingTop: scale(2) },
+  categoryCircleScroll: { paddingHorizontal: scale(16), gap: scale(10), paddingBottom: scale(2), marginBottom: 0, paddingTop: scale(10) },
   categoryCircleItem: { alignItems: 'center', width: scale(68) },
   categoryCircle: {
     width: CATEGORY_CIRCLE, height: CATEGORY_CIRCLE, borderRadius: scale(12),
