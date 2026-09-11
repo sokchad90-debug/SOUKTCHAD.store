@@ -518,7 +518,7 @@ export default function HomeScreen() {
               )}
             </View>
 {/* Search bar — stays sticky */}
-            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: 4 }]}>
+            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: 2 }]}>
               <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
               <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: 16 }, isAr && { flexDirection: 'row-reverse' }]}>
                 <MaterialIcons name="search" size={18} color={colors.textTertiary} />
@@ -608,7 +608,7 @@ export default function HomeScreen() {
             renderItem={renderProductItem}
             numColumns={numCols}
             columnWrapperStyle={[styles.grid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
-            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(stickyHeight - 16, 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: tabBarHeight + layout.smallGap }}
+            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(stickyHeight - 18, 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: tabBarHeight + layout.smallGap }}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
@@ -800,7 +800,7 @@ const styles = StyleSheet.create({
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: scale(6) },
   headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 },
   headerFlexGroup: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: scale(10) },
-  headerTouch44: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  headerTouch44: { width: 43, height: 43, alignItems: 'center', justifyContent: 'center' },
   headerSideIcons: { position: 'absolute', left: 12, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: scale(14) },
   actionIconsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(16), paddingTop: scale(10), paddingBottom: scale(8) },
   actionIconsGroup: { flexDirection: 'row', alignItems: 'center', gap: scale(18) },

@@ -162,7 +162,7 @@ export const getPhoneLayoutMetrics = (params: {
   const maxContentWidth = CANONICAL_MAX_SURFACE_WIDTH - horizontalPadding * 2;
 
   const headerHeight = clamp(50, Math.round(widthFactor * 54), 58);
-  const searchHeight = clamp(44, Math.round(widthFactor * 46), 50);
+  const searchHeight = clamp(42, Math.round(widthFactor * 44), 48);
   const searchGap = clamp(4, Math.round(heightFactor * 6), 8);
 
   // Banner: proportion of contentWidth, clamped
