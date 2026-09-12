@@ -72,7 +72,6 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
   const { colors, language, isFavorite, toggleFavorite } = useApp();
   const isAr = language === 'ar';
   const isDark = (colors as any).background === '#0B1120' || (colors as any).surface === '#161E2E';
-  const isDark = (colors as any).background === '#0B1120' || (colors as any).surface === '#161E2E';
   const { cardWidth: CARD_WIDTH, imageHeight: IMAGE_HEIGHT, cardScale } = useCardDimensions(imageHeightRatio, containerWidth);
   const heartScale = React.useRef(new Animated.Value(1)).current;
 
@@ -279,11 +278,11 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: '100%',
     position: 'relative',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  imgFallback: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#F1F5F9' },
+  imgFallback: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#FFFFFF' },
   imgFallbackText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
   image: {
     width: '100%',

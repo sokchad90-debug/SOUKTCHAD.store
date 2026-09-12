@@ -5,8 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { DS } from '@/ui/designSystem';
 
 /**
- * Unified product image — fills the frame (contentFit="cover") like the
- * owner-approved reference: edge-to-edge, no inner padding, no white gaps.
+ * Unified product image — FULL image always visible (contentFit="contain"),
  * fixed frame held during load AND failure (no list jump), neutral gap when
  * the image ratio differs from the frame. No server-crop dependency.
  * Never stretched, never blurred, never flipped in RTL.
@@ -20,22 +19,23 @@ interface Props {
   loadingText?: string;
 }
 
-function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.product, neutralBg = '#F1F5F9', failedText, loadingText }: Props) {
+function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.product, neutralBg = '#FFFFFF', failedText, loadingText }: Props) {
   const [failed, setFailed] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const height = Math.round(frameWidth / frameRatio);
   React.useEffect(() => { setFailed(false); setLoading(true); }, [uri]);
 
+  const innerPad = Math.min(Math.max(Math.round(frameWidth * 0.04), 6), 12);
   return (
-    <View style={[styles.frame, { width: frameWidth, height, backgroundColor: neutralBg }]}
+    <View style={[styles.frame, { width: frameWidth, height, backgroundColor: neutralBg, padding: innerPad }]}
       testID="product-image-frame"
     >
       {uri && !failed ? (
         <Image
           source={{ uri }}
           style={styles.image}
-          contentFit="cover"
-          transition={200}
+          contentFit="contain"
+          transition={150}
           recyclingKey={uri}
           onLoadEnd={() => setLoading(false)}
           onError={() => { setFailed(true); setLoading(false); }}
