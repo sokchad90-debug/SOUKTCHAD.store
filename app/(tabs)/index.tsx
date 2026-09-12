@@ -69,7 +69,7 @@ function HomeListHeader({
   return (
     <View>
       {/* Categories - Grid (only show when "all" is selected, hidden when a category is chosen) */}
-            {selectedCategory === 'all' ? (
+            {selectedCategory === 'all' && showHeaderContent ? (
       <View style={[styles.categoryGrid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
         testID="home-categories"
       >
