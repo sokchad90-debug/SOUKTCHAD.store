@@ -904,7 +904,7 @@ const styles = StyleSheet.create({
   verifiedStoreName: { fontSize: scale(9), fontWeight: '600', marginTop: scale(4), textAlign: 'center', width: VERIFIED_STORE_ITEM_W, overflow: 'hidden', lineHeight: 12, fontFamily: 'Cairo-SemiBold' },
 
   sectionHeader: { paddingHorizontal: scale(16), paddingTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(3), paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
-  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', width: '100%', paddingHorizontal: scale(16), paddingTop: scale(6), paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', width: '100%', paddingHorizontal: scale(16), paddingTop: scale(6), marginTop: scale(8), paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
   seeAllRow: { flexDirection: 'row', alignItems: 'center', gap: scale(2) },
   seeAllText: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
   sectionTitle: { fontSize: scale(15), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
