@@ -278,11 +278,11 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: '100%',
     position: 'relative',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  imgFallback: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#FFFFFF' },
+  imgFallback: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#F1F5F9' },
   imgFallbackText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
   image: {
     width: '100%',
