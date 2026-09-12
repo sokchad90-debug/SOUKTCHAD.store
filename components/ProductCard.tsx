@@ -72,6 +72,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
   const { colors, language, isFavorite, toggleFavorite } = useApp();
   const isAr = language === 'ar';
   const isDark = (colors as any).background === '#0B1120' || (colors as any).surface === '#161E2E';
+  const isDark = (colors as any).background === '#0B1120' || (colors as any).surface === '#161E2E';
   const { cardWidth: CARD_WIDTH, imageHeight: IMAGE_HEIGHT, cardScale } = useCardDimensions(imageHeightRatio, containerWidth);
   const heartScale = React.useRef(new Animated.Value(1)).current;
 
