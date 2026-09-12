@@ -633,7 +633,7 @@ export default function HomeScreen() {
             renderItem={renderProductItem}
             numColumns={numCols}
             columnWrapperStyle={[styles.grid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
-            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(stickyHeight - LIST_TOP_PULL, 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: layout.smallGap + BOTTOM_NAV_CONTENT_GAP }}
+            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(selectedCategory !== 'all' ? stickyHeight + 2 : stickyHeight - LIST_TOP_PULL, 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: layout.smallGap + BOTTOM_NAV_CONTENT_GAP }}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
