@@ -394,6 +394,7 @@ interface AppContextType {
   getPaymentMethodsForCountry: (countryCode: string) => PaymentMethod[];
   categories: Category[];
   subCategories: Category[];
+  lastCategory: Category | null;
   currentCategoryPath: { id: string; name: string }[];
   loadSubCategories: (parentId: string) => Promise<Category[]>;
   navigateToCategory: (cat: Category) => Promise<void>;
@@ -584,6 +585,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [enabledCountries, setEnabledCountriesState] = useState<string[]>(DEFAULT_ENABLED_COUNTRIES);
   const [categories, setCategories] = useState<Category[]>(mockCategories);
   const [subCategories, setSubCategories] = useState<Category[]>([]);
+  const [lastCategory, setLastCategory] = useState<Category | null>(null);
   const [currentCategoryPath, setCurrentCategoryPath] = useState<{ id: string; name: string }[]>([]);
   const [shippingCompanies, setShippingCompanies] = useState<ShippingCompany[]>([
     { id: 'ship_1', name: 'Express Tchad', phone: '+235 66 00 11 22', description: 'Fast delivery across all major cities', isActive: true, createdAt: new Date().toISOString() },
@@ -875,12 +877,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const catName = cat.name[language] || cat.name.en || cat.id;
         setCurrentCategoryPath(prev => [...prev, { id: cat.id, name: catName }]);
         setSelectedCategory(cat.id);
+        setLastCategory(cat);
         return;
       }
     }
     // No subcategories → show products directly
     setSelectedCategory(cat.id);
     setSubCategories([]);
+    setLastCategory(cat);
   }, [loadSubCategories, language, setSelectedCategory]);
 
   const goBackCategory = useCallback(() => {
@@ -2379,7 +2383,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setFilters, resetFilters,
       addProduct, setProductDiscount, removeProductDiscount, sendMessage, startConversation, placeOrder, updateOrderStatus, permanentBanUser, confirmOrderReceived,
       categories,
-      subCategories, currentCategoryPath, loadSubCategories, navigateToCategory, goBackCategory, resetCategoryNavigation,
+      subCategories, lastCategory, currentCategoryPath, loadSubCategories, navigateToCategory, goBackCategory, resetCategoryNavigation,
       followingList, followStats, followedSellers, followedProducts, fetchFollowStatus, toggleFollow, toggleFollowNotifications, fetchSellerStats, fetchFollowedSellers, fetchFollowedProducts,
       shippingCompanies, addShippingCompany, removeShippingCompany, toggleShippingCompanyActive,
       verificationPlans, verificationSubscriptions, addVerificationPlan, removeVerificationPlan, toggleVerificationPlanActive,

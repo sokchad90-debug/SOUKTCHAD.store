@@ -50,7 +50,7 @@ MemoProductCard.displayName = 'MemoProductCard';
 function HomeListHeader({
   colors, t, searchQuery, activeFilterCount, language, showHeaderContent, selectedCategory,
   setSelectedCategory, pinnedProducts, filteredProductsLength, router, verifiedSellers,
-  layout, setShowCityDropdown, openFilters, selection, subCategories,
+  layout, setShowCityDropdown, openFilters, selection, subCategories, lastCategory,
 }: { [key: string]: any; layout: PhoneLayoutMetrics }) {
   const isFr = language === 'fr';
   const isAr = language === 'ar';
@@ -131,7 +131,8 @@ function HomeListHeader({
         </Pressable>
         {(() => {
           const cat = (categories as any[]).find(c => c.id === selectedCategory)
-            || (subCategories as any[]).find(c => c.id === selectedCategory);
+            || (subCategories as any[]).find(c => c.id === selectedCategory)
+            || (lastCategory as any);
           if (!cat) return null;
           const catName = (cat.name as Record<string, string>)?.[language] || (cat.name as Record<string, string>)?.en || cat.id;
           return (
@@ -281,7 +282,8 @@ function HomeListHeader({
             : selectedCategory !== 'all'
               ? `${(() => {
                   const cat = (categories as any[]).find(c => c.id === selectedCategory)
-                    || (subCategories as any[]).find(c => c.id === selectedCategory);
+                    || (subCategories as any[]).find(c => c.id === selectedCategory)
+                    || (lastCategory as any);
                   const catName = (cat?.name as Record<string, string>)?.[language] || (cat?.name as Record<string, string>)?.en || selectedCategory;
                   return `${catName} (${filteredProductsLength})`;
                 })()}`
@@ -327,7 +329,7 @@ export default function HomeScreen() {
 
   const {
     colors, t, language, searchQuery, setSearchQuery,
-    selectedCategory, setSelectedCategory, getFilteredProducts, products, subCategories,
+    selectedCategory, setSelectedCategory, getFilteredProducts, products, subCategories, lastCategory,
     filters, setFilters, resetFilters, activeFilterCount,
     refreshProducts, selectedCity, setSelectedCity,
   } = useApp();
@@ -444,6 +446,7 @@ export default function HomeScreen() {
       setSelectedCategory={setSelectedCategory}
       pinnedProducts={stablePinnedProducts}
       subCategories={subCategories}
+      lastCategory={lastCategory}
       filteredProductsLength={searchQuery || activeFilterCount > 0 ? filteredProducts.length : 0}
       router={router}
       verifiedSellers={verifiedSellers}
