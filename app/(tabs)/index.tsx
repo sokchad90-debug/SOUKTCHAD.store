@@ -252,10 +252,11 @@ function HomeListHeader({
         </View>
       ) : null}
 
-      {/* Products Grid Title */}
+      {/* Products Grid Title — HIDDEN during active search: products appear directly under the bar */}
+      {searchQuery ? null : (
       <View style={[styles.sectionHeaderRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
         <AppText weight={700} style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
-          {searchQuery || activeFilterCount > 0
+          {activeFilterCount > 0
             ? `${filteredProductsLength} ${lb('results', 'résultats', 'نتائج')}`
             : selectedCategory !== 'all'
               ? `${(() => {
@@ -267,13 +268,14 @@ function HomeListHeader({
                 })()}`
               : t('recentlyAdded')}
         </AppText>
-        {!(searchQuery || activeFilterCount > 0) ? (
+        {!(activeFilterCount > 0) ? (
           <Pressable onPress={() => router.push('/all-products' as any)} style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
             <Text style={[styles.seeAllText, { color: colors.verified }]}>{lb('See All', 'Tout voir', 'عرض الكل')}</Text>
             <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={18} color={colors.verified} />
           </Pressable>
         ) : null}
       </View>
+      )}
     </View>
   );
 }
