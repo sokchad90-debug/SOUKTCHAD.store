@@ -272,8 +272,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
     marginBottom: scale(10),
-    flex: 1, // stretch to row height — both cards end on the same line
-    alignSelf: 'stretch',
+    alignSelf: 'stretch', // height stretch per row — cards end on the same line
+    // width is set inline (CARD_WIDTH) — a lone card keeps single-column width
   },
   imageContainer: {
     width: '100%',

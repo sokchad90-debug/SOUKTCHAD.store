@@ -121,7 +121,27 @@ function HomeListHeader({
           );
         })}
       </View>
-      ) : null}
+      ) : (
+      <View>
+      {/* Category chips row (when a category is selected): الكل + current, to go back */}
+      <View style={[styles.catChipsRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
+        <Pressable onPress={() => setSelectedCategory('all')} testID="category-chip-all"
+          style={[styles.catChip, { borderColor: colors.border }, selectedCategory === 'all' && { borderColor: colors.primary, backgroundColor: colors.primary + '14' }]}>
+          <Text style={[styles.catChipText, { color: selectedCategory === 'all' ? colors.primary : colors.textSecondary }]}>{lb('All', 'Tout', 'الكل')}</Text>
+        </Pressable>
+        {(() => {
+          const cat = (categories as any[]).find(c => c.id === selectedCategory);
+          if (!cat) return null;
+          const catName = (cat.name as Record<string, string>)?.[language] || (cat.name as Record<string, string>)?.en || cat.id;
+          return (
+            <View style={[styles.catChip, { borderColor: colors.primary, backgroundColor: colors.primary + '14' }]}>
+              <Text style={[styles.catChipText, { color: colors.primary }]}>{catName}</Text>
+            </View>
+          );
+        })()}
+      </View>
+      </View>
+      )}
 
       {/* Verified Stores — horizontal scroll (only when All category is active).
           Hidden entirely on very short screens to make room for product cards. */}
@@ -257,7 +277,13 @@ function HomeListHeader({
         <AppText weight={700} style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
           {searchQuery || activeFilterCount > 0
             ? `${filteredProductsLength} ${lb('results', 'résultats', 'نتائج')}`
-            : t('recentlyAdded')}
+            : selectedCategory !== 'all'
+              ? `${(() => {
+                  const cat = (categories as any[]).find(c => c.id === selectedCategory);
+                  const catName = (cat?.name as Record<string, string>)?.[language] || (cat?.name as Record<string, string>)?.en || selectedCategory;
+                  return `${catName} (${filteredProductsLength})`;
+                })()}`
+              : t('recentlyAdded')}
         </AppText>
         {!(searchQuery || activeFilterCount > 0) ? (
           <Pressable onPress={() => router.push('/all-products' as any)} style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
@@ -854,6 +880,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(10), paddingVertical: scale(5),
     borderRadius: scale(20), borderWidth: 1, gap: scale(4),
   },
+  catChipsRow: { flexDirection: 'row', alignItems: 'center', gap: scale(8), paddingVertical: scale(6) },
+  catChip: { borderWidth: 1, borderRadius: scale(999), paddingHorizontal: scale(14), paddingVertical: scale(6), },
+  catChipText: { fontSize: scale(13), fontWeight: '700', fontFamily: 'Cairo-Bold' },
+
   activeFilterText: { fontSize: scale(11), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(16), paddingTop: scale(14), paddingBottom: scale(4), gap: 0 },
   categoryGridItem: { alignItems: 'center', width: '25%', marginBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4) },
