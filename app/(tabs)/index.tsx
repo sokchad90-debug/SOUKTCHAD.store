@@ -121,29 +121,7 @@ function HomeListHeader({
           );
         })}
       </View>
-      ) : (
-      <View>
-      {/* Category chips row (when a category is selected): الكل + current, to go back */}
-      <View style={[styles.catChipsRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
-        <Pressable onPress={() => setSelectedCategory('all')} testID="category-chip-all"
-          style={[styles.catChip, { borderColor: colors.border }, selectedCategory === 'all' && { borderColor: colors.primary, backgroundColor: colors.primary + '14' }]}>
-          <Text style={[styles.catChipText, { color: selectedCategory === 'all' ? colors.primary : colors.textSecondary }]}>{lb('All', 'Tout', 'الكل')}</Text>
-        </Pressable>
-        {(() => {
-          const cat = (categories as any[]).find(c => c.id === selectedCategory)
-            || (subCategories as any[]).find(c => c.id === selectedCategory)
-            || (lastCategory as any);
-          if (!cat) return null;
-          const catName = (cat.name as Record<string, string>)?.[language] || (cat.name as Record<string, string>)?.en || cat.id;
-          return (
-            <View style={[styles.catChip, { borderColor: colors.primary, backgroundColor: colors.primary + '14' }]}>
-              <Text style={[styles.catChipText, { color: colors.primary }]}>{catName}</Text>
-            </View>
-          );
-        })()}
-      </View>
-      </View>
-      )}
+      ) : null}
 
       {/* Verified Stores — horizontal scroll (only when All category is active).
           Hidden entirely on very short screens to make room for product cards. */}
@@ -926,7 +904,7 @@ const styles = StyleSheet.create({
   verifiedStoreName: { fontSize: scale(9), fontWeight: '600', marginTop: scale(4), textAlign: 'center', width: VERIFIED_STORE_ITEM_W, overflow: 'hidden', lineHeight: 12, fontFamily: 'Cairo-SemiBold' },
 
   sectionHeader: { paddingHorizontal: scale(16), paddingTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(3), paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
-  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', width: '100%', paddingHorizontal: scale(16), paddingTop: 0, paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', width: '100%', paddingHorizontal: scale(16), paddingTop: scale(6), paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
   seeAllRow: { flexDirection: 'row', alignItems: 'center', gap: scale(2) },
   seeAllText: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
   sectionTitle: { fontSize: scale(15), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
