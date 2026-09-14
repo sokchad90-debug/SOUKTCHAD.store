@@ -18,7 +18,6 @@ function isPurpleTopRoute(pathname: string): boolean {
   const p = pathname.replace(/\/+$/, '') || '/';
   if (p === '/' || p === '/index' || p === '/(tabs)' || p === '/(tabs)/index') return true; // Home tab
   if (p.startsWith('/all-products')) return true;
-  if (p.startsWith('/settings')) return true;
   return false;
 }
 
@@ -33,13 +32,10 @@ function SystemBarsManager() {
   const { isDark, colors } = useApp();
   const pathname = usePathname() || '';
   const purpleTop = isPurpleTopRoute(pathname);
-  const onSettings = pathname.startsWith('/settings');
 
   // Icon style for the status bar region actually behind the bar
   const statusStyle: 'light' | 'dark' = (purpleTop || isDark) ? 'light' : 'dark';
-  const statusBg = purpleTop
-    ? (onSettings && !isDark ? '#5B48D9' : (isDark ? '#39276A' : '#4C1CEA'))
-    : colors.background;
+  const statusBg = purpleTop ? (isDark ? '#39276A' : '#4C1CEA') : colors.background;
 
   // Bottom nav buttons legibility: dark buttons on the light tab bar, light on dark
   useEffect(() => {
