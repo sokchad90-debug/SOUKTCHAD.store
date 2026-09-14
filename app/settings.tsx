@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert, Modal, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -9,6 +9,8 @@ import { SUPPORTED_LANGUAGES } from '@/constants/config';
 import { borderRadius } from '@/constants/theme';
 import { selection, notifyWarning, notifySuccess, impactLight } from '@/services/haptics';
 import * as ImagePicker from 'expo-image-picker';
+import * as Notifications from 'expo-notifications';
+import * as FileSystem from 'expo-file-system';
 import { changePassword, updateProfile } from '@/services/supabaseStats';
 import { getBlockedSellers, unblockSeller } from '@/services/blockedSellers';
 import { scale } from '@/constants/responsive';
@@ -17,7 +19,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const {
-    colors, t, language, setLanguage, isDark, toggleDarkMode, themePref, setThemePref,
+    colors, t, language, setLanguage, isDark, themePref, setThemePref,
     isLoggedIn, user, logout, updateUserAvatar, updateUserCover,
     enabledLanguages,
   } = useApp();
@@ -26,7 +28,12 @@ export default function SettingsScreen() {
   const isAr = language === 'ar';
   const lb = useCallback((en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en, [isFr, isAr]);
   const isBuyer = user?.role === 'buyer' || (!user?.isSeller);
-  const isSeller = user?.isSeller === true;
+
+  // Light-lavender page background (reference design); calm dark background in dark mode
+  const pageBg = isDark ? colors.background : '#F1F0FB';
+  const cardBg = isDark ? colors.surface : '#FFFFFF';
+  const headerBg = isDark ? colors.pinnedLight : '#5B48D9';
+  const iconTint = colors.primary;
 
   // ---- Local settings state ----
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -41,22 +48,18 @@ export default function SettingsScreen() {
   const [editAvatar, setEditAvatar] = useState(user?.avatar || '');
   const [editCover, setEditCover] = useState(user?.coverImage || '');
 
-  const [notifOrders, setNotifOrders] = useState(true);
-  const [notifMessages, setNotifMessages] = useState(true);
-  const [notifVerification, setNotifVerification] = useState(true);
-
-  const [autoAcceptOrders, setAutoAcceptOrders] = useState(false);
+  const [notifEnabled, setNotifEnabled] = useState(false);
+  const [notifPermissionDenied, setNotifPermissionDenied] = useState(false);
 
   const [showLangModal, setShowLangModal] = useState(false);
-
   const [showBlockedModal, setShowBlockedModal] = useState(false);
   const [blockedSellersList, setBlockedSellersList] = useState<any[]>([]);
   const [blockedLoading, setBlockedLoading] = useState(false);
+  const [cacheInfo, setCacheInfo] = useState<{ files: number; bytes: number } | null>(null);
 
   const memberSince = useMemo(() => {
     const d = user?.created_at || (user as any)?.createdAt;
     if (!d) {
-      // Fallback: estimate from numeric user id (timestamp-based IDs) or default to 1 year ago
       const numericId = parseInt(String(user?.id ?? ''), 10);
       if (!isNaN(numericId) && numericId > 1000000000) {
         const ts = numericId > 1e12 ? numericId : numericId * 1000;
@@ -75,6 +78,48 @@ export default function SettingsScreen() {
       return new Date(d).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
     } catch { return ''; }
   }, [user, isAr, isFr]);
+
+  // ---- Real notification permission state (honest switch) ----
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const { status } = await Notifications.getPermissionsAsync();
+        if (!alive) return;
+        setNotifEnabled(status === 'granted');
+        setNotifPermissionDenied(status === 'denied');
+      } catch { /* keep honest default off */ }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const handleToggleNotifications = useCallback(async (v: boolean) => {
+    selection();
+    if (v) {
+      try {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status === 'granted') {
+          setNotifEnabled(true);
+          setNotifPermissionDenied(false);
+        } else {
+          setNotifEnabled(false);
+          setNotifPermissionDenied(true);
+          Alert.alert(
+            lb('Notifications blocked', 'Notifications bloquées', 'الإشعارات مرفوضة'),
+            lb('Enable notifications for Sokchad from system Settings to receive order and message alerts.', 'Activez les notifications pour Sokchad depuis les réglages du téléphone pour recevoir les alertes.', 'فعّل إشعارات Sokchad من إعدادات الهاتف لتصلك تنبيهات الطلبات والرسائل.'),
+          );
+        }
+      } catch {
+        setNotifEnabled(false);
+      }
+    } else {
+      setNotifEnabled(false);
+      Alert.alert(
+        lb('Notifications off', 'Notifications désactivées', 'تم إيقاف الإشعارات'),
+        lb('To turn system notifications back on, allow them for Sokchad in phone Settings.', 'Pour réactiver les notifications système, autorisez-les pour Sokchad dans les réglages du téléphone.', 'لإعادة تشغيل إشعارات النظام، فعّلها لتطبيق Sokchad من إعدادات الهاتف.'),
+      );
+    }
+  }, [lb]);
 
   const handleChangePassword = useCallback(async () => {
     if (!curPw || !newPw || !confirmPw) {
@@ -146,16 +191,60 @@ export default function SettingsScreen() {
     setShowEditProfileModal(false);
   }, [editName, editPhone, editAvatar, editCover, user?.id, user?.avatar, user?.coverImage, updateUserAvatar, updateUserCover]);
 
+  // ---- Real cache clear: expo FileSystem cacheDirectory ONLY (files, not DB) ----
+  const measureCache = useCallback(async () => {
+    try {
+      const dir = FileSystem.cacheDirectory;
+      if (!dir) { setCacheInfo(null); return; }
+      const items = await FileSystem.readDirectoryAsync(dir);
+      let files = 0, bytes = 0;
+      for (const name of items) {
+        try {
+          const info = await FileSystem.getInfoAsync(dir + name);
+          if (info.exists && !info.isDirectory) { files++; bytes += info.size || 0; }
+          else if (info.exists && info.isDirectory) {
+            const sub = await FileSystem.readDirectoryAsync(dir + name);
+            files += sub.length;
+            for (const f2 of sub) {
+              try {
+                const i2 = await FileSystem.getInfoAsync(dir + name + '/' + f2);
+                if (i2.exists && !i2.isDirectory) bytes += i2.size || 0;
+              } catch { /* skip */ }
+            }
+          }
+        } catch { /* skip */ }
+      }
+      setCacheInfo({ files, bytes });
+    } catch { setCacheInfo(null); }
+  }, []);
+
+  useEffect(() => { measureCache(); }, [measureCache]);
+
   const handleClearCache = useCallback(() => {
     Alert.alert(
-      lb('Clear Cache?', 'Vider le cache?', 'مسح ذاكرة التخزين المؤقت؟'),
-      lb('This will clear temporary data. Your account and listings are safe.', 'Ceci effacera les données temporaires. Votre compte et vos annonces sont en sécurité.', 'سيتم مسح البيانات المؤقتة. حسابك وإعلاناتك بأمان.'),
+      lb('Clear Cache?', 'Vider le cache ?', 'مسح الذاكرة المؤقتة؟'),
+      lb('Temporary files only — your account, orders, chats and login are untouched.', 'Fichiers temporaires uniquement — votre compte, commandes, discussions et session ne sont pas touchés.', 'الملفات المؤقتة فقط — حسابك وطلباتك ومحادثاتك وجلسة دخولك لن تُمس.'),
       [
         { text: lb('Cancel', 'Annuler', 'إلغاء'), style: 'cancel' },
         {
           text: lb('Clear', 'Vider', 'مسح'),
           style: 'destructive',
-          onPress: () => { notifySuccess(); Alert.alert(lb('Cache Cleared', 'Cache vidé', 'تم المسح')); },
+          onPress: async () => {
+            try {
+              const dir = FileSystem.cacheDirectory;
+              if (dir) {
+                const items = await FileSystem.readDirectoryAsync(dir);
+                for (const name of items) {
+                  try { await FileSystem.deleteAsync(dir + name, { idempotent: true }); } catch { /* skip */ }
+                }
+              }
+              notifySuccess();
+              setCacheInfo({ files: 0, bytes: 0 });
+              Alert.alert(lb('Cache Cleared', 'Cache vidé', 'تم المسح'));
+            } catch {
+              Alert.alert(lb('Could not clear', 'Impossible de vider', 'تعذر المسح'));
+            }
+          },
         },
       ],
     );
@@ -184,263 +273,245 @@ export default function SettingsScreen() {
     }
   }, [lb]);
 
+  const appearanceLabel = themePref === 'light' ? lb('Light', 'Clair', 'فاتح')
+    : themePref === 'dark' ? lb('Dark', 'Sombre', 'داكن')
+    : lb('Follow device', 'Selon l\u2019appareil', 'حسب إعداد الجهاز');
+
+  const email = user?.email || '';
+  const phone = user?.phone || '';
+  const na = lb('Not available', 'Non renseigné', 'غير متوفر');
+
+  const fmtBytes = (b: number) => {
+    if (b >= 1024 * 1024) return `${(b / 1024 / 1024).toFixed(1)} MB`;
+    if (b >= 1024) return `${Math.round(b / 1024)} KB`;
+    return `${b} B`;
+  };
+
+  // ---- Row / card building blocks (reference design: white rounded cards on lavender) ----
+  const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+    <Text style={[st.sectionTitle, { color: isDark ? colors.textSecondary : '#5B48D9' }]}>{children}</Text>
+  );
+
+  const NavCard = ({ icon, iconBg, onPress, label, right, noChevron }: {
+    icon: string; iconBg: string; onPress: () => void; label: string; right?: React.ReactNode; noChevron?: boolean;
+  }) => (
+    <Pressable onPress={() => { selection(); onPress(); }}
+      style={({ pressed }) => [st.card, st.navRow, { backgroundColor: cardBg, opacity: pressed ? 0.88 : 1 }]}>
+      <View style={[st.iconCircle, { backgroundColor: iconBg }]}>
+        <MaterialIcons name={icon as any} size={scale(21)} color={iconTint} />
+      </View>
+      <Text style={[st.navLabel, { color: colors.textPrimary }]} numberOfLines={2}>{label}</Text>
+      {right}
+      {!noChevron && (
+        <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(22)} color={isDark ? colors.textTertiary : '#A5A3B8'} />
+      )}
+    </Pressable>
+  );
+
   return (
-    <SafeAreaView edges={['top']} style={[sStyles.safeArea, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[sStyles.header, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={sStyles.headerBackBtn}>
-          <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(24)} color={colors.textPrimary} />
+    <SafeAreaView edges={['top']} style={[st.safeArea, { backgroundColor: headerBg }]}>
+      {/* ===== Purple header (reference design) — title + subtitle, no fake number ===== */}
+      <View style={st.header}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={st.headerBackBtn}
+          accessibilityRole="button" accessibilityLabel={lb('Back', 'Retour', 'رجوع')}>
+          <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(24)} color="#FFFFFF" />
         </Pressable>
-        <Text style={[sStyles.headerTitle, { color: colors.textPrimary }]}>
-          {lb('Settings', 'Paramètres', 'الإعدادات')}
-        </Text>
-        <View style={{ width: scale(24) }} />
+        <View style={st.headerCenter}>
+          <Text style={st.headerTitle}>{lb('Settings', 'Paramètres', 'الإعدادات')}</Text>
+          <Text style={[st.headerSubtitle, isAr && { textAlign: 'center' }]}>
+            {lb('Buyer account', 'Compte acheteur', 'حساب المشتري')}
+          </Text>
+        </View>
+        <View style={st.headerBackBtn} />
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + scale(90) + scale(16), paddingHorizontal: scale(16), paddingTop: scale(12) }} showsVerticalScrollIndicator={false}>
-        {/* General Settings */}
-        <Text style={[sStyles.sectionTitle, { color: colors.textTertiary }]}>
-          {lb('General Settings', 'Paramètres généraux', 'الإعدادات العامة')}
-        </Text>
+      <View style={[st.page, { backgroundColor: pageBg, paddingBottom: insets.bottom + scale(90) + scale(16) }]}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(14) }} showsVerticalScrollIndicator={false}>
+          {/* ================= PRÉFÉRENCES ================= */}
+          <SectionTitle>{lb('PREFERENCES', 'PRÉFÉRENCES', 'التفضيلات')}</SectionTitle>
 
-        {/* Appearance card: language + dark mode */}
-        {enabledLanguages && enabledLanguages.length > 1 ? (
-          <View style={[sStyles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Pressable onPress={() => { selection(); setShowLangModal(true); }} style={sStyles.row}>
-              <MaterialIcons name="language" size={scale(22)} color={colors.primary} />
-              <Text style={[sStyles.rowLabel, { color: colors.textPrimary, flex: 1 }]}>{t('language')}</Text>
-              <Text style={[sStyles.infoValue, { color: colors.textSecondary }]}>
-                {SUPPORTED_LANGUAGES.find(l => l.id === language)?.nativeLabel || ''}
-              </Text>
-              <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(22)} color={colors.textTertiary} />
-            </Pressable>
-          </View>
-        ) : null}
+          <NavCard
+            icon="language" iconBg={isDark ? colors.primary + '22' : '#E7E2FD'}
+            onPress={() => setShowLangModal(true)}
+            label={lb('Language', 'Langue', 'اللغة')}
+            right={<Text style={[st.navValue, { color: colors.textSecondary }]}>
+              {SUPPORTED_LANGUAGES.find(l => l.id === language)?.nativeLabel || ''}
+            </Text>}
+          />
 
-        <View style={[sStyles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={sStyles.rowFull}>
-            <MaterialIcons name={isDark ? 'dark-mode' : 'light-mode'} size={scale(22)} color={colors.primary} />
-            <Text style={[sStyles.rowLabel, { color: colors.textPrimary, flex: 1 }]}>{lb('Appearance', 'Apparence', 'المظهر')}</Text>
-          </View>
-          {([
-            { key: 'light', label: lb('Light', 'Clair', 'فاتح') },
-            { key: 'dark', label: lb('Dark', 'Sombre', 'داكن') },
-            { key: 'system', label: lb('Follow device', 'Selon l\u2019appareil', 'حسب إعداد الجهاز') },
-          ] as const).map(opt => (
-            <Pressable key={opt.key} onPress={() => { selection(); setThemePref(opt.key); }}
-              style={sStyles.rowFull} testID={`appearance-${opt.key}`}
-              accessibilityRole="radio" accessibilityState={{ selected: themePref === opt.key }}>
-              <MaterialIcons
-                name={themePref === opt.key ? 'radio-button-checked' : 'radio-button-unchecked'}
-                size={scale(20)} color={themePref === opt.key ? colors.primary : colors.textTertiary} />
-              <Text style={[sStyles.rowLabel, { color: themePref === opt.key ? colors.primary : colors.textPrimary, marginLeft: scale(8) }]}>{opt.label}</Text>
-            </Pressable>
-          ))}
-        </View>
+          <NavCard
+            icon={themePref === 'dark' ? 'dark-mode' : themePref === 'system' ? 'brightness-auto' : 'light-mode'}
+            iconBg={isDark ? colors.primary + '22' : '#E7E2FD'}
+            onPress={() => setThemePref(themePref === 'light' ? 'dark' : themePref === 'dark' ? 'system' : 'light')}
+            label={lb('Appearance', 'Apparence', 'المظهر')}
+            right={<Text style={[st.navValue, { color: colors.textSecondary }]}>{appearanceLabel}</Text>}
+          />
 
-        {/* Notifications master toggle */}
-        <View style={[sStyles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={sStyles.rowFull}>
-            <MaterialIcons name="notifications" size={scale(22)} color={colors.primary} />
-            <Text style={[sStyles.rowLabel, { color: colors.textPrimary, flex: 1 }]}>{lb('Notifications', 'Notifications', 'الإشعارات')}</Text>
-            <Switch value={notifOrders} onValueChange={(v) => { selection(); setNotifOrders(v); setNotifMessages(v); setNotifVerification(v); }} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#FFF" />
-          </View>
-        </View>
-
-        {/* Account section */}
-        {isLoggedIn && user ? (
-          <>
-            <Text style={[sStyles.sectionTitle, { color: colors.textTertiary, marginTop: scale(8) }]}>
-              {lb('Account', 'Compte', 'الحساب')}
-            </Text>
-
-            {/* Edit Profile */}
-            <Pressable onPress={() => { selection(); setShowEditProfileModal(true); }}
-              style={({ pressed }) => [sStyles.listItem, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.88 : 1 }]}>
-              <View style={[sStyles.iconWrap, { backgroundColor: colors.primary + '14' }]}>
-                <MaterialIcons name="person" size={scale(20)} color={colors.primary} />
+          <View style={[st.card, { backgroundColor: cardBg }]}>
+            <View style={[st.navRow, { paddingVertical: 0 }]}>
+              <View style={[st.iconCircle, { backgroundColor: isDark ? colors.primary + '22' : '#E7E2FD' }]}>
+                <MaterialIcons name="notifications" size={scale(21)} color={iconTint} />
               </View>
-              <Text style={[sStyles.listLabel, { color: colors.textPrimary, flex: 1 }]}>
-                {lb('Edit Profile', 'Modifier le profil', 'تعديل الملف الشخصي')}
+              <Text style={[st.navLabel, { color: colors.textPrimary }]}>{lb('Notifications', 'Notifications', 'الإشعارات')}</Text>
+              <Switch
+                value={notifEnabled}
+                onValueChange={handleToggleNotifications}
+                trackColor={{ true: colors.primary, false: isDark ? colors.border : '#D9D6E8' }}
+                thumbColor="#FFFFFF"
+                accessibilityRole="switch"
+                accessibilityLabel={lb('Notifications', 'Notifications', 'الإشعارات')}
+              />
+            </View>
+            {notifPermissionDenied && (
+              <Text style={[st.notifHint, { color: colors.warning }]}>
+                {lb('Permission denied — enable notifications for Sokchad in phone Settings.', 'Permission refusée — activez les notifications pour Sokchad dans les réglages du téléphone.', 'الإذن مرفوض — فعّل إشعارات Sokchad من إعدادات الهاتف.')}
               </Text>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(22)} color={colors.textTertiary} />
-            </Pressable>
+            )}
+          </View>
 
-            {/* Change Password */}
-            <Pressable onPress={() => { selection(); setCurPw(''); setNewPw(''); setConfirmPw(''); setShowPasswordModal(true); }}
-              style={({ pressed }) => [sStyles.listItem, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.88 : 1 }]}>
-              <View style={[sStyles.iconWrap, { backgroundColor: colors.verified + '14' }]}>
-                <MaterialIcons name="lock" size={scale(20)} color={colors.verified} />
-              </View>
-              <Text style={[sStyles.listLabel, { color: colors.textPrimary, flex: 1 }]}>
-                {lb('Change Password', 'Changer le mot de passe', 'تغيير كلمة المرور')}
-              </Text>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(22)} color={colors.textTertiary} />
-            </Pressable>
+          {/* ================= COMPTE ================= */}
+          {isLoggedIn && user ? (
+            <>
+              <SectionTitle>{lb('ACCOUNT', 'COMPTE', 'الحساب')}</SectionTitle>
 
-            {/* Account Info */}
-            <View style={[sStyles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={sStyles.row}>
-                <View style={[sStyles.iconWrap, { backgroundColor: colors.textTertiary + '14' }]}>
-                  <MaterialIcons name="info" size={scale(20)} color={colors.textTertiary} />
+              <NavCard
+                icon="person" iconBg={isDark ? colors.primary + '22' : '#E7E2FD'}
+                onPress={() => setShowEditProfileModal(true)}
+                label={lb('Edit profile', 'Modifier le profil', 'تعديل الملف الشخصي')}
+              />
+
+              <NavCard
+                icon="lock" iconBg={isDark ? colors.primary + '22' : '#E7E2FD'}
+                onPress={() => { setCurPw(''); setNewPw(''); setConfirmPw(''); setShowPasswordModal(true); }}
+                label={lb('Change password', 'Changer le mot de passe', 'تغيير كلمة المرور')}
+              />
+
+              {/* Account info: value shown UNDER the title (no truncation), no fake chevrons */}
+              <View style={[st.card, { backgroundColor: cardBg }]}>
+                <View style={st.infoHead}>
+                  <View style={[st.iconCircle, { backgroundColor: isDark ? colors.primary + '22' : '#E7E2FD' }]}>
+                    <MaterialIcons name="info" size={scale(21)} color={iconTint} />
+                  </View>
+                  <Text style={[st.navLabel, { color: colors.textPrimary }]}>{lb('Account info', 'Informations du compte', 'معلومات الحساب')}</Text>
                 </View>
-                <Text style={[sStyles.rowLabel, { color: colors.textPrimary }]}>
-                  {lb('Account Info', 'Informations du compte', 'معلومات الحساب')}
-                </Text>
+                <View style={[st.infoRow, { borderTopColor: isDark ? colors.border : '#EEEDF6' }]}>
+                  <MaterialIcons name="email" size={scale(16)} color={isDark ? colors.textTertiary : '#A5A3B8'} />
+                  <View style={st.infoBody}>
+                    <Text style={[st.infoLabel, { color: colors.textTertiary }]}>{lb('Email', 'Email', 'البريد الإلكتروني')}</Text>
+                    {email ? (
+                      <Text style={[st.infoValue, { color: colors.textPrimary }]}>{email}</Text>
+                    ) : (
+                      <Text style={[st.infoValue, { color: colors.textTertiary }]}>{na}</Text>
+                    )}
+                  </View>
+                </View>
+                <View style={[st.infoRow, { borderTopColor: isDark ? colors.border : '#EEEDF6' }]}>
+                  <MaterialIcons name="phone" size={scale(16)} color={isDark ? colors.textTertiary : '#A5A3B8'} />
+                  <View style={st.infoBody}>
+                    <Text style={[st.infoLabel, { color: colors.textTertiary }]}>{lb('Phone', 'Téléphone', 'رقم الهاتف')}</Text>
+                    {phone ? (
+                      <Text style={[st.infoValue, { color: colors.textPrimary }]}>{phone}</Text>
+                    ) : (
+                      <Text style={[st.infoValue, { color: colors.textTertiary }]}>{na}</Text>
+                    )}
+                  </View>
+                </View>
+                <View style={[st.infoRow, { borderTopColor: isDark ? colors.border : '#EEEDF6' }]}>
+                  <MaterialIcons name="event" size={scale(16)} color={isDark ? colors.textTertiary : '#A5A3B8'} />
+                  <View style={st.infoBody}>
+                    <Text style={[st.infoLabel, { color: colors.textTertiary }]}>{lb('Member since', 'Membre depuis', 'تاريخ الانضمام')}</Text>
+                    {memberSince ? (
+                      <Text style={[st.infoValue, { color: colors.textPrimary }]}>{memberSince}</Text>
+                    ) : (
+                      <Text style={[st.infoValue, { color: colors.textTertiary }]}>{na}</Text>
+                    )}
+                  </View>
+                </View>
               </View>
-              <View style={sStyles.infoRow}>
-                <MaterialIcons name="email" size={scale(16)} color={colors.textTertiary} />
-                <Text style={[sStyles.infoLabel, { color: colors.textTertiary }]}>{lb('Email', 'Email', 'البريد')}</Text>
-                <Text style={[sStyles.infoValue, { color: colors.textPrimary }]} numberOfLines={1}>{user?.email || '-'}</Text>
-              </View>
-              <View style={sStyles.infoRow}>
-                <MaterialIcons name="phone" size={scale(16)} color={colors.textTertiary} />
-                <Text style={[sStyles.infoLabel, { color: colors.textTertiary }]}>{lb('Phone', 'Téléphone', 'الهاتف')}</Text>
-                <Text style={[sStyles.infoValue, { color: colors.textPrimary }]} numberOfLines={1}>{user?.phone || '-'}</Text>
-              </View>
-              <View style={sStyles.infoRow}>
-                <MaterialIcons name="event" size={scale(16)} color={colors.textTertiary} />
-                <Text style={[sStyles.infoLabel, { color: colors.textTertiary }]}>{lb('Member since', 'Membre depuis', 'عضو منذ')}</Text>
-                <Text style={[sStyles.infoValue, { color: colors.textPrimary }]}>{memberSince}</Text>
-              </View>
-            </View>
-          </>
-        ) : null}
+            </>
+          ) : null}
 
-        {/* Seller Settings */}
-        {isLoggedIn && user?.isSeller && (
-          <>
-            <Text style={[sStyles.sectionTitle, { color: colors.textTertiary, marginTop: scale(8) }]}>
-              {lb('Seller Settings', 'Paramètres vendeur', 'إعدادات البائع')}
-            </Text>
-            <Pressable onPress={() => { selection(); router.push('/seller' as any); }}
-              style={({ pressed }) => [sStyles.listItem, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.88 : 1 }]}>
-              <View style={[sStyles.iconWrap, { backgroundColor: colors.primary + '14' }]}>
-                <MaterialIcons name="store" size={scale(20)} color={colors.primary} />
-              </View>
-              <Text style={[sStyles.listLabel, { color: colors.textPrimary, flex: 1 }]}>
-                {lb('Store Settings', 'Paramètres boutique', 'إعدادات المتجر')}
+          {/* ================= CONFIDENTIALITÉ ================= */}
+          <SectionTitle>{lb('PRIVACY', 'CONFIDENTIALITÉ', 'الخصوصية')}</SectionTitle>
+
+          {isLoggedIn && isBuyer && (
+            <NavCard
+              icon="block" iconBg={isDark ? colors.errorLight : '#FDE5E5'}
+              onPress={openBlockedModal}
+              label={lb('Blocked sellers', 'Vendeurs bloqués', 'البائعون المحظورون')}
+              right={blockedSellersList.length > 0 ? (
+                <Text style={[st.navValue, { color: colors.textTertiary }]}>{String(blockedSellersList.length)}</Text>
+              ) : undefined}
+            />
+          )}
+
+          <NavCard
+            icon="verified-user" iconBg={isDark ? colors.primary + '22' : '#E7E2FD'}
+            onPress={() => router.push('/privacy-policy' as any)}
+            label={lb('Privacy policy', 'Politique de confidentialité', 'سياسة الخصوصية')}
+          />
+
+          {/* ================= SUPPORT ET AIDE ================= */}
+          <SectionTitle>{lb('SUPPORT & HELP', 'SUPPORT ET AIDE', 'الدعم والمساعدة')}</SectionTitle>
+
+          <NavCard
+            icon="help-outline" iconBg={isDark ? colors.accentLight : '#FDF1DC'}
+            onPress={() => Alert.alert(lb('Help Center', "Centre d'aide", 'مركز المساعدة'), lb('FAQ coming soon', 'FAQ bientôt', 'الأسئلة الشائعة قريباً'))}
+            label={lb("Help center", "Centre d'aide", 'مركز المساعدة')}
+          />
+
+          <NavCard
+            icon="bug-report" iconBg={isDark ? colors.errorLight : '#FDE5E5'}
+            onPress={() => Alert.alert(lb('Report a Problem', 'Signaler un problème', 'الإبلاغ عن مشكلة'), lb('Send bug report', 'Envoyer rapport', 'إرسال تقرير'))}
+            label={lb('Report a problem', 'Signaler un problème', 'الإبلاغ عن مشكلة')}
+          />
+
+          {/* ================= APPLICATION ================= */}
+          <SectionTitle>{lb('APPLICATION', 'APPLICATION', 'التطبيق')}</SectionTitle>
+
+          <NavCard
+            icon="cleaning-services" iconBg={isDark ? colors.accentLight : '#FDF1DC'}
+            onPress={handleClearCache}
+            label={lb('Clear cache', 'Vider le cache', 'مسح الذاكرة المؤقتة')}
+            right={cacheInfo && cacheInfo.files > 0 ? (
+              <Text style={[st.navValue, { color: colors.textTertiary }]}>
+                {cacheInfo.files} {lb('files', 'fichiers', 'ملف')} · {fmtBytes(cacheInfo.bytes)}
               </Text>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(22)} color={colors.textTertiary} />
+            ) : undefined}
+          />
+
+          <NavCard
+            icon="description" iconBg={isDark ? colors.primary + '22' : '#E7E2FD'}
+            onPress={() => router.push('/privacy-policy' as any)}
+            label={lb("Terms of use", "Conditions d'utilisation", 'شروط الاستخدام')}
+          />
+
+          {/* ================= Déconnexion ================= */}
+          {isLoggedIn ? (
+            <Pressable onPress={() => { notifyWarning(); logout(); }}
+              style={({ pressed }) => [st.logoutBtn, { backgroundColor: isDark ? colors.errorLight : '#FBE3E7', opacity: pressed ? 0.88 : 1 }]}>
+              <MaterialIcons name="logout" size={scale(20)} color={colors.error} />
+              <Text style={[st.logoutText, { color: colors.error }]}>{t('logout')}</Text>
             </Pressable>
-            <Pressable onPress={() => { selection(); router.push('/seller-payments' as any); }}
-              style={({ pressed }) => [sStyles.listItem, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.88 : 1 }]}>
-              <View style={[sStyles.iconWrap, { backgroundColor: colors.verified + '14' }]}>
-                <MaterialIcons name="account-balance-wallet" size={scale(20)} color={colors.verified} />
-              </View>
-              <Text style={[sStyles.listLabel, { color: colors.textPrimary, flex: 1 }]}>
-                {lb('Payment Settings', 'Paramètres de paiement', 'إعدادات الدفع')}
-              </Text>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(22)} color={colors.textTertiary} />
-            </Pressable>
-            <View style={[sStyles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={sStyles.notifRow}>
-                <Text style={[sStyles.notifLabel, { color: colors.textSecondary }]}>{lb('Auto-accept orders', 'Acceptation automatique', 'قبول تلقائي')}</Text>
-                <Switch value={autoAcceptOrders} onValueChange={(v) => { selection(); setAutoAcceptOrders(v); }} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#FFF" />
-              </View>
-            </View>
-          </>
-        )}
-
-        {/* Support & Help */}
-        <Text style={[sStyles.sectionTitle, { color: colors.textTertiary, marginTop: scale(8) }]}>
-          {lb('Support & Help', 'Support et aide', 'الدعم والمساعدة')}
-        </Text>
-        <Pressable onPress={() => { selection(); Alert.alert(lb('Help Center', "Centre d'aide", 'مركز المساعدة'), lb('FAQ coming soon', 'FAQ bientôt', 'الأسئلة الشائعة قريباً')); }}
-          style={({ pressed }) => [sStyles.listItem, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.88 : 1 }]}>
-          <View style={[sStyles.iconWrap, { backgroundColor: colors.accent + '14' }]}>
-            <MaterialIcons name="help-outline" size={scale(20)} color={colors.accent} />
-          </View>
-          <Text style={[sStyles.listLabel, { color: colors.textPrimary, flex: 1 }]}>
-            {lb('Help Center', "Centre d'aide", 'مركز المساعدة')}
-          </Text>
-          <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(22)} color={colors.textTertiary} />
-        </Pressable>
-        <Pressable onPress={() => { selection(); Alert.alert(lb('Report a Problem', 'Signaler un problème', 'الإبلاغ عن مشكلة'), lb('Send bug report', 'Envoyer rapport', 'إرسال تقرير')); }}
-          style={({ pressed }) => [sStyles.listItem, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.88 : 1 }]}>
-          <View style={[sStyles.iconWrap, { backgroundColor: colors.error + '14' }]}>
-            <MaterialIcons name="bug-report" size={scale(20)} color={colors.error} />
-          </View>
-          <Text style={[sStyles.listLabel, { color: colors.textPrimary, flex: 1 }]}>
-            {lb('Report a Problem', 'Signaler un problème', 'الإبلاغ عن مشكلة')}
-          </Text>
-          <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(22)} color={colors.textTertiary} />
-        </Pressable>
-        <Pressable onPress={() => { selection(); router.push('/privacy-policy' as any); }}
-          style={({ pressed }) => [sStyles.listItem, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.88 : 1 }]}>
-          <View style={[sStyles.iconWrap, { backgroundColor: colors.primary + '14' }]}>
-            <MaterialIcons name="policy" size={scale(20)} color={colors.primary} />
-          </View>
-          <Text style={[sStyles.listLabel, { color: colors.textPrimary, flex: 1 }]}>
-            {lb('Privacy Policy', 'Confidentialité', 'الخصوصية')}
-          </Text>
-          <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(22)} color={colors.textTertiary} />
-        </Pressable>
-        <Pressable onPress={() => { selection(); router.push('/privacy-policy' as any); }}
-          style={({ pressed }) => [sStyles.listItem, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.88 : 1 }]}>
-          <View style={[sStyles.iconWrap, { backgroundColor: colors.primary + '14' }]}>
-            <MaterialIcons name="description" size={scale(20)} color={colors.primary} />
-          </View>
-          <Text style={[sStyles.listLabel, { color: colors.textPrimary, flex: 1 }]}>
-            {lb('Terms of Service', "Conditions d'utilisation", 'الشروط والأحكام')}
-          </Text>
-          <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(22)} color={colors.textTertiary} />
-        </Pressable>
-
-        {/* Clear Cache */}
-        <Pressable onPress={() => { selection(); handleClearCache(); }}
-          style={({ pressed }) => [sStyles.listItem, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.88 : 1 }]}>
-          <View style={[sStyles.iconWrap, { backgroundColor: colors.warning + '14' }]}>
-            <MaterialIcons name="cleaning-services" size={scale(20)} color={colors.warning} />
-          </View>
-          <Text style={[sStyles.listLabel, { color: colors.textPrimary, flex: 1 }]}>
-            {lb('Clear Cache', 'Vider le cache', 'مسح الذاكرة المؤقتة')}
-          </Text>
-          <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(22)} color={colors.textTertiary} />
-        </Pressable>
-
-        {/* Blocked Sellers (buyer only) */}
-        {isLoggedIn && isBuyer ? (
-          <Pressable onPress={openBlockedModal}
-            style={({ pressed }) => [sStyles.listItem, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.88 : 1 }]}>
-            <View style={[sStyles.iconWrap, { backgroundColor: colors.error + '14' }]}>
-              <MaterialIcons name="block" size={scale(20)} color={colors.error} />
-            </View>
-            <Text style={[sStyles.listLabel, { color: colors.textPrimary, flex: 1 }]}>
-              {lb('Blocked Sellers', 'Vendeurs bloqués', 'البائعون المحظورون')}
-            </Text>
-            <Text style={[sStyles.infoValue, { color: colors.textTertiary, marginRight: scale(4) }]}>
-              {blockedSellersList.length > 0 ? String(blockedSellersList.length) : ''}
-            </Text>
-            <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(22)} color={colors.textTertiary} />
-          </Pressable>
-        ) : null}
-
-        {/* Logout */}
-        {isLoggedIn ? (
-          <Pressable onPress={() => { notifyWarning(); logout(); }}
-            style={({ pressed }) => [sStyles.logoutBtn, { backgroundColor: colors.error + '08', borderColor: colors.error, opacity: pressed ? 0.88 : 1 }]}>
-            <MaterialIcons name="logout" size={scale(20)} color={colors.error} />
-            <Text style={[sStyles.logoutText, { color: colors.error }]}>{t('logout')}</Text>
-          </Pressable>
-        ) : null}
-      </ScrollView>
+          ) : null}
+        </ScrollView>
+      </View>
 
       {/* Change Password Modal */}
       <Modal visible={showPasswordModal} transparent animationType="slide" onRequestClose={() => setShowPasswordModal(false)}>
-        <View style={[sStyles.modalOverlay, { backgroundColor: colors.overlay }]}>
-          <View style={[sStyles.modalContent, { backgroundColor: colors.surface }]}>
-            <View style={sStyles.modalHeader}>
-              <Text style={[sStyles.modalTitle, { color: colors.primary }]}>
+        <View style={[st.modalOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[st.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={st.modalHeader}>
+              <Text style={[st.modalTitle, { color: colors.primary }]}>
                 {lb('Change Password', 'Changer le mot de passe', 'تغيير كلمة المرور')}
               </Text>
               <Pressable onPress={() => setShowPasswordModal(false)} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
             </View>
-            <Text style={[sStyles.modalDesc, { color: colors.textSecondary }]}>
+            <Text style={[st.modalDesc, { color: colors.textSecondary }]}>
               {lb('Enter your current password and a new one.', 'Entrez votre mot de passe actuel et un nouveau.', 'أدخل كلمة المرور الحالية وكلمة جديدة.')}
             </Text>
 
-            <Text style={[sStyles.inputLabel, { color: colors.textSecondary }]}>{lb('CURRENT PASSWORD *', 'MOT DE PASSE ACTUEL *', 'كلمة المرور الحالية *')}</Text>
+            <Text style={[st.inputLabel, { color: colors.textSecondary }]}>{lb('CURRENT PASSWORD *', 'MOT DE PASSE ACTUEL *', 'كلمة المرور الحالية *')}</Text>
             <TextInput
               value={curPw}
               onChangeText={setCurPw}
@@ -449,10 +520,10 @@ export default function SettingsScreen() {
               autoCorrect={false}
               placeholder={lb('Current password', 'Mot de passe actuel', 'كلمة المرور الحالية')}
               placeholderTextColor={colors.textTertiary}
-              style={[sStyles.input, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, color: colors.textPrimary }]}
+              style={[st.input, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, color: colors.textPrimary }]}
             />
 
-            <Text style={[sStyles.inputLabel, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('NEW PASSWORD *', 'NOUVEAU MOT DE PASSE *', 'كلمة المرور الجديدة *')}</Text>
+            <Text style={[st.inputLabel, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('NEW PASSWORD *', 'NOUVEAU MOT DE PASSE *', 'كلمة المرور الجديدة *')}</Text>
             <TextInput
               value={newPw}
               onChangeText={setNewPw}
@@ -461,10 +532,10 @@ export default function SettingsScreen() {
               autoCorrect={false}
               placeholder={lb('At least 6 characters', 'Au moins 6 caractères', '6 أحرف على الأقل')}
               placeholderTextColor={colors.textTertiary}
-              style={[sStyles.input, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, color: colors.textPrimary }]}
+              style={[st.input, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, color: colors.textPrimary }]}
             />
 
-            <Text style={[sStyles.inputLabel, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('CONFIRM NEW PASSWORD *', 'CONFIRMER LE MOT DE PASSE *', 'تأكيد كلمة المرور *')}</Text>
+            <Text style={[st.inputLabel, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('CONFIRM NEW PASSWORD *', 'CONFIRMER LE MOT DE PASSE *', 'تأكيد كلمة المرور *')}</Text>
             <TextInput
               value={confirmPw}
               onChangeText={setConfirmPw}
@@ -473,14 +544,14 @@ export default function SettingsScreen() {
               autoCorrect={false}
               placeholder={lb('Repeat new password', 'Repeter le mot de passe', 'كرر كلمة المرور')}
               placeholderTextColor={colors.textTertiary}
-              style={[sStyles.input, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, color: colors.textPrimary }]}
+              style={[st.input, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, color: colors.textPrimary }]}
             />
 
             <Pressable onPress={handleChangePassword}
-              style={({ pressed }) => [sStyles.submitBtn, { backgroundColor: pwLoading ? colors.textTertiary : colors.primary, opacity: pressed ? 0.9 : 1 }]}
+              style={({ pressed }) => [st.submitBtn, { backgroundColor: pwLoading ? colors.textTertiary : colors.primary, opacity: pressed ? 0.9 : 1 }]}
               disabled={pwLoading}>
               {pwLoading ? <ActivityIndicator color="#FFF" /> : <MaterialIcons name="lock-reset" size={scale(18)} color="#FFF" />}
-              <Text style={sStyles.submitBtnText}>{pwLoading ? '...' : lb('Update Password', 'Mettre a jour', 'تحديث كلمة المرور')}</Text>
+              <Text style={st.submitBtnText}>{pwLoading ? '...' : lb('Update Password', 'Mettre a jour', 'تحديث كلمة المرور')}</Text>
             </Pressable>
           </View>
         </View>
@@ -488,57 +559,57 @@ export default function SettingsScreen() {
 
       {/* Edit Profile Modal */}
       <Modal visible={showEditProfileModal} transparent animationType="slide" onRequestClose={() => setShowEditProfileModal(false)}>
-        <View style={[sStyles.modalOverlay, { backgroundColor: colors.overlay }]}>
-          <View style={[sStyles.modalContent, { backgroundColor: colors.surface }]}>
+        <View style={[st.modalOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[st.modalContent, { backgroundColor: colors.surface }]}>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={sStyles.modalHeader}>
-                <Text style={[sStyles.modalTitle, { color: colors.primary }]}>
+              <View style={st.modalHeader}>
+                <Text style={[st.modalTitle, { color: colors.primary }]}>
                   {lb('Edit Profile', 'Modifier le profil', 'تعديل الملف الشخصي')}
                 </Text>
                 <Pressable onPress={() => setShowEditProfileModal(false)} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
               </View>
 
-              <Text style={[sStyles.inputLabel, { color: colors.textSecondary }]}>{lb('AVATAR', 'AVATAR', 'الصورة الشخصية')}</Text>
-              <Pressable onPress={pickEditAvatar} style={[sStyles.docPicker, { height: scale(100), backgroundColor: colors.backgroundSecondary, borderColor: editAvatar ? colors.success : colors.border }]}>
+              <Text style={[st.inputLabel, { color: colors.textSecondary }]}>{lb('AVATAR', 'AVATAR', 'الصورة الشخصية')}</Text>
+              <Pressable onPress={pickEditAvatar} style={[st.docPicker, { height: scale(100), backgroundColor: colors.backgroundSecondary, borderColor: editAvatar ? colors.success : colors.border }]}>
                 {editAvatar ? (
                   <Image source={{ uri: editAvatar }} style={{ width: scale(80), height: scale(80), borderRadius: scale(40) }} contentFit="cover" />
                 ) : (
-                  <View style={sStyles.docPlaceholder}><MaterialIcons name="account-circle" size={scale(40)} color={colors.textTertiary} /><Text style={[sStyles.docPlaceholderText, { color: colors.textTertiary }]}>{lb('Tap to choose', 'Appuyer pour choisir', 'اضغط للاختيار')}</Text></View>
+                  <View style={st.docPlaceholder}><MaterialIcons name="account-circle" size={scale(40)} color={colors.textTertiary} /><Text style={[st.docPlaceholderText, { color: colors.textTertiary }]}>{lb('Tap to choose', 'Appuyer pour choisir', 'اضغط للاختيار')}</Text></View>
                 )}
               </Pressable>
 
-              <Text style={[sStyles.inputLabel, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('COVER IMAGE', 'IMAGE DE COUVERTURE', 'صورة الغلاف')}</Text>
-              <Pressable onPress={pickEditCover} style={[sStyles.docPicker, { height: scale(100), backgroundColor: colors.backgroundSecondary, borderColor: editCover ? colors.success : colors.border }]}>
+              <Text style={[st.inputLabel, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('COVER IMAGE', 'IMAGE DE COUVERTURE', 'صورة الغلاف')}</Text>
+              <Pressable onPress={pickEditCover} style={[st.docPicker, { height: scale(100), backgroundColor: colors.backgroundSecondary, borderColor: editCover ? colors.success : colors.border }]}>
                 {editCover ? (
                   <Image source={{ uri: editCover }} style={{ width: '100%', height: '100%', borderRadius: scale(8) }} contentFit="cover" />
                 ) : (
-                  <View style={sStyles.docPlaceholder}><MaterialIcons name="add-photo-alternate" size={scale(40)} color={colors.textTertiary} /><Text style={[sStyles.docPlaceholderText, { color: colors.textTertiary }]}>{lb('Tap to choose', 'Appuyer pour choisir', 'اضغط للاختيار')}</Text></View>
+                  <View style={st.docPlaceholder}><MaterialIcons name="add-photo-alternate" size={scale(40)} color={colors.textTertiary} /><Text style={[st.docPlaceholderText, { color: colors.textTertiary }]}>{lb('Tap to choose', 'Appuyer pour choisir', 'اضغط للاختيار')}</Text></View>
                 )}
               </Pressable>
 
-              <Text style={[sStyles.inputLabel, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('NAME *', 'NOM *', 'الاسم *')}</Text>
+              <Text style={[st.inputLabel, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('NAME *', 'NOM *', 'الاسم *')}</Text>
               <TextInput
                 value={editName}
                 onChangeText={setEditName}
                 placeholder={lb('Your name', 'Votre nom', 'اسمك')}
                 placeholderTextColor={colors.textTertiary}
-                style={[sStyles.input, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, color: colors.textPrimary }]}
+                style={[st.input, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, color: colors.textPrimary }]}
               />
 
-              <Text style={[sStyles.inputLabel, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('PHONE', 'TELEPHONE', 'الهاتف')}</Text>
+              <Text style={[st.inputLabel, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('PHONE', 'TELEPHONE', 'الهاتف')}</Text>
               <TextInput
                 value={editPhone}
                 onChangeText={setEditPhone}
                 keyboardType="phone-pad"
                 placeholder={lb('Phone number', 'Numero de telephone', 'رقم الهاتف')}
                 placeholderTextColor={colors.textTertiary}
-                style={[sStyles.input, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, color: colors.textPrimary }]}
+                style={[st.input, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, color: colors.textPrimary }]}
               />
 
               <Pressable onPress={handleSaveProfile}
-                style={({ pressed }) => [sStyles.submitBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }]}>
+                style={({ pressed }) => [st.submitBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }]}>
                 <MaterialIcons name="check" size={scale(18)} color="#FFF" />
-                <Text style={sStyles.submitBtnText}>{lb('Save Changes', 'Enregistrer', 'حفظ التغييرات')}</Text>
+                <Text style={st.submitBtnText}>{lb('Save Changes', 'Enregistrer', 'حفظ التغييرات')}</Text>
               </Pressable>
             </ScrollView>
           </View>
@@ -566,10 +637,10 @@ export default function SettingsScreen() {
 
       {/* Blocked Sellers Modal */}
       <Modal visible={showBlockedModal} transparent animationType="slide" onRequestClose={() => setShowBlockedModal(false)}>
-        <View style={[sStyles.modalOverlay, { backgroundColor: colors.overlay }]}>
-          <View style={[sStyles.modalContent, { backgroundColor: colors.surface }]}>
-            <View style={sStyles.modalHeader}>
-              <Text style={[sStyles.modalTitle, { color: colors.error }]}>
+        <View style={[st.modalOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[st.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={st.modalHeader}>
+              <Text style={[st.modalTitle, { color: colors.error }]}>
                 {lb('Blocked Sellers', 'Vendeurs bloqués', 'البائعون المحظورون')}
               </Text>
               <Pressable onPress={() => setShowBlockedModal(false)} hitSlop={12}>
@@ -577,7 +648,7 @@ export default function SettingsScreen() {
               </Pressable>
             </View>
 
-            <Text style={[sStyles.modalDesc, { color: colors.textSecondary }]}>
+            <Text style={[st.modalDesc, { color: colors.textSecondary }]}>
               {lb('Sellers you blocked cannot contact you and their products are hidden.', 'Les vendeurs bloqués ne peuvent pas vous contacter et leurs produits sont masqués.', 'البائعون المحظورون لا يمكنهم التواصل معك ومنتجاتهم مخفية.')}
             </Text>
 
@@ -593,8 +664,8 @@ export default function SettingsScreen() {
             ) : (
               <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: scale(400) }}>
                 {blockedSellersList.map((seller) => (
-                  <View key={String(seller.seller_id)} style={[sStyles.listItem, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, marginBottom: scale(8) }]}>
-                    <View style={[sStyles.iconWrap, { backgroundColor: colors.error + '14' }]}>
+                  <View key={String(seller.seller_id)} style={[st.listItem, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, marginBottom: scale(8) }]}>
+                    <View style={[st.iconCircle, { backgroundColor: colors.error + '14' }]}>
                       <MaterialIcons name="storefront" size={scale(20)} color={colors.error} />
                     </View>
                     <View style={{ flex: 1, gap: scale(2) }}>
@@ -629,25 +700,27 @@ export default function SettingsScreen() {
   );
 }
 
-const sStyles = StyleSheet.create({
+const st = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(12), paddingVertical: scale(12), borderBottomWidth: 0.5 },
-  headerBackBtn: { padding: scale(4) },
-  headerTitle: { fontSize: scale(18), fontWeight: '700', fontFamily: 'Cairo-Bold' },
-  sectionTitle: { fontSize: scale(12), fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: scale(8), fontFamily: 'Cairo-SemiBold' },
-  card: { borderRadius: borderRadius.lg, borderWidth: 0.5, padding: scale(14), marginBottom: scale(8) },
-  row: { flexDirection: 'row', alignItems: 'center', gap: scale(10), marginBottom: scale(10) },
-  rowFull: { flexDirection: 'row', alignItems: 'center', gap: scale(10) },
-  rowLabel: { fontSize: scale(15), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
-  infoValue: { flex: 1, fontSize: scale(14), fontWeight: '500', textAlign: 'right', fontFamily: 'Cairo-Regular' },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: scale(8), paddingVertical: scale(8), borderTopWidth: 0.5, borderTopColor: 'rgba(128,128,128,0.2)' },
-  infoLabel: { fontSize: scale(13), fontWeight: '600', width: scale(90), fontFamily: 'Cairo-SemiBold' },
-  listItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: scale(16), paddingHorizontal: scale(14), minHeight: scale(58), borderRadius: borderRadius.lg, borderWidth: 0.5, marginBottom: scale(8), gap: scale(12) },
-  iconWrap: { width: scale(38), height: scale(38), borderRadius: scale(19), alignItems: 'center', justifyContent: 'center' },
-  listLabel: { fontSize: scale(15), fontWeight: '600', fontFamily: 'Cairo-Regular' },
-  notifRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: scale(10), borderTopWidth: 0.5, borderTopColor: 'rgba(128,128,128,0.2)' },
-  notifLabel: { fontSize: scale(14), fontWeight: '500', flex: 1, fontFamily: 'Cairo-Regular' },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: scale(20), marginBottom: scale(8), paddingVertical: scale(14), borderRadius: borderRadius.lg, borderWidth: 1, gap: scale(8) },
+  // Header: flat purple, generous vertical padding, centered title stack
+  header: { backgroundColor: '#5B48D9', paddingTop: scale(10), paddingBottom: scale(16), paddingHorizontal: scale(12) },
+  headerBackBtn: { width: scale(40), height: scale(40), alignItems: 'center', justifyContent: 'center' },
+  headerCenter: { flex: 1, alignItems: 'center' },
+  headerTitle: { fontSize: scale(20), fontWeight: '700', color: '#FFFFFF', fontFamily: 'Cairo-Bold', textAlign: 'center' },
+  headerSubtitle: { fontSize: scale(13), color: '#E4DFFB', fontFamily: 'Cairo-Regular', marginTop: scale(2), textAlign: 'center' },
+  sectionTitle: { fontSize: scale(13), fontWeight: '700', letterSpacing: 1.2, marginBottom: scale(10), fontFamily: 'Cairo-Bold' },
+  card: { borderRadius: borderRadius.lg, marginBottom: scale(10), paddingHorizontal: scale(14), paddingVertical: scale(14) },
+  navRow: { flexDirection: 'row', alignItems: 'center', gap: scale(12) },
+  iconCircle: { width: scale(38), height: scale(38), borderRadius: scale(19), alignItems: 'center', justifyContent: 'center' },
+  navLabel: { flex: 1, fontSize: scale(16), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
+  navValue: { fontSize: scale(14), fontWeight: '500', fontFamily: 'Cairo-Regular', textAlign: 'right' },
+  notifHint: { fontSize: scale(12), fontFamily: 'Cairo-Regular', marginTop: scale(8), lineHeight: scale(17) },
+  infoHead: { flexDirection: 'row', alignItems: 'center', gap: scale(12), marginBottom: scale(4) },
+  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: scale(10), paddingVertical: scale(10), borderTopWidth: 1 },
+  infoBody: { flex: 1 },
+  infoLabel: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-SemiBold', marginBottom: scale(2) },
+  infoValue: { fontSize: scale(14), fontWeight: '500', fontFamily: 'Cairo-Regular', flexShrink: 1 },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: scale(16), marginBottom: scale(8), paddingVertical: scale(15), borderRadius: borderRadius.lg, gap: scale(8) },
   logoutText: { fontSize: scale(16), fontWeight: '700', fontFamily: 'Cairo-Bold' },
   // Modal styles
   modalOverlay: { flex: 1, justifyContent: 'flex-end' },
@@ -662,4 +735,6 @@ const sStyles = StyleSheet.create({
   docPlaceholderText: { fontSize: scale(12), fontWeight: '500', fontFamily: 'Cairo-Regular' },
   submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: scale(52), borderRadius: borderRadius.md, gap: scale(8), marginTop: scale(16), marginBottom: scale(16) },
   submitBtnText: { color: '#FFF', fontSize: scale(16), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
+  listItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: scale(16), paddingHorizontal: scale(14), minHeight: scale(58), borderRadius: borderRadius.lg, borderWidth: 0.5, gap: scale(12) },
+  page: { flex: 1 },
 });
