@@ -219,6 +219,11 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <TabIcon name="grid-view" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
+        <Tabs.Screen key="services" name="services-tab" options={{
+          tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('services')} color={color} />,
+          tabBarIcon: ({ color, size }) => <TabIcon name="handyman" size={size} color={color} />,
+          href: isSeller ? HIDDEN : VISIBLE,
+        }} />,
         <Tabs.Screen key="index" name="index" options={{
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('home')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="storefront" size={size} color={color} />,
@@ -234,6 +239,16 @@ export default function TabLayout() {
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('categories')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="grid-view" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
+        }} />,
+        <Tabs.Screen key="services" name="services-tab" options={{
+          tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('services')} color={color} />,
+          tabBarIcon: ({ color, size }) => <TabIcon name="handyman" size={size} color={color} />,
+          href: isSeller ? HIDDEN : VISIBLE,
+        }} />,
+        <Tabs.Screen key="chats" name="chats" options={{
+          tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('messages')} color={color} />,
+          tabBarIcon: ({ color, size }) => <TabIcon name="chat" size={size} color={color} />,
+          tabBarBadge: chatBadgeCount > 0 ? chatBadgeCount : undefined,
         }} />,
         <Tabs.Screen key="chats" name="chats" options={{
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('messages')} color={color} />,
