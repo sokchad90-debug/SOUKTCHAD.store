@@ -308,7 +308,7 @@ export default function HomeScreen() {
     : (rawTabHeight || scale(56) + insets.bottom);
 
   const {
-    colors, t, language, searchQuery, setSearchQuery,
+    colors, t, language, isDark, searchQuery, setSearchQuery,
     selectedCategory, setSelectedCategory, getFilteredProducts, products, subCategories, lastCategory,
     filters, setFilters, resetFilters, activeFilterCount,
     refreshProducts, selectedCity, setSelectedCity,
@@ -475,13 +475,13 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#4C1CEA' }]}>
-      <StatusBar style="light" backgroundColor="#4C1CEA" />
+    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: isDark ? '#39276A' : '#4C1CEA' }]}>
+      <StatusBar style="light" backgroundColor={isDark ? '#39276A' : '#4C1CEA'} />
       <View style={[styles.homeBackdrop, { backgroundColor: colors.background }]}>
         <View style={[styles.homeSurface, { width: layout.surfaceWidth, backgroundColor: colors.background }]}>
           {/* Sticky Search Bar — always visible at top */}
           <View
-            style={[styles.stickySearchWrap, { backgroundColor: '#4C1CEA', paddingTop: 0 }]}
+            style={[styles.stickySearchWrap, { backgroundColor: isDark ? '#39276A' : '#4C1CEA', paddingTop: 0 }]}
             onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}
           >
                         {/* Mockup header — order swapped per language; groups are equal flex, sides fixed */}

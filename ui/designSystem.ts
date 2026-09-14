@@ -18,7 +18,8 @@ export const DS = {
     borderLight: '#F1F5F9',
     bg: '#F8FAFC',
     surface: '#FFFFFF',
-    imageNeutral: '#F1F5F9', // neutral gap behind contain images
+    imageNeutral: '#F1F5F9', // light-mode neutral gap; dark mode uses DS.dark.imageNeutral
+    imageNeutralDark: '#36363B',
   },
   fontFamily: {
     regular: 'Cairo-Regular',

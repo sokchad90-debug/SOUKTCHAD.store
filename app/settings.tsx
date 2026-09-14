@@ -17,7 +17,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const {
-    colors, t, language, setLanguage, isDark, toggleDarkMode,
+    colors, t, language, setLanguage, isDark, toggleDarkMode, themePref, setThemePref,
     isLoggedIn, user, logout, updateUserAvatar, updateUserCover,
     enabledLanguages,
   } = useApp();
@@ -220,9 +220,22 @@ export default function SettingsScreen() {
         <View style={[sStyles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={sStyles.rowFull}>
             <MaterialIcons name={isDark ? 'dark-mode' : 'light-mode'} size={scale(22)} color={colors.primary} />
-            <Text style={[sStyles.rowLabel, { color: colors.textPrimary, flex: 1 }]}>{t('darkMode')}</Text>
-            <Switch value={isDark} onValueChange={() => { selection(); toggleDarkMode(); }} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#FFF" />
+            <Text style={[sStyles.rowLabel, { color: colors.textPrimary, flex: 1 }]}>{lb('Appearance', 'Apparence', 'المظهر')}</Text>
           </View>
+          {([
+            { key: 'light', label: lb('Light', 'Clair', 'فاتح') },
+            { key: 'dark', label: lb('Dark', 'Sombre', 'داكن') },
+            { key: 'system', label: lb('Follow device', 'Selon l\u2019appareil', 'حسب إعداد الجهاز') },
+          ] as const).map(opt => (
+            <Pressable key={opt.key} onPress={() => { selection(); setThemePref(opt.key); }}
+              style={sStyles.rowFull} testID={`appearance-${opt.key}`}
+              accessibilityRole="radio" accessibilityState={{ selected: themePref === opt.key }}>
+              <MaterialIcons
+                name={themePref === opt.key ? 'radio-button-checked' : 'radio-button-unchecked'}
+                size={scale(20)} color={themePref === opt.key ? colors.primary : colors.textTertiary} />
+              <Text style={[sStyles.rowLabel, { color: themePref === opt.key ? colors.primary : colors.textPrimary, marginLeft: scale(8) }]}>{opt.label}</Text>
+            </Pressable>
+          ))}
         </View>
 
         {/* Notifications master toggle */}

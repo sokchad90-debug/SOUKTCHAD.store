@@ -118,7 +118,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           uri={product?.images?.[0]}
           frameWidth={CARD_WIDTH}
           frameRatio={CARD_WIDTH / IMAGE_HEIGHT}
-          neutralBg="#F1F5F9"
+          neutralBg={colors.borderLight}
           failedText={language === 'fr' ? 'Image indisponible' : language === 'ar' ? 'الصورة غير متوفرة' : 'Image unavailable'}
         />
         {isPinActive(product) ? (

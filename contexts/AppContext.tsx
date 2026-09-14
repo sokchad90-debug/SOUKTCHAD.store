@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/template';
 import { lightColors, darkColors, ThemeColors } from '@/constants/theme';
 import { Language, t as translate } from '@/constants/config';
+import { Appearance } from 'react-native';
 import { translateMessageFull, detectLanguage } from '@/services/translation';
 import {
   initializeNotifications, sendOrderNotification, sendMessageNotification,
@@ -325,6 +326,8 @@ interface User {
 interface AppContextType {
   language: Language;
   isDark: boolean;
+  themePref: 'light' | 'dark' | 'system';
+  setThemePref: (mode: 'light' | 'dark' | 'system') => void;
   colors: ThemeColors;
   user: User | null;
   isLoggedIn: boolean;
@@ -499,7 +502,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [appStoreLogo, setAppStoreLogo] = useState("");
   const [language, setLanguageState] = useState<Language>('fr');
   const [enabledLanguages, setEnabledLanguages] = useState<string[]>(['fr', 'ar']);
-  const [isDark, setIsDark] = useState(false);
+  const [themePref, setThemePref] = useState<'light' | 'dark' | 'system'>('light');
+  const [systemDark, setSystemDark] = useState(Appearance.getColorScheme() === 'dark');
+  useEffect(() => {
+    const sub = Appearance.addChangeListener(({ colorScheme }) => setSystemDark(colorScheme === 'dark'));
+    return () => sub.remove();
+  }, []);
+  const [isDarkState, setIsDarkState] = useState(false);
+  const isDark = themePref === 'dark' || (themePref === 'system' && systemDark);
   const [user, setUser] = useState<User | null>(null);
   // userChecked: true once we've checked AsyncStorage and Supabase session.
   // Before that, we don't know if user is null (no session) or just not loaded.
@@ -1314,6 +1324,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         const lang = await AsyncStorage.getItem('language').catch(() => null);
         const dark = await AsyncStorage.getItem('isDark').catch(() => null);
+        const themePrefSaved = await AsyncStorage.getItem('themePref').catch(() => null);
+        if (themePrefSaved === 'light' || themePrefSaved === 'dark' || themePrefSaved === 'system') {
+          setThemePref(themePrefSaved as 'light' | 'dark' | 'system');
+          setIsDarkState(themePrefSaved === 'dark');
+        } else if (dark === 'true') {
+          setThemePref('dark'); setIsDarkState(true);
+        }
         const favs = await AsyncStorage.getItem('favorites').catch(() => null);
         const usernames = await AsyncStorage.getItem('registeredUsernames').catch(() => null);
         const refs = await AsyncStorage.getItem('usedReferenceIds').catch(() => null);
@@ -1328,7 +1345,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setLanguageState(lang as Language);
           // RTL is handled manually in components — no forceRTL needed
         }
-        if (dark) setIsDark(dark === 'true');
+        // legacy isDark handled via themePref above
         if (favs) try { setFavorites(JSON.parse(favs)); } catch {}
         if (usernames) try { setRegisteredUsernames(JSON.parse(usernames)); } catch {}
         if (refs) try { setUsedReferenceIds(JSON.parse(refs)); } catch {}
@@ -1461,7 +1478,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return next;
     });
   }, []);
-  const toggleDarkMode = useCallback(() => { setIsDark(prev => !prev); }, []);
+  const toggleDarkMode = useCallback(() => {
+    setThemePref(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      AsyncStorage.setItem('themePref', next).catch(() => {});
+      return next;
+    });
+  }, []);
+  const setThemePrefPersist = useCallback((mode: 'light' | 'dark' | 'system') => {
+    setThemePref(mode);
+    AsyncStorage.setItem('themePref', mode).catch(() => {});
+  }, []);
 
   const isUsernameTaken = useCallback((username: string) => {
     return registeredUsernames.includes(username.trim().toLowerCase());
@@ -2377,7 +2404,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       language, isDark, colors, user, isLoggedIn: !!user, isReady, authLoading, userChecked, dynamicBanners: appBanners, storeLogo: appStoreLogo,
       products, favorites, conversations, orders, sellers, reviews,
       searchQuery, selectedCategory, filters, activeFilterCount, registeredUsernames, usedReferenceIds, blacklist, staffMembers,
-      t, setLanguage, enabledLanguages, toggleLanguageEnabled, toggleDarkMode, logout,
+      t, setLanguage, enabledLanguages, toggleLanguageEnabled, toggleDarkMode, themePref, setThemePref: setThemePrefPersist, logout,
       isUsernameTaken, isReferenceIdUsed, updateUserAvatar, updateUserCover,
       toggleFavorite, isFavorite, setSearchQuery, setSelectedCategory,
       setFilters, resetFilters,
