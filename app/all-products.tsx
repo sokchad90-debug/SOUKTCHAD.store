@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, Pressable } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -65,7 +64,6 @@ export default function AllProductsScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: '#4C1CEA' }]}>
-      <StatusBar style="light" backgroundColor="#4C1CEA" />
       {/* Header: back + title + search (identity-consistent — purple like home) */}
       <View style={[styles.header, { width: layout.surfaceWidth }, isAr && { flexDirection: 'row-reverse' }]}>
         <Pressable hitSlop={10} onPress={() => router.back()}>

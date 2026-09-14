@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert, Modal, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -311,8 +310,6 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[st.safeArea, { backgroundColor: headerBg }]}>
-      {/* Status bar: light icons over the purple header (dark header in dark mode) */}
-      <StatusBar style="light" backgroundColor={headerBg} />
       {/* ===== Compact purple bar with title + subtitle — content starts immediately below ===== */}
       <View style={st.header}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={st.headerBackBtn}
