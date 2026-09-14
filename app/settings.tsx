@@ -310,23 +310,18 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[st.safeArea, { backgroundColor: headerBg }]}>
-      {/* ===== Purple header (reference design) — title + subtitle, no fake number ===== */}
+      {/* ===== Compact purple bar — settings start immediately below it ===== */}
       <View style={st.header}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={st.headerBackBtn}
           accessibilityRole="button" accessibilityLabel={lb('Back', 'Retour', 'رجوع')}>
-          <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(24)} color="#FFFFFF" />
+          <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(22)} color="#FFFFFF" />
         </Pressable>
-        <View style={st.headerCenter}>
-          <Text style={st.headerTitle}>{lb('Settings', 'Paramètres', 'الإعدادات')}</Text>
-          <Text style={[st.headerSubtitle, isAr && { textAlign: 'center' }]}>
-            {lb('Buyer account', 'Compte acheteur', 'حساب المشتري')}
-          </Text>
-        </View>
+        <Text style={st.headerTitle}>{lb('Settings', 'Paramètres', 'الإعدادات')}</Text>
         <View style={st.headerBackBtn} />
       </View>
 
-      <View style={[st.page, { backgroundColor: pageBg, paddingBottom: insets.bottom + scale(90) + scale(16) }]}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(14) }} showsVerticalScrollIndicator={false}>
+      <View style={[st.page, { backgroundColor: pageBg, paddingBottom: insets.bottom + scale(12) }]}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(14), paddingTop: scale(8) }} showsVerticalScrollIndicator={false}>
           {/* ================= PRÉFÉRENCES ================= */}
           <SectionTitle>{lb('PREFERENCES', 'PRÉFÉRENCES', 'التفضيلات')}</SectionTitle>
 
@@ -702,12 +697,10 @@ export default function SettingsScreen() {
 
 const st = StyleSheet.create({
   safeArea: { flex: 1 },
-  // Header: flat purple, generous vertical padding, centered title stack
-  header: { backgroundColor: '#5B48D9', paddingTop: scale(10), paddingBottom: scale(16), paddingHorizontal: scale(12) },
+  // Header: slim purple bar (settings content starts immediately below)
+  header: { backgroundColor: '#5B48D9', height: scale(48), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(8) },
   headerBackBtn: { width: scale(40), height: scale(40), alignItems: 'center', justifyContent: 'center' },
-  headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle: { fontSize: scale(20), fontWeight: '700', color: '#FFFFFF', fontFamily: 'Cairo-Bold', textAlign: 'center' },
-  headerSubtitle: { fontSize: scale(13), color: '#E4DFFB', fontFamily: 'Cairo-Regular', marginTop: scale(2), textAlign: 'center' },
+  headerTitle: { fontSize: scale(17), fontWeight: '700', color: '#FFFFFF', fontFamily: 'Cairo-Bold', textAlign: 'center' },
   sectionTitle: { fontSize: scale(13), fontWeight: '700', letterSpacing: 1.2, marginBottom: scale(10), fontFamily: 'Cairo-Bold' },
   card: { borderRadius: borderRadius.lg, marginBottom: scale(10), paddingHorizontal: scale(14), paddingVertical: scale(14) },
   navRow: { flexDirection: 'row', alignItems: 'center', gap: scale(12) },
