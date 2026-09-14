@@ -255,9 +255,23 @@ export default function ProductDetailScreen() {
               <View style={[styles.discountBadgeLarge, { backgroundColor: '#EF4444' }]}>
                 <Text style={styles.discountBadgeLargeText}>-{discountPercent}%</Text>
               </View>
+              {(product.rating ?? 0) >= 4.5 && (product.soldCount ?? 0) >= 100 ? (
+                <View style={[styles.discountBadgeLarge, { backgroundColor: '#FDE68A' }]}>
+                  <MaterialIcons name="workspace-premium" size={scale(14)} color="#B8860B" />
+                  <Text style={[styles.discountBadgeLargeText, { color: '#B8860B' }]}>Top</Text>
+                </View>
+              ) : null}
             </View>
           ) : (
-            <Text style={[styles.price, { color: colors.primary }]}>{formatPrice(product.price)}</Text>
+            <View style={styles.discountPriceRow}>
+              <Text style={[styles.price, { color: colors.primary }]}>{formatPrice(product.price)}</Text>
+              {(product.rating ?? 0) >= 4.5 && (product.soldCount ?? 0) >= 100 ? (
+                <View style={[styles.discountBadgeLarge, { backgroundColor: '#FDE68A' }]}>
+                  <MaterialIcons name="workspace-premium" size={scale(14)} color="#B8860B" />
+                  <Text style={[styles.discountBadgeLargeText, { color: '#B8860B' }]}>Top</Text>
+                </View>
+              ) : null}
+            </View>
           )}
           {hasDiscount ? (
             <Text style={[styles.oldPriceDetail, { color: colors.textTertiary }]}>{formatPrice(product.price)}</Text>
@@ -280,12 +294,20 @@ export default function ProductDetailScreen() {
                 size={scale(14)}
                 color={productReviews.length > 0 ? '#F59E0B' : colors.textTertiary}
               />
-              <Text style={[styles.metaText, { color: productReviews.length > 0 ? '#F59E0B' : colors.textTertiary, fontWeight: '600' }]}>
-                {productReviews.length > 0
-                  ? `${avgRating.toFixed(1)} (${productReviews.length})`
+              <Text style={[styles.metaText, { color: (productReviews.length > 0 || (product.rating ?? 0) > 0) ? '#F59E0B' : colors.textTertiary, fontWeight: '600' }]}>
+                {(productReviews.length > 0 || (product.rating ?? 0) > 0)
+                  ? `${(productReviews.length > 0 ? avgRating : (product.rating ?? 0)).toFixed(1)} (${productReviews.length > 0 ? productReviews.length : (product.reviewsCount ?? 0)})`
                   : lb('No reviews', 'Aucun avis', 'لا تقييمات')}
               </Text>
             </Pressable>
+            {(product.soldCount ?? 0) > 0 ? (
+              <View style={[styles.metaItem]}>
+                <MaterialIcons name="sell" size={scale(14)} color={colors.textTertiary} />
+                <Text style={[styles.metaText, { color: colors.textSecondary, fontWeight: '600' }]}>
+                  {lb(`${product.soldCount} sold`, `${product.soldCount} vendus`, `${product.soldCount} مبيع`)}
+                </Text>
+              </View>
+            ) : null}
             {category ? (
               <View style={[styles.catBadge, { backgroundColor: category.color + '15' }]}>
                 <MaterialIcons name={category.icon as any} size={scale(14)} color={category.color} />
@@ -299,7 +321,7 @@ export default function ProductDetailScreen() {
             ) : null}
           </View>
 
-          {/* Stock / Quantity */}
+          {/* Stock / Quantity — zero stock = out of stock (real state, not missing) */}
           {(product.stock ?? 0) > 0 ? (
             <View style={[styles.stockBadge, { backgroundColor: colors.success + '10', borderColor: colors.success + '30' }]}>
               <MaterialIcons name="inventory" size={scale(16)} color={colors.success} />
@@ -311,6 +333,23 @@ export default function ProductDetailScreen() {
                   {lb(`Max ${product.maxOrderQty}/order`, `Max ${product.maxOrderQty}/commande`, `الحد الأقصى ${product.maxOrderQty}/طلب`)}
                 </Text>
               ) : null}
+            </View>
+          ) : (product.stock ?? -1) === 0 ? (
+            <View style={[styles.stockBadge, { backgroundColor: colors.error + '10', borderColor: colors.error + '30' }]}>
+              <MaterialIcons name="remove-shopping-cart" size={scale(16)} color={colors.error} />
+              <Text style={[styles.stockBadgeText, { color: colors.error }]}>
+                {lb('Out of stock', 'Rupture de stock', 'نفد المخزون')}
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Warranty (seller-declared, when present) */}
+          {(product.warrantyDays ?? 0) > 0 ? (
+            <View style={[styles.stockBadge, { backgroundColor: colors.verified + '10', borderColor: colors.verified + '30' }]}>
+              <MaterialIcons name="verified-user" size={scale(16)} color={colors.verified} />
+              <Text style={[styles.stockBadgeText, { color: colors.verified }]}>
+                {lb(`Seller warranty: ${product.warrantyDays} days`, `Garantie vendeur: ${product.warrantyDays}j`, `ضمان البائع: ${product.warrantyDays} أيام`)}
+              </Text>
             </View>
           ) : null}
 
@@ -372,7 +411,7 @@ export default function ProductDetailScreen() {
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(20), paddingBottom: scale(12) }}>
                   <Text style={{ fontSize: scale(18), fontWeight: '700', color: colors.textPrimary }}>
-                    {lb('Reviews', 'Avis', 'التقييمات')} ({productReviews.length})
+                    {lb('Reviews', 'Avis', 'التقييمات')} ({Math.max(productReviews.length, (product.reviewsCount ?? 0))})
                   </Text>
                   <Pressable onPress={() => setShowReviewsSheet(false)} hitSlop={12}>
                     <MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} />
@@ -430,7 +469,9 @@ export default function ProductDetailScreen() {
                     <View style={{ alignItems: 'center', paddingVertical: scale(32), gap: scale(8) }}>
                       <MaterialIcons name="rate-review" size={scale(32)} color={colors.textTertiary} />
                       <Text style={{ fontSize: scale(14), color: colors.textTertiary }}>
-                        {lb('No reviews yet', 'Aucun avis pour le moment', 'لا توجد تقييمات بعد')}
+                        {(product.rating ?? 0) > 0
+                          ? lb(`Catalog rating ${product.rating} from ${product.reviewsCount ?? 0} buyers`, `Note catalogue ${product.rating} sur ${product.reviewsCount ?? 0} acheteurs`, `تقييم المنتج ${product.rating} من ${product.reviewsCount ?? 0} مشتري`)
+                          : lb('No reviews yet', 'Aucun avis pour le moment', 'لا توجد تقييمات بعد')}
                       </Text>
                     </View>
                   )}
