@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert,
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
+import TopBadge from '@/components/TopBadge';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
 import { getSellerById } from '@/services/mockData';
@@ -186,6 +187,7 @@ export default function ProductDetailScreen() {
   const conditionLabel = product.condition === 'new' ? t('brandNew') : product.condition === 'like_new' ? t('likeNew') : t('used');
   const isRealEstate = product.categoryId === 'real_estate';
 
+  const topEarned = (product?.rating ?? 0) >= 4.5 && (product?.soldCount ?? 0) >= 100;
   const hasDiscount = (product.discountPercent ?? 0) > 0 && product.discountUntil && new Date(product.discountUntil).getTime() > Date.now();
   const discountPercent = hasDiscount ? Math.min(30, product.discountPercent || 0) : 0;
   const discountedPrice = hasDiscount ? Math.round(product.price * (1 - discountPercent / 100)) : product.price;
@@ -255,22 +257,12 @@ export default function ProductDetailScreen() {
               <View style={[styles.discountBadgeLarge, { backgroundColor: '#EF4444' }]}>
                 <Text style={styles.discountBadgeLargeText}>-{discountPercent}%</Text>
               </View>
-              {(product.rating ?? 0) >= 4.5 && (product.soldCount ?? 0) >= 100 ? (
-                <View style={[styles.discountBadgeLarge, { backgroundColor: '#FDE68A' }]}>
-                  <MaterialIcons name="workspace-premium" size={scale(14)} color="#B8860B" />
-                  <Text style={[styles.discountBadgeLargeText, { color: '#B8860B' }]}>Top</Text>
-                </View>
-              ) : null}
+              <TopBadge earned={topEarned} />
             </View>
           ) : (
             <View style={styles.discountPriceRow}>
               <Text style={[styles.price, { color: colors.primary }]}>{formatPrice(product.price)}</Text>
-              {(product.rating ?? 0) >= 4.5 && (product.soldCount ?? 0) >= 100 ? (
-                <View style={[styles.discountBadgeLarge, { backgroundColor: '#FDE68A' }]}>
-                  <MaterialIcons name="workspace-premium" size={scale(14)} color="#B8860B" />
-                  <Text style={[styles.discountBadgeLargeText, { color: '#B8860B' }]}>Top</Text>
-                </View>
-              ) : null}
+              <TopBadge earned={topEarned} />
             </View>
           )}
           {hasDiscount ? (
@@ -279,11 +271,6 @@ export default function ProductDetailScreen() {
           <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>{title}</Text>
 
           <View style={styles.metaRow}>
-            <View style={styles.metaItem}>
-              <MaterialIcons name="location-on" size={scale(16)} color={colors.textTertiary} />
-              <Text style={[styles.metaText, { color: colors.textSecondary }]} numberOfLines={1}>{product.location}</Text>
-            </View>
-            {/* Product rating button — replaces views, opens reviews bottom sheet */}
             <Pressable
               onPress={() => { impactLight(); setShowReviewsSheet(true); }}
               style={({ pressed }) => [styles.metaItem, { opacity: pressed ? 0.7 : 1 }]}
@@ -308,6 +295,10 @@ export default function ProductDetailScreen() {
                 </Text>
               </View>
             ) : null}
+            <View style={styles.metaItem}>
+              <MaterialIcons name="location-on" size={scale(16)} color={colors.textTertiary} />
+              <Text style={[styles.metaText, { color: colors.textSecondary }]} numberOfLines={1}>{product.location}</Text>
+            </View>
             {category ? (
               <View style={[styles.catBadge, { backgroundColor: category.color + '15' }]}>
                 <MaterialIcons name={category.icon as any} size={scale(14)} color={category.color} />
@@ -317,6 +308,17 @@ export default function ProductDetailScreen() {
             {!isRealEstate ? (
               <View style={[styles.catBadge, { backgroundColor: product.condition === 'new' ? '#10B98115' : '#F59E0B15' }]}>
                 <Text style={[styles.catBadgeText, { color: product.condition === 'new' ? '#10B981' : '#F59E0B' }]}>{conditionLabel}</Text>
+              </View>
+            ) : null}
+            {(product.freeShipping || product.deliveryType === 'free') ? (
+              <View style={[styles.catBadge, { backgroundColor: '#10B98115' }]}>
+                <MaterialIcons name="local-shipping" size={scale(14)} color="#10B981" />
+                <Text style={[styles.catBadgeText, { color: '#10B981' }]}>{lb('Free delivery', 'Livraison offerte', 'توصيل مجاني')}</Text>
+              </View>
+            ) : product.deliveryType === 'paid' && (product.deliveryFee ?? 0) > 0 ? (
+              <View style={[styles.catBadge, { backgroundColor: '#F59E0B15' }]}>
+                <MaterialIcons name="local-shipping" size={scale(14)} color="#F59E0B" />
+                <Text style={[styles.catBadgeText, { color: '#F59E0B' }]}>{lb('Delivery', 'Livraison', 'توصيل')}: {formatPrice(product.deliveryFee ?? 0)}</Text>
               </View>
             ) : null}
           </View>

@@ -12,6 +12,7 @@ import { clamp, PRODUCT_IMAGE_RATIO, scale, usePhoneLayout } from '@/constants/r
 import { DT } from '@/constants/designTokens';
 import ProductImage from '@/components/ProductImage';
 import { AppText } from '@/components/AppText';
+import TopBadge from '@/components/TopBadge';
 
 const SHIELD_ICON = require('@/assets/images/icons/shield.png');
 
@@ -162,11 +163,8 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
               {isAr ? '\u200E' : ''}{formatPrice(product.price)}{isAr ? '\u200E' : ''}
             </AppText>
           )}
-          {(product?.tagLabel || ((product?.rating ?? 0) >= 4.5 && (product?.soldCount ?? 0) >= 100)) ? (
-            <View style={[styles.tagBadge, isAr && styles.rowRTL]}>
-              <MaterialIcons name="workspace-premium" size={scale(12)} color="#B8860B" />
-              <Text style={styles.tagBadgeText}>{product.tagLabel || (language === 'fr' ? 'Top' : language === 'ar' ? 'رائج' : 'Top')}</Text>
-            </View>
+          {((product.tagLabel || ((product?.rating ?? 0) >= 4.5 && (product?.soldCount ?? 0) >= 100))) ? (
+            <TopBadge earned label={product.tagLabel || (language === 'fr' ? 'Top' : language === 'ar' ? 'رائج' : 'Top')} />
           ) : null}
         </View>
         {isDiscountActive(product) ? (
