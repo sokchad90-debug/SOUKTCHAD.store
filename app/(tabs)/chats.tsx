@@ -89,7 +89,7 @@ export default function ChatsScreen() {
           </View>
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={{ paddingBottom: insets.bottom + scale(90) }}
+            contentContainerStyle={{ paddingBottom: scale(12) }}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl

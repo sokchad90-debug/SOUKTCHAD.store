@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert, Modal, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -310,18 +311,23 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[st.safeArea, { backgroundColor: headerBg }]}>
-      {/* ===== Compact purple bar — settings start immediately below it ===== */}
+      {/* Status bar: light icons over the purple header (dark header in dark mode) */}
+      <StatusBar style="light" backgroundColor={headerBg} />
+      {/* ===== Compact purple bar with title + subtitle — content starts immediately below ===== */}
       <View style={st.header}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={st.headerBackBtn}
           accessibilityRole="button" accessibilityLabel={lb('Back', 'Retour', 'رجوع')}>
           <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(22)} color="#FFFFFF" />
         </Pressable>
-        <Text style={st.headerTitle}>{lb('Settings', 'Paramètres', 'الإعدادات')}</Text>
+        <View style={st.headerCenter}>
+          <Text style={st.headerTitle}>{lb('Settings', 'Paramètres', 'الإعدادات')}</Text>
+          <Text style={st.headerSubtitle}>{lb('Buyer account', 'Compte acheteur', 'حساب المشتري')}</Text>
+        </View>
         <View style={st.headerBackBtn} />
       </View>
 
-      <View style={[st.page, { backgroundColor: pageBg, paddingBottom: insets.bottom + scale(12) }]}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(14), paddingTop: scale(8) }} showsVerticalScrollIndicator={false}>
+      <View style={[st.page, { backgroundColor: pageBg, paddingBottom: insets.bottom + scale(10) }]}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(14), paddingTop: scale(8), flexGrow: 1 }} showsVerticalScrollIndicator={false}>
           {/* ================= PRÉFÉRENCES ================= */}
           <SectionTitle>{lb('PREFERENCES', 'PRÉFÉRENCES', 'التفضيلات')}</SectionTitle>
 
@@ -697,10 +703,12 @@ export default function SettingsScreen() {
 
 const st = StyleSheet.create({
   safeArea: { flex: 1 },
-  // Header: slim purple bar (settings content starts immediately below)
-  header: { backgroundColor: '#5B48D9', height: scale(48), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(8) },
+  // Header: compact purple bar (title + subtitle), content starts right below
+  header: { backgroundColor: '#5B48D9', height: scale(58), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(8) },
   headerBackBtn: { width: scale(40), height: scale(40), alignItems: 'center', justifyContent: 'center' },
+  headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { fontSize: scale(17), fontWeight: '700', color: '#FFFFFF', fontFamily: 'Cairo-Bold', textAlign: 'center' },
+  headerSubtitle: { fontSize: scale(12), color: '#E4DFFB', fontFamily: 'Cairo-Regular', marginTop: scale(1), textAlign: 'center' },
   sectionTitle: { fontSize: scale(13), fontWeight: '700', letterSpacing: 1.2, marginBottom: scale(10), fontFamily: 'Cairo-Bold' },
   card: { borderRadius: borderRadius.lg, marginBottom: scale(10), paddingHorizontal: scale(14), paddingVertical: scale(14) },
   navRow: { flexDirection: 'row', alignItems: 'center', gap: scale(12) },

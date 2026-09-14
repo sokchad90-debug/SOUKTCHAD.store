@@ -136,7 +136,7 @@ export default function CategoriesScreen() {
         keyExtractor={(item) => item.id}
         numColumns={3}
         columnWrapperStyle={[styles.row, isAr && { flexDirection: 'row-reverse' }]}
-        contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(16), paddingBottom: insets.bottom + scale(16) }}
+        contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(16), paddingBottom: scale(16) }}
         onLayout={(e) => setGridW(e.nativeEvent.layout.width)}
         showsVerticalScrollIndicator={false}
       />

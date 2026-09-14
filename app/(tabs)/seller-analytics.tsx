@@ -183,7 +183,7 @@ export default function SellerAnalyticsScreen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: insets.bottom + scale(90), paddingHorizontal: scale(16), paddingTop: scale(12) }}
+        contentContainerStyle={{ paddingBottom: scale(16), paddingHorizontal: scale(16), paddingTop: scale(12) }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />}
       >

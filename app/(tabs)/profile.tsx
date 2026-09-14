@@ -818,7 +818,7 @@ export default function ProfileScreen() {
     <SafeAreaView edges={['top']} style={[pStyles.safeArea, { backgroundColor: colors.background }]}>
       {showGuest ? (
         /* Guest view — compact card */
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + scale(16), paddingTop: scale(16) }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: scale(14), paddingTop: scale(16) }} showsVerticalScrollIndicator={false}>
           <View style={[pStyles.guestCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={[pStyles.guestAvatarCircle, { backgroundColor: colors.primary + '18' }]}>
               <MaterialIcons name="person" size={scale(32)} color={colors.primary} />
@@ -844,7 +844,7 @@ export default function ProfileScreen() {
         </View>
       ) : showProfile ? (
         /* Logged-in user profile */
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + scale(90) + scale(16) }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: scale(14) }} showsVerticalScrollIndicator={false}>
           <View style={{ paddingHorizontal: scale(16), paddingTop: scale(4), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <ReportButton />
             {!isSeller ? (
@@ -1009,7 +1009,7 @@ export default function ProfileScreen() {
 
           {/* Seller Tabs */}
           {isSeller ? (
-            <View style={[pStyles.settingsSection, { paddingBottom: insets.bottom + scale(90) + scale(16) }]}>
+            <View style={[pStyles.settingsSection, { paddingBottom: scale(14) }]}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={pStyles.sellerTabRow}>
                 {(['products', 'orders', 'stats', 'reviews'] as const).map(tab => (
                   <Pressable key={tab} onPress={() => { selection(); setSellerTab(tab); }}
@@ -1178,7 +1178,7 @@ export default function ProfileScreen() {
               </View>
 
               {buyerTab === 'stats' ? (
-                <View style={{ paddingBottom: insets.bottom + scale(90) + scale(16) }}>
+                <View style={{ paddingBottom: scale(14) }}>
                 <BuyerStatsContent
                   buyerCompletedOrders={buyerCompletedOrders}
                   buyerOrders={buyerOrders}
@@ -1201,7 +1201,7 @@ export default function ProfileScreen() {
               ) : null}
 
               {buyerTab === 'orders' ? (
-                <View style={{ gap: scale(8), paddingBottom: insets.bottom + scale(90) + scale(16) }}>
+                <View style={{ gap: scale(8), paddingBottom: scale(14) }}>
                   {buyerOrders.length === 0 ? (
                     <View style={[pStyles.emptyProducts, { paddingVertical: scale(60), justifyContent: 'center', alignItems: 'center' }]}><MaterialIcons name="receipt-long" size={scale(48)} color={colors.textTertiary} /><Text style={[pStyles.emptyProductsText, { color: colors.textSecondary }]}>{t('noOrdersDesc')}</Text></View>
                   ) : buyerOrders.map(order => {
@@ -1332,7 +1332,7 @@ export default function ProfileScreen() {
                   )}
                 </View>
               ) : buyerTab === 'favorites' ? (
-                <View style={{ paddingBottom: insets.bottom + scale(90) + scale(16) }}>
+                <View style={{ paddingBottom: scale(14) }}>
                   {(favorites?.length ?? 0) === 0 ? (
                     <View style={[pStyles.emptyProducts, { paddingVertical: scale(60), justifyContent: 'center', alignItems: 'center' }]}><MaterialIcons name="favorite-border" size={scale(48)} color={colors.textTertiary} /><Text style={[pStyles.emptyProductsText, { color: colors.textSecondary }]}>{lb('No favorites yet.', 'Aucun favori.', 'لا توجد مفضلات.')}</Text></View>
                   ) : (

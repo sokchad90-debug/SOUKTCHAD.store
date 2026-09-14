@@ -207,7 +207,7 @@ export default function SellerOrdersScreen() {
       </View>
 
       {/* ─── Orders List ─── */}
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + scale(90), paddingHorizontal: scale(16), paddingTop: scale(8) }}
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: scale(16), paddingHorizontal: scale(16), paddingTop: scale(8) }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />}>
         {filteredOrders.length === 0 ? (

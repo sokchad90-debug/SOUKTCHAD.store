@@ -45,7 +45,7 @@ export default function SellerSettingsTab() {
         </Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: scale(16), paddingBottom: insets.bottom + scale(40) }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: scale(16), paddingBottom: scale(16) }}>
         {/* Store info card */}
         <View style={[styles.storeCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }, shadows.card]}>
           {user?.avatar ? (

@@ -280,7 +280,7 @@ export default function SellScreen() {
         </View>
       ) : showSellForm ? (
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(16), paddingBottom: insets.bottom + scale(100), paddingTop: scale(8) }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(16), paddingBottom: scale(16), paddingTop: scale(8) }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={[styles.pageTitle, { color: colors.textPrimary }]}>{t('sellProduct')}</Text>
 
           {images.length > 0 ? (

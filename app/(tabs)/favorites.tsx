@@ -94,7 +94,7 @@ export default function FavoritesScreen() {
         style={{ flex: 1, width: layout.surfaceWidth }}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingHorizontal: layout.horizontalPadding, paddingBottom: insets.bottom + scale(80) },
+          { paddingHorizontal: layout.horizontalPadding, paddingBottom: scale(16) },
         ]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
