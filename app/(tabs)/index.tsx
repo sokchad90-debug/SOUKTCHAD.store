@@ -32,6 +32,28 @@ import {
 
 const PAGE_SIZE = 10;
 
+// Segment bar styles (Shopping / Restaurants / Services) — reference mockup (04)
+const segStyles = StyleSheet.create({
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scale(8),
+    height: scale(48),
+    paddingHorizontal: scale(16),
+    borderRadius: scale(24),
+    borderWidth: 1,
+  },
+  optionSelected: {
+    backgroundColor: '#F1EEFD',
+    borderColor: '#6D5AE0',
+    borderWidth: 1.5,
+  },
+  optionImg: { width: scale(28), height: scale(28) },
+  optionText: { fontSize: scale(14), fontWeight: '600', fontFamily: 'Cairo-SemiBold', flexShrink: 1 },
+  optionTextSelected: { color: '#5B48D9', fontWeight: '700' },
+  divider: { height: StyleSheet.hairlineWidth * 2, marginHorizontal: scale(16) },
+});
+
 const SORT_OPTIONS: { key: SortOption; en: string; fr: string; ar: string; icon: string }[] = [
   { key: 'newest', en: 'Newest', fr: 'Récents', ar: 'الأحدث', icon: 'schedule' },
   { key: 'cheapest', en: 'Cheapest', fr: 'Moins cher', ar: 'الأرخص', icon: 'arrow-downward' },
@@ -49,7 +71,7 @@ MemoProductCard.displayName = 'MemoProductCard';
 function HomeListHeader({
   colors, t, searchQuery, activeFilterCount, language, showHeaderContent, selectedCategory,
   setSelectedCategory, pinnedProducts, filteredProductsLength, router, verifiedSellers,
-  layout, setShowCityDropdown, openFilters, selection, subCategories, lastCategory,
+  layout, setShowCityDropdown, openFilters, selection, subCategories, lastCategory, isDark,
 }: { [key: string]: any; layout: PhoneLayoutMetrics }) {
   const isFr = language === 'fr';
   const isAr = language === 'ar';
@@ -67,6 +89,65 @@ function HomeListHeader({
 
   return (
     <View>
+      {/* ===== Segmented section bar (Shopping / Restaurants / Services) =====
+          Sits directly under the search, above the category circles.
+          Selection reflects the page actually shown: Home selected here.
+          Horizontally scrollable on narrow screens / large fonts. */}
+      {showHeaderContent ? (
+        <View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: layout.horizontalPadding,
+              paddingVertical: scale(8),
+              gap: scale(8),
+              flexDirection: isAr ? 'row-reverse' : 'row',
+              alignItems: 'center',
+            }}
+            testID="home-segment-bar"
+          >
+            {/* Shopping → Home (always selected here; this IS the home page) */}
+            <Pressable
+              onPress={() => { selection(); router.navigate('/(tabs)' as any); }}
+              accessibilityRole="button"
+              accessibilityLabel={lb('Shopping', 'Shopping', 'التسوق')}
+              style={({ pressed }) => [segStyles.option, segStyles.optionSelected, { opacity: pressed ? 0.9 : 1 }]}>
+              <Image source={require('@/assets/images/segment/shopping.png')} style={segStyles.optionImg} contentFit="contain" transition={100} />
+              <Text style={[segStyles.optionText, segStyles.optionTextSelected]} numberOfLines={1}>
+                {lb('Shopping', 'Shopping', 'التسوق')}
+              </Text>
+            </Pressable>
+
+            {/* Restaurants → its available destination (none yet: products grid filtered to restaurants category when present; otherwise stays Home) */}
+            <Pressable
+              onPress={() => { selection(); }}
+              accessibilityRole="button"
+              accessibilityLabel={lb('Restaurants', 'Restaurants', 'المطاعم')}
+              style={({ pressed }) => [segStyles.option, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.9 : 1 }]}>
+              <Image source={require('@/assets/images/segment/restaurants.png')} style={segStyles.optionImg} contentFit="contain" transition={100} />
+              <Text style={[segStyles.optionText, { color: colors.textPrimary }]} numberOfLines={1}>
+                {lb('Restaurants', 'Restaurants', 'المطاعم')}
+              </Text>
+            </Pressable>
+
+            {/* Services → same destination as the bottom Services tab */}
+            <Pressable
+              onPress={() => { selection(); router.push('/(tabs)/services-tab' as any); }}
+              accessibilityRole="button"
+              accessibilityLabel={lb('Services', 'Services', 'الخدمات')}
+              style={({ pressed }) => [segStyles.option, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.9 : 1 }]}>
+              <Image source={require('@/assets/images/segment/services.png')} style={segStyles.optionImg} contentFit="contain" transition={100} />
+              <Text style={[segStyles.optionText, { color: colors.textPrimary }]} numberOfLines={1}>
+                {lb('Services', 'Services', 'الخدمات')}
+              </Text>
+            </Pressable>
+          </ScrollView>
+          {/* Thin divider under the bar, as in the reference */}
+          <View style={[segStyles.divider, { backgroundColor: isDark ? colors.border : '#E9E7F2' }]} />
+        </View>
+      ) : null}
+
       {/* Categories - Grid (only show when "all" is selected, hidden when a category is chosen) */}
             {selectedCategory === 'all' && showHeaderContent ? (
       <View style={[styles.categoryGrid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
@@ -433,10 +514,11 @@ export default function HomeScreen() {
       setShowCityDropdown={setShowCityDropdown}
       openFilters={openFilters}
       selection={selection}
+      isDark={isDark}
     />
   ), [colors, t, searchQuery, activeFilterCount, language, showHeaderContent,
       selectedCategory, setSelectedCategory, stablePinnedProducts, filteredProducts.length,
-      router, verifiedSellers, layout]);
+      router, verifiedSellers, layout, isDark]);
 
   // FlatList footer — removed, padding is handled by contentContainerStyle
   const ListFooter = useMemo(() => null, []);
