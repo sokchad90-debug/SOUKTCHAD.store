@@ -9,6 +9,7 @@ import { formatPrice } from '@/constants/config';
 import { borderRadius, shadows } from '@/constants/theme';
 import { FlatList } from 'react-native';
 import { scale, usePhoneLayout } from '@/constants/responsive';
+import ProductCard from '@/components/ProductCard';
 
 
 export default function PromotedScreen() {
@@ -25,32 +26,15 @@ export default function PromotedScreen() {
   const promoted = useMemo(() => products.filter(p => p.isPinned), [products]);
 
   const renderItem = ({ item: product }: { item: typeof promoted[0] }) => {
-    const title = product.title[language] || product.title.en;
+    // SHARED ProductCard (same as home) — identical size/details; SPONSORISÉ badge on top
     return (
-      <Pressable
-        onPress={() => router.push(`/product/${product.id}`)}
-        style={({ pressed }) => [
-          styles.card,
-          { width: CARD_WIDTH, backgroundColor: colors.surface, borderColor: colors.pinnedLight, opacity: pressed ? 0.92 : 1 },
-          shadows.card,
-        ]}
-      >
-        <Image source={{ uri: product.images[0] }} style={[styles.cardImage, { height: CARD_WIDTH }]} contentFit="cover" transition={200} />
-        <View style={[styles.pinnedBadge, { backgroundColor: '#8B5CF6' }]}>
+      <View style={{ width: layoutP.recentCardWidth }}>
+        <View style={[styles.pinnedBadge, { backgroundColor: '#8B5CF6', position: 'absolute', top: scale(8), left: scale(8), zIndex: 10 }]}>
           <MaterialIcons name="push-pin" size={scale(10)} color="#FFF" />
           <Text style={styles.pinnedBadgeText}>SPONSORISÉ</Text>
         </View>
-        <View style={styles.cardInfo}>
-          <Text style={[styles.cardPrice, { color: colors.primary }]} numberOfLines={1}>{formatPrice(product.price)}</Text>
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]} numberOfLines={2} ellipsizeMode="tail">{title}</Text>
-          <View style={styles.cardMeta}>
-            <MaterialIcons name="location-on" size={scale(12)} color={colors.textTertiary} />
-            <Text style={[styles.cardLocation, { color: colors.textTertiary }]} numberOfLines={1} ellipsizeMode="tail">{product.location}</Text>
-            <MaterialIcons name="visibility" size={scale(12)} color={colors.textTertiary} style={{ marginLeft: scale(8) }} />
-            <Text style={[styles.cardLocation, { color: colors.textTertiary }]}>{product.views}</Text>
-          </View>
-        </View>
-      </Pressable>
+        <ProductCard product={product} />
+      </View>
     );
   };
 
