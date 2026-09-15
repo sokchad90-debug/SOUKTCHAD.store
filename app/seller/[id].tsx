@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, FlatList, Share, Platform, Animated, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -117,7 +117,11 @@ const ReviewItem = ({
 
 export default function SellerStoreScreen() {
   const layoutSL = usePhoneLayout();
-  const CARD_WIDTH = Math.floor((layoutSL.contentWidth - scale(24)) / 2);
+  // Card width from the REAL container width (onLayout-measured) — guaranteed half-width
+  // even for the lone last item in a 2-column grid (owner-reported bug).
+  const [gridW, setGridW] = useState(() => Math.min(layoutSL.contentWidth, 480));
+  // 32 = row horizontal padding (16x2), 12 = row gap - two cards + gap fit exactly
+  const CARD_WIDTH = Math.floor((gridW - scale(32) - scale(12)) / 2);
   const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -291,11 +295,12 @@ export default function SellerStoreScreen() {
   const renderProduct = ({ item: product }: { item: typeof sellerProducts[0] }) => {
     const title = product.title[language] || product.title.en;
     return (
+      <View style={{ width: CARD_WIDTH }}>
       <Pressable
         onPress={() => router.push(`/product/${product.id}` as any)}
         style={({ pressed }) => [
           styles.productCard,
-          { width: CARD_WIDTH, backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.92 : 1 },
+          { width: '100%', backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.92 : 1 },
           shadows.card,
         ]}
       >
@@ -305,6 +310,7 @@ export default function SellerStoreScreen() {
           <Text style={[styles.productTitle, { color: colors.textPrimary }]} numberOfLines={2}>{title}</Text>
         </View>
       </Pressable>
+      </View>
     );
   };
 
@@ -337,6 +343,7 @@ export default function SellerStoreScreen() {
         data={sellerProducts}
         renderItem={renderProduct}
         keyExtractor={(item) => item.id}
+        onLayout={(e) => { const w = e.nativeEvent.layout.width; if (w > 100 && Math.abs(w - gridW) > 2) setGridW(w); }}
         numColumns={2}
         columnWrapperStyle={sellerProducts.length > 0 ? styles.row : undefined}
         contentContainerStyle={{ paddingBottom: insets.bottom + scale(100) }}
@@ -752,10 +759,9 @@ const styles = StyleSheet.create({
   },
 
   // Products grid
-  row: { justifyContent: 'space-between', paddingHorizontal: scale(16), marginBottom: scale(12), alignItems: 'stretch' },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: scale(12), paddingHorizontal: scale(16), marginBottom: scale(12), alignItems: 'flex-start' },
   productCard: {
     borderRadius: borderRadius.md, borderWidth: 1, overflow: 'hidden',
-    flex: 1, alignSelf: 'stretch', // equal-height cards per row
   },
   productImage: { width: '100%', height: '100%' },
   productImageFrame: { width: '100%', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
