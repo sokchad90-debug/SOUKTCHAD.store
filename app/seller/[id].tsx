@@ -10,6 +10,7 @@ import { getSellerById, Seller } from '@/services/mockData';
 import { formatPrice } from '@/constants/config';
 import { borderRadius, shadows } from '@/constants/theme';
 import { impactMedium, notifySuccess } from '@/services/haptics';
+import ProductCard from '@/components/ProductCard';
 import { blockSeller } from '@/services/blockedSellers';
 import { scale, usePhoneLayout } from '@/constants/responsive';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -291,23 +292,11 @@ export default function SellerStoreScreen() {
   };
 
   const renderProduct = ({ item: product }: { item: typeof sellerProducts[0] }) => {
-    const title = product.title[language] || product.title.en;
+    // EXACT same card as the home feed: Top/Choice badges, rating + sold,
+    // livraison offerte, stock, garantie, edge-to-edge image, same measurements.
     return (
       <View style={{ width: CARD_WIDTH }}>
-      <Pressable
-        onPress={() => router.push(`/product/${product.id}` as any)}
-        style={({ pressed }) => [
-          styles.productCard,
-          { width: '100%', backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.92 : 1 },
-          shadows.card,
-        ]}
-      >
-        <ProductCardImage uri={product.images[0]} colors={colors} frameWidth={CARD_WIDTH} />
-        <View style={styles.productInfo}>
-          <Text style={[styles.productPrice, { color: colors.primary }]}>{formatPrice(product.price)}</Text>
-          <Text style={[styles.productTitle, { color: colors.textPrimary }]} numberOfLines={2} minimumFontScale={0.85} adjustsFontSizeToFit>{title}</Text>
-        </View>
-      </Pressable>
+        <ProductCard product={product} containerWidth={CARD_WIDTH} />
       </View>
     );
   };
