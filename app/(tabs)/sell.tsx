@@ -7,7 +7,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useApp } from '@/contexts/AppContext';
-import { categories } from '@/services/mockData';
+// categories come from AppContext (DB tree + fallback) so seller sees enabled branches
 import { formatPrice } from '@/constants/config';
 import { COUNTRY_CITIES } from '@/constants/countries';
 import { borderRadius } from '@/constants/theme';
@@ -97,7 +97,9 @@ interface SelectedImage { id: string; uri: string; }
 
 export default function SellScreen() {
   const insets = useSafeAreaInsets();
-  const { colors, t, language, isLoggedIn, user, addProduct, enabledCountries, products, setProductDiscount, removeProductDiscount, isReady } = useApp();
+  const { colors, t, language, isLoggedIn, user, addProduct, enabledCountries, products, setProductDiscount, removeProductDiscount, isReady, categories: appCategories } = useApp();
+  // Enabled branches for the seller picker (from DB tree; includes children)
+  const sellerCategories = (appCategories || []).filter(c => c.id !== 'all');
   const [showLogin, setShowLogin] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -368,7 +370,7 @@ export default function SellScreen() {
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>{t('selectCategory')} *</Text>
           <View style={styles.catGrid}>
-            {categories.map(cat => (
+            {sellerCategories.map(cat => (
               <Pressable key={cat.id} onPress={() => setSelectedCat(cat.id)} style={[styles.catChip, { backgroundColor: selectedCat === cat.id ? cat.color : colors.surface, borderColor: selectedCat === cat.id ? cat.color : colors.border }]}>
                 <MaterialIcons name={cat.icon as any} size={scale(16)} color={selectedCat === cat.id ? '#FFF' : cat.color} />
                 <Text style={[styles.catChipText, { color: selectedCat === cat.id ? '#FFF' : colors.textPrimary }]}>{cat.name[language] || cat.name.en}</Text>

@@ -26,13 +26,13 @@ try {
     $parent = isset($_GET['parent']) ? trim((string)$_GET['parent']) : '';
 
     if ($parent !== '' && strtolower($parent) !== 'all') {
-        $stmt = $db->prepare("SELECT id, name_en, name_fr, name_ar, icon, color, sort_order, is_active
+        $stmt = $db->prepare("SELECT id, name_en, name_fr, name_ar, icon, color, sort_order, is_active, parent_id
                               FROM categories
                               WHERE is_active = 1 AND parent_id = :p
                               ORDER BY sort_order ASC, name_en ASC");
         $stmt->execute([':p' => $parent]);
     } else {
-        $stmt = $db->query("SELECT id, name_en, name_fr, name_ar, icon, color, sort_order, is_active
+        $stmt = $db->query("SELECT id, name_en, name_fr, name_ar, icon, color, sort_order, is_active, parent_id
                             FROM categories
                             WHERE is_active = 1
                             ORDER BY sort_order ASC, name_en ASC");
@@ -59,6 +59,7 @@ try {
             'color'        => $r['color'],
             'sort_order'   => (int)$r['sort_order'],
             'is_active'    => (int)$r['is_active'],
+            'parent_id'    => isset($r['parent_id']) ? $r['parent_id'] : null,
             'has_children' => $childMap[$r['id']] ?? false,
         ];
     }

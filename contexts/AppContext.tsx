@@ -17,6 +17,7 @@ import {
   mockOrders, sellers as mockSellers, paymentMethods, mockReviews,
   categories as mockCategories, Category, mockSellerStats,
 } from '@/services/mockData';
+import { CATEGORY_TREE, descendantsOf } from '@/services/categoryTree';
 import { fetchProducts, createProduct as dbCreateProduct, updateProduct as dbUpdateProduct, getCategoryUUID } from '@/services/productService';
 import { fetchAllUsers, fetchSellers as dbFetchSellers, banUserInDB, unbanUserInDB, verifyUserInDB, unverifyUserInDB } from '@/services/adminService';
 import { fetchBuyerStats, fetchUserOrders, BuyerStats, OrderFromAPI } from '@/services/orderStats';
@@ -2311,7 +2312,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const getFilteredProducts = useCallback(() => {
     let filtered = products;
-    if (selectedCategory !== 'all') { filtered = filtered.filter(p => p.categoryId === selectedCategory); }
+    if (selectedCategory !== 'all') {
+      // Parent selection = itself + all descendants (no duplicates: each ad has exactly one leaf)
+      const scope = [selectedCategory, ...descendantsOf(CATEGORY_TREE, selectedCategory)];
+      filtered = filtered.filter(p => p.categoryId && scope.includes(p.categoryId));
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p => p.title.en.toLowerCase().includes(q) || p.title.fr.toLowerCase().includes(q) || p.title.ar.includes(q));

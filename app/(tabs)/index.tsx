@@ -50,6 +50,7 @@ function HomeListHeader({
   colors, t, searchQuery, activeFilterCount, language, showHeaderContent, selectedCategory,
   setSelectedCategory, pinnedProducts, filteredProductsLength, router, verifiedSellers,
   layout, setShowCityDropdown, openFilters, selection, subCategories, lastCategory,
+  navigateToCategory,
 }: { [key: string]: any; layout: PhoneLayoutMetrics }) {
   const isFr = language === 'fr';
   const isAr = language === 'ar';
@@ -77,7 +78,7 @@ function HomeListHeader({
           return (
             <Pressable
               key={cat.id}
-              onPress={() => { selection(); setSelectedCategory(cat.id); }}
+              onPress={() => { selection(); navigateToCategory(cat); }}
               style={styles.categoryGridItem}
             >
               <View
@@ -311,6 +312,7 @@ export default function HomeScreen() {
     selectedCategory, setSelectedCategory, getFilteredProducts, products, subCategories, lastCategory,
     filters, setFilters, resetFilters, activeFilterCount,
     refreshProducts, selectedCity, setSelectedCity,
+    navigateToCategory, currentCategoryPath, goBackCategory, resetCategoryNavigation,
   } = useApp();
 
   // Scroll position is retained for smooth native list updates.
@@ -426,17 +428,18 @@ export default function HomeScreen() {
       pinnedProducts={stablePinnedProducts}
       subCategories={subCategories}
       lastCategory={lastCategory}
-      filteredProductsLength={searchQuery || activeFilterCount > 0 ? filteredProducts.length : 0}
+      filteredProductsLength={filteredProducts.length}
       router={router}
       verifiedSellers={verifiedSellers}
       layout={layout}
       setShowCityDropdown={setShowCityDropdown}
       openFilters={openFilters}
       selection={selection}
+      navigateToCategory={navigateToCategory}
     />
   ), [colors, t, searchQuery, activeFilterCount, language, showHeaderContent,
       selectedCategory, setSelectedCategory, stablePinnedProducts, filteredProducts.length,
-      router, verifiedSellers, layout]);
+      router, verifiedSellers, layout, navigateToCategory]);
 
   // FlatList footer — removed, padding is handled by contentContainerStyle
   const ListFooter = useMemo(() => null, []);

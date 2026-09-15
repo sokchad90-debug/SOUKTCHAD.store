@@ -137,11 +137,21 @@ export interface Order {
   seller_name?: string;
 }
 
+import { CATEGORY_TREE, CATEGORY_IMAGE_BY_ID } from '@/services/categoryTree';
+
+/** Flattened category list derived from the fixed-ID tree (sokchad-v1).
+ *  'all' kept for existing logic; hasChildren computed from the tree. */
 export const categories: Category[] = [
   { id: 'all', name: { en: 'All', fr: 'Tout', ar: 'الكل' }, icon: 'apps', color: '#6366F1' },
-  { id: 'electronics', name: { en: 'Electronics', fr: 'Électronique', ar: 'إلكترونيات' }, icon: 'devices', color: '#3B82F6', image: require('@/assets/images/categories/electronics.png') },
-  { id: 'fashion', name: { en: 'Clothing', fr: 'Vêtements', ar: 'ملابس' }, icon: 'checkroom', color: '#EC4899', image: require('@/assets/images/categories/fashion.png') },
-  { id: 'shoes', name: { en: 'Shoes', fr: 'Chaussures', ar: 'أحذية' }, icon: 'hiking', color: '#F59E0B', image: require('@/assets/images/categories/shoes.png') },
+  ...CATEGORY_TREE.map(n => ({
+    id: n.id,
+    parentId: n.parentId,
+    hasChildren: CATEGORY_TREE.some(x => x.parentId === n.id),
+    name: { en: n.nameFr, fr: n.nameFr, ar: n.nameAr },
+    icon: n.icon || 'category',
+    color: n.color || '#6366F1',
+    image: CATEGORY_IMAGE_BY_ID[n.id],
+  })),
 ];
 
 export const paymentMethods: PaymentMethod[] = [
@@ -197,7 +207,7 @@ export const products: Product[] = [
     soldCount: 214, rating: 4.7, reviewsCount: 31, freeShipping: true,
     description: { en: 'Brand new Samsung Galaxy A54 with 128GB storage, 6GB RAM. Sealed box with warranty.', fr: 'Samsung Galaxy A54 neuf avec 128Go de stockage, 6Go RAM. Boîte scellée avec garantie.', ar: 'سامسونج جالاكسي A54 جديد بسعة تخزين 128 جيجا، 6 جيجا رام. صندوق مغلق مع ضمان.' },
     price: 185000, images: ['https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=800&q=75&fm=jpg'],
-    categoryId: 'electronics', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
+    categoryId: 'electronics_phones', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
     postedDate: '2024-12-15', isPinned: true, pinnedUntil: '2025-03-15', isFeatured: true, views: 342,
     discountPercent: 15, discountUntil: '2026-08-15', stock: 8, maxOrderQty: 5,
   },
@@ -205,14 +215,14 @@ export const products: Product[] = [
     id: 'p2', title: { en: 'iPhone 14 Pro Max', fr: 'iPhone 14 Pro Max', ar: 'آيفون 14 برو ماكس' },
     description: { en: 'iPhone 14 Pro Max 256GB Deep Purple. Excellent condition, barely used for 2 months.', fr: 'iPhone 14 Pro Max 256Go Violet Intense. Excellent état, à peine utilisé pendant 2 mois.', ar: 'آيفون 14 برو ماكس 256 جيجا بنفسجي عميق. حالة ممتازة، استخدم لمدة شهرين فقط.' },
     price: 650000, images: ['https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=800&q=75&fm=jpg'],
-    categoryId: 'electronics', sellerId: 'seller1', condition: 'like_new', location: "N'Djamena",
+    categoryId: 'electronics_phones', sellerId: 'seller1', condition: 'like_new', location: "N'Djamena",
     postedDate: '2024-12-10', isPinned: true, pinnedUntil: '2025-02-10', isFeatured: true, views: 518, stock: 1,
   },
   {
     id: 'p3', title: { en: 'Toyota Corolla 2019', fr: 'Toyota Corolla 2019', ar: 'تويوتا كورولا 2019' },
     description: { en: 'Toyota Corolla 2019 sedan, automatic, 45,000km. AC, power windows. Clean title.', fr: 'Toyota Corolla 2019 berline, automatique, 45 000km. Climatisation, vitres électriques.', ar: 'تويوتا كورولا 2019 سيدان، أوتوماتيك، 45,000 كم. تكييف، نوافذ كهربائية.' },
     price: 8500000, images: ['https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=75&fm=jpg'],
-    categoryId: 'shoes', sellerId: 'seller3', condition: 'used', location: "N'Djamena",
+    categoryId: 'vehicles', sellerId: 'seller3', condition: 'used', location: "N'Djamena",
     postedDate: '2024-12-08', isPinned: false, isFeatured: false, views: 127, stock: 1,
   },
   {
@@ -220,14 +230,14 @@ export const products: Product[] = [
     tagLabel: 'Choice', soldCount: 940, rating: 4.4, reviewsCount: 210, freeShipping: true,
     description: { en: 'Adidas Ultraboost running shoes, size 42. Comfortable and stylish.', fr: 'Chaussures de course Adidas Ultraboost, taille 42. Confortables et élégantes.', ar: 'حذاء Adidas Ultraboost للجري، مقاس 42. مريح وأنيق.' },
     price: 55000, images: ['https://images.unsplash.com/photo-1549298916-b41d501d3779?w=800&q=75&fm=jpg'],
-    categoryId: 'shoes', sellerId: 'seller3', condition: 'used', location: "N'Djamena",
+    categoryId: 'shoes_men', sellerId: 'seller3', condition: 'used', location: "N'Djamena",
     postedDate: '2024-12-12', isPinned: false, isFeatured: false, views: 89,
   },
   {
     id: 'p5', title: { en: "Men's Traditional Boubou", fr: 'Boubou Traditionnel Homme', ar: 'بوبو رجالي تقليدي' },
     description: { en: 'Handcrafted traditional boubou with beautiful embroidery. Premium cotton fabric.', fr: 'Boubou traditionnel fait main avec de belles broderies. Tissu coton premium.', ar: 'بوبو تقليدي مصنوع يدوياً بتطريز جميل. قماش قطن فاخر.' },
     price: 25000, images: ['https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=75&fm=jpg'],
-    categoryId: 'fashion', sellerId: 'seller2', condition: 'new', location: 'Moundou',
+    categoryId: 'fashion_traditional', sellerId: 'seller2', condition: 'new', location: 'Moundou',
     postedDate: '2024-12-14', isPinned: false, isFeatured: true, views: 203, stock: 20, maxOrderQty: 10,
   },
   {
@@ -235,7 +245,7 @@ export const products: Product[] = [
     soldCount: 320, rating: 4.6, reviewsCount: 58, freeShipping: true, warrantyDays: 7,
     description: { en: 'Original Nike Air Max, Size 42 EU. Brand new in box, multiple colors available.', fr: 'Nike Air Max original, Taille 42 EU. Neuf dans la boîte, plusieurs couleurs disponibles.', ar: 'نايك اير ماكس أصلي، مقاس 42 أوروبي. جديد في العلبة، عدة ألوان متاحة.' },
     price: 45000, images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=75&fm=jpg'],
-    categoryId: 'shoes', sellerId: 'seller2', condition: 'new', location: 'Moundou',
+    categoryId: 'shoes_men', sellerId: 'seller2', condition: 'new', location: 'Moundou',
     postedDate: '2024-12-13', isPinned: true, pinnedUntil: '2025-01-13', isFeatured: false, views: 176,
     discountPercent: 25, discountUntil: '2026-08-10', stock: 15, maxOrderQty: 5,
   },
@@ -257,7 +267,7 @@ export const products: Product[] = [
     id: 'p9', title: { en: 'Solar Panel Kit 300W', fr: 'Kit Panneau Solaire 300W', ar: 'طقم ألواح شمسية 300 واط' },
     description: { en: 'Complete solar panel kit: 300W panel, charge controller, inverter, and battery. Perfect for home use.', fr: 'Kit panneau solaire complet: panneau 300W, régulateur de charge, onduleur et batterie.', ar: 'طقم ألواح شمسية كامل: لوح 300 واط، منظم شحن، عاكس، وبطارية.' },
     price: 150000, images: ['https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=75&fm=jpg'],
-    categoryId: 'home_garden', sellerId: 'seller4', condition: 'new', location: 'Abéché',
+    categoryId: 'energy_solar', sellerId: 'seller4', condition: 'new', location: 'Abéché',
     postedDate: '2024-12-11', isPinned: false, isFeatured: true, views: 145,
     discountPercent: 10, discountUntil: '2026-08-05', stock: 5, maxOrderQty: 3,
   },
@@ -265,35 +275,35 @@ export const products: Product[] = [
     id: 'p10', title: { en: 'Leather Sofa Set (3+2)', fr: 'Ensemble Canapé Cuir (3+2)', ar: 'طقم كنب جلد (3+2)' },
     description: { en: 'Premium leather sofa set, 3-seater and 2-seater. Brown color, excellent condition.', fr: 'Ensemble canapé cuir premium, 3 et 2 places. Couleur marron, excellent état.', ar: 'طقم كنب جلد فاخر، 3 مقاعد و 2 مقاعد. لون بني، حالة ممتازة.' },
     price: 280000, images: ['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=75&fm=jpg'],
-    categoryId: 'home_garden', sellerId: 'seller4', condition: 'like_new', location: 'Abéché',
+    categoryId: 'furniture_salon', sellerId: 'seller4', condition: 'like_new', location: 'Abéché',
     postedDate: '2024-12-09', isPinned: false, isFeatured: false, views: 98,
   },
   {
     id: 'p11', title: { en: 'Tractor Spare Parts', fr: 'Pièces Détachées Tracteur', ar: 'قطع غيار جرار' },
     description: { en: 'Various tractor spare parts: filters, belts, bearings. Compatible with major brands.', fr: 'Diverses pièces détachées pour tracteur: filtres, courroies, roulements.', ar: 'قطع غيار متنوعة للجرار: فلاتر، أحزمة، محامل.' },
     price: 120000, images: ['https://images.unsplash.com/photo-1586771107445-b3e7eb3f3a12?w=800&q=75&fm=jpg'],
-    categoryId: 'agriculture', sellerId: 'seller5', condition: 'new', location: 'Sarh',
+    categoryId: 'agriculture_machinery', sellerId: 'seller5', condition: 'new', location: 'Sarh',
     postedDate: '2024-12-07', isPinned: false, isFeatured: false, views: 32, stock: 50, maxOrderQty: 20,
   },
   {
     id: 'p12', title: { en: 'Water Irrigation Pump', fr: "Pompe d'Irrigation", ar: 'مضخة ري مياه' },
     description: { en: 'Diesel-powered irrigation pump, 3-inch outlet. Ideal for farming and garden use.', fr: "Pompe d'irrigation diesel, sortie 3 pouces. Idéale pour l'agriculture.", ar: 'مضخة ري تعمل بالديزل، مخرج 3 بوصة. مثالية للزراعة.' },
     price: 95000, images: ['https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=75&fm=jpg'],
-    categoryId: 'agriculture', sellerId: 'seller5', condition: 'new', location: 'Sarh',
+    categoryId: 'agriculture_irrigation', sellerId: 'seller5', condition: 'new', location: 'Sarh',
     postedDate: '2024-12-06', isPinned: false, isFeatured: false, views: 28,
   },
   {
     id: 'p13', title: { en: 'JBL Bluetooth Speaker', fr: 'Enceinte Bluetooth JBL', ar: 'سماعة جي بي إل بلوتوث' },
     description: { en: 'JBL Charge 5, waterproof, 20-hour battery. Perfect for outdoor events.', fr: 'JBL Charge 5, étanche, batterie 20 heures. Parfait pour les événements.', ar: 'جي بي إل تشارج 5، مقاوم للماء، بطارية 20 ساعة.' },
     price: 35000, images: ['https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=800&q=75&fm=jpg'],
-    categoryId: 'electronics', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
+    categoryId: 'electronics_audio', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
     postedDate: '2024-12-14', isPinned: false, isFeatured: false, views: 67,
   },
   {
     id: 'p14', title: { en: 'HP Laptop 15.6"', fr: 'Ordinateur Portable HP 15.6"', ar: 'لابتوب HP 15.6 بوصة' },
     description: { en: 'HP Laptop 15, Intel Core i5, 8GB RAM, 256GB SSD. Great for work and studies.', fr: 'HP Laptop 15, Intel Core i5, 8Go RAM, 256Go SSD. Idéal pour le travail.', ar: 'لابتوب HP 15، إنتل كور i5، 8 جيجا رام، 256 جيجا SSD.' },
     price: 320000, images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&q=75&fm=jpg'],
-    categoryId: 'electronics', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
+    categoryId: 'electronics_computers_laptops', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
     postedDate: '2024-12-13', isPinned: false, isFeatured: false, views: 91,
   },
   {
@@ -307,7 +317,7 @@ export const products: Product[] = [
     id: 'p16', title: { en: "Women's Abaya Collection", fr: 'Collection Abayas Femme', ar: 'مجموعة عبايات نسائية' },
     description: { en: 'Elegant abayas in various designs. Premium fabric with delicate embroidery.', fr: 'Abayas élégantes en divers modèles. Tissu premium avec broderie délicate.', ar: 'عبايات أنيقة بتصاميم متنوعة. قماش فاخر بتطريز رقيق.' },
     price: 18000, images: ['https://images.unsplash.com/photo-1590736969955-71cc94901144?w=800&q=75&fm=jpg'],
-    categoryId: 'fashion', sellerId: 'seller2', condition: 'new', location: 'Moundou',
+    categoryId: 'fashion_women', sellerId: 'seller2', condition: 'new', location: 'Moundou',
     postedDate: '2024-12-11', isPinned: false, isFeatured: false, views: 112,
   },
   {
@@ -321,21 +331,21 @@ export const products: Product[] = [
     id: 'p18', title: { en: 'Chest Freezer 300L', fr: 'Congélateur Coffre 300L', ar: 'فريزر أفقي 300 لتر' },
     description: { en: 'Large chest freezer, 300L capacity. Energy efficient, perfect for businesses.', fr: 'Grand congélateur coffre, 300L. Économe en énergie, idéal pour les commerces.', ar: 'فريزر أفقي كبير، سعة 300 لتر. موفر للطاقة، مثالي للأعمال.' },
     price: 195000, images: ['https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=800&q=75&fm=jpg'],
-    categoryId: 'home_garden', sellerId: 'seller4', condition: 'new', location: 'Abéché',
+    categoryId: 'electromenager_froid', sellerId: 'seller4', condition: 'new', location: 'Abéché',
     postedDate: '2024-12-10', isPinned: false, isFeatured: false, views: 55,
   },
   {
     id: 'p19', title: { en: 'Organic Seeds Pack', fr: 'Pack Graines Bio', ar: 'حزمة بذور عضوية' },
     description: { en: 'Assorted organic vegetable seeds: tomato, okra, pepper, lettuce. For home or commercial farming.', fr: 'Graines bio assorties: tomate, gombo, piment, laitue. Usage domestique ou commercial.', ar: 'بذور خضروات عضوية متنوعة: طماطم، بامية، فلفل، خس.' },
     price: 8500, images: ['https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=75&fm=jpg'],
-    categoryId: 'agriculture', sellerId: 'seller5', condition: 'new', location: 'Sarh',
+    categoryId: 'agriculture_culture', sellerId: 'seller5', condition: 'new', location: 'Sarh',
     postedDate: '2024-12-15', isPinned: false, isFeatured: false, views: 21, stock: 100, maxOrderQty: 50,
   },
   {
     id: 'p20', title: { en: 'Samsung Smart TV 55"', fr: 'Samsung Smart TV 55"', ar: 'تلفزيون سامسونج ذكي 55 بوصة' },
     description: { en: 'Samsung 55" 4K UHD Smart TV with built-in WiFi, Netflix, YouTube. Wall mount included.', fr: 'Samsung 55" 4K UHD Smart TV avec WiFi intégré. Support mural inclus.', ar: 'تلفزيون سامسونج 55 بوصة 4K ذكي مع واي فاي مدمج.' },
     price: 285000, images: ['https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=800&q=75&fm=jpg'],
-    categoryId: 'electronics', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
+    categoryId: 'electronics_tv', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
     postedDate: '2024-12-12', isPinned: false, isFeatured: true, views: 234,
   },
   {
@@ -349,7 +359,7 @@ export const products: Product[] = [
     id: 'p22', title: { en: 'Generator 5KVA', fr: 'Groupe Électrogène 5KVA', ar: 'مولد كهربائي 5 كيلو فولت أمبير' },
     description: { en: 'Reliable 5KVA generator, diesel powered. Automatic voltage regulator. Perfect for homes and shops.', fr: 'Groupe électrogène fiable 5KVA, diesel. Régulateur de tension automatique.', ar: 'مولد كهربائي 5 كيلو فولت أمبير موثوق، يعمل بالديزل.' },
     price: 275000, images: ['https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=75&fm=jpg'],
-    categoryId: 'home_garden', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
+    categoryId: 'energy_backup', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
     postedDate: '2024-12-14', isPinned: true, pinnedUntil: '2025-02-14', isFeatured: false, views: 110,
   },
 ];
