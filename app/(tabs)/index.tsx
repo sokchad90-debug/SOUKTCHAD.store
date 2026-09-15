@@ -219,24 +219,14 @@ function HomeListHeader({
             ref={pinnedScrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.pinnedScroll, { paddingHorizontal: layout.horizontalPadding, gap: layout.smallGap }, isAr && { flexDirection: 'row-reverse' }]}
+            contentContainerStyle={[styles.pinnedScroll, { paddingHorizontal: layout.horizontalPadding, gap: layout.smallGap }]}
             snapToInterval={layout.sponsoredCardWidth + layout.smallGap}
             decelerationRate="fast"
             onLayout={() => {
+              // First sponsored product (Samsung) always at the LEFT, visible with NO swipe (both languages)
               setTimeout(() => {
-                if (isAr) {
-                  pinnedScrollRef.current?.scrollToEnd({ animated: false });
-                } else {
-                  pinnedScrollRef.current?.scrollTo({ x: 0, y: 0, animated: false });
-                }
+                pinnedScrollRef.current?.scrollTo({ x: 0, y: 0, animated: false });
               }, 50);
-            }}
-            onContentSizeChange={() => {
-              if (isAr) {
-                setTimeout(() => {
-                  pinnedScrollRef.current?.scrollToEnd({ animated: false });
-                }, 30);
-              }
             }}
           >
             {pinnedProducts.map((product: any) => {
