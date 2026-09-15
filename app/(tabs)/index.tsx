@@ -32,6 +32,26 @@ import {
 
 const PAGE_SIZE = 10;
 
+/** Original home category circles (exact pre-expansion design — owner rule). */
+const ORIGINAL_HOME_CATEGORIES = ['all', 'electronics', 'fashion', 'shoes'];
+
+/** Home circle tap: open the big Categories TAB focused on that family
+ *  (tree browsing lives in the Categories tab, NOT on the home grid). */
+function buildOpenHomeCategory(navigateToCategory: any, router: any, resetCategoryNavigation: any, setSelectedCategory: any) {
+  return (cat: any) => {
+    if (cat.id === 'all') {
+      // "Tout" = original behavior: show everything on Home itself
+      resetCategoryNavigation();
+      setSelectedCategory('all');
+      return;
+    }
+    resetCategoryNavigation();
+    setSelectedCategory(cat.id as any);
+    navigateToCategory(cat);
+    router.navigate('/(tabs)/categories' as any);
+  };
+}
+
 const SORT_OPTIONS: { key: SortOption; en: string; fr: string; ar: string; icon: string }[] = [
   { key: 'newest', en: 'Newest', fr: 'Récents', ar: 'الأحدث', icon: 'schedule' },
   { key: 'cheapest', en: 'Cheapest', fr: 'Moins cher', ar: 'الأرخص', icon: 'arrow-downward' },
@@ -50,7 +70,7 @@ function HomeListHeader({
   colors, t, searchQuery, activeFilterCount, language, showHeaderContent, selectedCategory,
   setSelectedCategory, pinnedProducts, filteredProductsLength, router, verifiedSellers,
   layout, setShowCityDropdown, openFilters, selection, subCategories, lastCategory,
-  navigateToCategory,
+  navigateToCategory, openHomeCategory,
 }: { [key: string]: any; layout: PhoneLayoutMetrics }) {
   const isFr = language === 'fr';
   const isAr = language === 'ar';
@@ -73,12 +93,12 @@ function HomeListHeader({
       <View style={[styles.categoryGrid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
         testID="home-categories"
       >
-        {categories.map(cat => {
+        {(ORIGINAL_HOME_CATEGORIES.map(id => (categories as any[]).find(c => c.id === id)).filter(Boolean)).map(cat => {
           const isSelected = selectedCategory === cat.id;
           return (
             <Pressable
               key={cat.id}
-              onPress={() => { selection(); navigateToCategory(cat); }}
+              onPress={() => { selection(); openHomeCategory(cat); }}
               style={styles.categoryGridItem}
             >
               <View
@@ -415,6 +435,10 @@ export default function HomeScreen() {
   ), []);
 
   // Render ListHeader as a proper component call
+  const openHomeCategory = useCallback(
+    buildOpenHomeCategory(navigateToCategory, router, resetCategoryNavigation, setSelectedCategory),
+    [navigateToCategory, router, resetCategoryNavigation, setSelectedCategory]);
+
   const renderListHeader = useCallback(() => (
     <HomeListHeader
       colors={colors}
@@ -436,10 +460,11 @@ export default function HomeScreen() {
       openFilters={openFilters}
       selection={selection}
       navigateToCategory={navigateToCategory}
+      openHomeCategory={openHomeCategory}
     />
   ), [colors, t, searchQuery, activeFilterCount, language, showHeaderContent,
       selectedCategory, setSelectedCategory, stablePinnedProducts, filteredProducts.length,
-      router, verifiedSellers, layout, navigateToCategory]);
+      router, verifiedSellers, layout, navigateToCategory, openHomeCategory]);
 
   // FlatList footer — removed, padding is handled by contentContainerStyle
   const ListFooter = useMemo(() => null, []);
