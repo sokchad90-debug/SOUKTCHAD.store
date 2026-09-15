@@ -295,9 +295,9 @@ export default function SellerStoreScreen() {
     // EXACT same card as the home feed: Top/Choice badges, rating + sold,
     // livraison offerte, stock, garantie, edge-to-edge image, same measurements.
     return (
-      <View style={{ width: CARD_WIDTH }}>
-        <ProductCard product={product} containerWidth={CARD_WIDTH} />
-      </View>
+      // NO containerWidth override - ProductCard computes the exact canonical width
+      // used on the home feed (same card component, same grid geometry).
+      <ProductCard product={product} />
     );
   };
 
@@ -356,7 +356,7 @@ export default function SellerStoreScreen() {
                 />
               )}
               <View style={styles.coverOverlay} pointerEvents="none" />
-              <View style={[styles.topBar, { marginTop: insets.top }, isAr && { flexDirection: 'row-reverse' }]}>
+              <View style={[styles.topBar, { marginTop: Math.max(insets.top, 24) + scale(4) }, isAr && { flexDirection: 'row-reverse' }]}>
                 <Pressable onPress={() => router.back()} hitSlop={12} style={styles.topBarBtn}>
                   <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color="#FFF" />
                 </Pressable>
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
   },
 
   // Products grid
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: scale(12), paddingHorizontal: scale(16), marginBottom: scale(12), alignItems: 'flex-start' },
+  row: { paddingHorizontal: scale(16), justifyContent: 'space-between', alignItems: 'stretch', paddingBottom: scale(2), marginBottom: scale(12) },
   productCard: {
     borderRadius: borderRadius.md, borderWidth: 1, overflow: 'hidden',
   },
