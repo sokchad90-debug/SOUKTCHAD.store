@@ -30,8 +30,8 @@ const ProductCardImage = ({ uri, colors, frameWidth }: { uri: string; colors: an
   const innerPad = Math.min(Math.max(Math.round(frameWidth * 0.04), 6), 12);
   if (failed || !uri) {
     return (
-      <View style={[styles.productImage, styles.productImagePlaceholder, { backgroundColor: '#FFFFFF', height: frameH }]}>
-        <MaterialIcons name="storefront" size={scale(40)} color={colors.textTertiary} />
+      <View style={[styles.productImage, styles.productImagePlaceholder, { backgroundColor: colors.primary + '14', height: frameH }]}>
+        <MaterialIcons name="image" size={scale(36)} color={colors.primary} />
       </View>
     );
   }
@@ -768,7 +768,7 @@ const styles = StyleSheet.create({
   productImagePlaceholder: {
     alignItems: 'center', justifyContent: 'center',
   },
-  productInfo: { padding: scale(10), gap: scale(2), flex: 1 },
+  productInfo: { padding: scale(10), gap: scale(2), flex: 1, minHeight: scale(58) },
   productPrice: { fontSize: scale(14), fontWeight: '800' },
   productTitle: { fontSize: scale(12), fontWeight: '500' },
 
