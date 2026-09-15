@@ -27,7 +27,6 @@ const ProductCardImage = ({ uri, colors, frameWidth }: { uri: string; colors: an
   const [failed, setFailed] = React.useState(false);
   const [retried, setRetried] = React.useState(false);
   const frameH = Math.round(frameWidth * 0.78);
-  const innerPad = Math.min(Math.max(Math.round(frameWidth * 0.04), 6), 12);
   if (failed || !uri) {
     return (
       <View style={[styles.productImage, styles.productImagePlaceholder, { backgroundColor: colors.primary + '14', height: frameH }]}>
@@ -36,12 +35,11 @@ const ProductCardImage = ({ uri, colors, frameWidth }: { uri: string; colors: an
     );
   }
   return (
-    <View style={[styles.productImageFrame, { backgroundColor: '#FFFFFF', height: frameH, padding: innerPad }]}>
+    <View style={[styles.productImageFrame, { height: frameH }]}>
       <Image
         source={{ uri }}
         style={styles.productImage}
-        contentFit="contain"
-        contentPosition="center"
+        contentFit="cover"
         transition={150}
         onError={() => {
           if (!retried) setRetried(true);
@@ -307,7 +305,7 @@ export default function SellerStoreScreen() {
         <ProductCardImage uri={product.images[0]} colors={colors} frameWidth={CARD_WIDTH} />
         <View style={styles.productInfo}>
           <Text style={[styles.productPrice, { color: colors.primary }]}>{formatPrice(product.price)}</Text>
-          <Text style={[styles.productTitle, { color: colors.textPrimary }]} numberOfLines={2}>{title}</Text>
+          <Text style={[styles.productTitle, { color: colors.textPrimary }]} numberOfLines={2} minimumFontScale={0.85} adjustsFontSizeToFit>{title}</Text>
         </View>
       </Pressable>
       </View>
@@ -768,7 +766,7 @@ const styles = StyleSheet.create({
   productImagePlaceholder: {
     alignItems: 'center', justifyContent: 'center',
   },
-  productInfo: { padding: scale(10), gap: scale(2), flex: 1, minHeight: scale(58) },
+  productInfo: { padding: scale(10), gap: scale(2), height: scale(76) },
   productPrice: { fontSize: scale(14), fontWeight: '800' },
   productTitle: { fontSize: scale(12), fontWeight: '500' },
 
