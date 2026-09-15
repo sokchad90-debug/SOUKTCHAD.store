@@ -206,7 +206,7 @@ export default function SellerStoreScreen() {
     return dist;
   }, [sellerReviews]);
 
-  const [activeTab, setActiveTab] = React.useState<'products' | 'about' | 'reviews'>(tab === 'reviews' ? 'reviews' : 'products');
+  const [activeTab, setActiveTab] = React.useState<'products' | 'reviews'>(tab === 'reviews' ? 'reviews' : 'products');
   const [fabVisible, setFabVisible] = React.useState(true);
   const lastScrollY = React.useRef(0);
 
@@ -421,7 +421,62 @@ export default function SellerStoreScreen() {
                 </View>
               </View>
 
-              {/* Store Details moved into 'À propos' tab (reference design) */}
+              {/* ============ STORE DETAILS ============ */}
+              <View style={styles.infoSection}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                  {lb('Store Details', 'Détails de la boutique', 'تفاصيل المتجر')}
+                </Text>
+                <View style={[styles.infoGrid, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+                  <InfoItem
+                    icon="event"
+                    label={lb('Joined', 'Inscrit', 'انضم')}
+                    value={effectiveSeller.joinedDate ? new Date(effectiveSeller.joinedDate).toLocaleDateString() : '—'}
+                    color={colors.primary}
+                  />
+                  <InfoItem
+                    icon="shopping-bag"
+                    label={lb('Total Sales', 'Ventes totales', 'إجمالي المبيعات')}
+                    value={String(mergedStats?.completed_orders || effectiveSeller.totalSales || 0)}
+                    color={colors.success}
+                  />
+                  <InfoItem
+                    icon="star"
+                    label={lb('Rating', 'Note', 'التقييم')}
+                    value={`${avgRating.toFixed(1)} (${sellerReviews.length})`}
+                    color="#F59E0B"
+                  />
+                  <InfoItem
+                    icon="verified"
+                    label={lb('Success Rate', 'Taux de réussite', 'نسبة النجاح')}
+                    value={`${(mergedStats?.success_rate || 0).toFixed(0)}%`}
+                    color={colors.success}
+                  />
+                  <InfoItem
+                    icon="cancel"
+                    label={lb('Failed Orders', 'Commandes échouées', 'طلبات فاشلة')}
+                    value={String(mergedStats?.failed_orders || 0)}
+                    color={colors.error}
+                  />
+                  <InfoItem
+                    icon="inventory-2"
+                    label={lb('Products', 'Produits', 'المنتجات')}
+                    value={String(sellerProducts.length)}
+                    color={colors.primary}
+                  />
+                  <InfoItem
+                    icon="trending-up"
+                    label={lb('Last 30 Days', '30 derniers jours', 'آخر 30 يوم')}
+                    value={String(mergedStats?.orders_last_30d || 0)}
+                    color={colors.pinned}
+                  />
+                  <InfoItem
+                    icon="people"
+                    label={lb('Followers', 'Abonnés', 'المتابعون')}
+                    value={String(mergedStats?.followers_count || effectiveSeller.followersCount || 0)}
+                    color="#8B5CF6"
+                  />
+                </View>
+              </View>
 
               {/* Action buttons — Contact + Share only */}
               <View style={[styles.actionRow, isAr && { flexDirection: 'row-reverse' }]}>
@@ -485,39 +540,7 @@ export default function SellerStoreScreen() {
               ) : null}
             </View>
 
-            {/* ============ TABS: Produits | À propos | Avis (reference design) ============ */}
-            <View style={[styles.profileTabs, isAr && { flexDirection: 'row-reverse' }]}>
-              {([
-                { key: 'products', label: `${lb('Products', 'Produits', 'المنتجات')} (${sellerProducts.length})` },
-                { key: 'about', label: lb('About', 'À propos', 'حول') },
-                { key: 'reviews', label: lb('Reviews', 'Avis', 'التقييمات') },
-              ] as const).map(t => (
-                <Pressable key={t.key} onPress={() => setActiveTab(t.key)} style={styles.profileTab}>
-                  <Text style={[styles.profileTabText, activeTab === t.key && { color: colors.primary, fontWeight: '700' }]}>
-                    {t.label}
-                  </Text>
-                  {activeTab === t.key ? <View style={[styles.profileTabUnderline, { backgroundColor: colors.primary }]} /> : null}
-                </Pressable>
-              ))}
-            </View>
-
-            {/* ============ ABOUT TAB: store details grid ============ */}
-            {activeTab === 'about' ? (
-              <View style={styles.infoSection}>
-                <View style={[styles.infoGrid, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-                  <InfoItem icon="event" label={lb('Joined', 'Inscrit le', 'مسجل منذ')} value={effectiveSeller.joinedDate ? new Date(effectiveSeller.joinedDate).toLocaleDateString() : '—'} color={colors.primary} />
-                  <InfoItem icon="shopping-bag" label={lb('Total Sales', 'Ventes totales', 'مجموع المبيعات')} value={String(mergedStats?.completed_orders || effectiveSeller.totalSales || 0)} color={colors.success} />
-                  <InfoItem icon="star" label={lb('Rating', 'Avis clients', 'تقييمات العملاء')} value={`${avgRating.toFixed(1)} (${sellerReviews.length})`} color="#F59E0B" />
-                  <InfoItem icon="verified" label={lb('Success Rate', 'Taux de réussite', 'نسبة النجاح')} value={`${(mergedStats?.success_rate || 0).toFixed(0)} %`} color={colors.success} />
-                  <InfoItem icon="cancel" label={lb('Failed Orders', 'Commandes échouées', 'طلبات فاشلة')} value={String(mergedStats?.failed_orders || 0)} color={colors.error} />
-                  <InfoItem icon="inventory-2" label={lb('Products', 'Produits', 'المنتجات')} value={String(sellerProducts.length)} color={colors.primary} />
-                  <InfoItem icon="trending-up" label={lb('Last 30 Days', '30 derniers jours', 'آخر 30 يوم')} value={String(mergedStats?.orders_last_30d || 0)} color={colors.pinned} />
-                  <InfoItem icon="people" label={lb('Followers', 'Abonnés', 'المتابعون')} value={String(mergedStats?.followers_count || effectiveSeller.followersCount || 0)} color="#8B5CF6" />
-                </View>
-              </View>
-            ) : null}
-
-            {/* ============ REVIEWS TAB ============ */}
+            {/* ============ REVIEWS MODAL (when tab=reviews) ============ */}
             {activeTab === 'reviews' ? (
               <View style={styles.reviewsSection}>
                 {sellerReviews.length > 0 ? (
@@ -561,7 +584,7 @@ export default function SellerStoreScreen() {
                   <Text style={styles.backToProductsText}>{lb('Back to Products', 'Retour aux produits', 'العودة للمنتجات')}</Text>
                 </Pressable>
               </View>
-            ) : activeTab === 'products' ? (
+            ) : (
               <>
                 {/* Products section title */}
                 <View style={[styles.productsSectionHeader, isAr && { flexDirection: 'row-reverse' }]}>
@@ -578,7 +601,7 @@ export default function SellerStoreScreen() {
                   </View>
                 ) : null}
               </>
-            ) : null}
+            )}
           </>
         }
       />
@@ -699,10 +722,6 @@ const styles = StyleSheet.create({
 
   // Info section
   infoSection: { marginTop: scale(10), marginBottom: scale(2) },
-  profileTabs: { flexDirection: 'row', paddingHorizontal: scale(16), marginTop: scale(12), borderBottomWidth: 1, borderBottomColor: 'rgba(128,128,128,0.15)' },
-  profileTab: { flex: 1, alignItems: 'center', paddingVertical: scale(10) },
-  profileTabText: { fontSize: scale(14), fontWeight: '600', color: '#64748B', fontFamily: 'Cairo-SemiBold' },
-  profileTabUnderline: { position: 'absolute', bottom: -1, left: '20%', right: '20%', height: scale(2), borderRadius: scale(2) },
   sectionTitle: { fontSize: scale(13), fontWeight: '800', marginBottom: scale(6), marginLeft: scale(2) },
   infoGrid: {
     flexDirection: 'row', flexWrap: 'wrap', borderRadius: borderRadius.lg, borderWidth: 1, overflow: 'hidden',
