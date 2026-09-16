@@ -143,47 +143,48 @@ export const getPhoneLayoutMetrics = (params: {
 
   const surfaceWidth = Math.min(effectiveWidth, CANONICAL_MAX_SURFACE_WIDTH);
 
-  // ---- Width normalization (controlled, clamped) ----
-  // Ratio of effective width to reference width, clamped to prevent extremes
-  const widthFactor = clamp(0.88, surfaceWidth / REFERENCE_WIDTH, 1.12);
-
-  // ---- Height class (for gap compression only) ----
+  // Height classes: informational only (s-policy keeps design uniform)
   const isShortHeight = effectiveHeight < 600;
   const isTallHeight = effectiveHeight > 820;
-  // Compression factor: 1.0 = normal, <1.0 = compress gaps
-  const heightFactor = isShortHeight ? 0.85 : 1.0;
+
+  // ---- UNIFIED DESIGN SCALE s (owner rule v8.9.84) ----
+  // s = available app-space width / reference design width (Honor, 390dp).
+  // EVERY design dimension = reference value × s. No clamps, no height-based
+  // independent scaling — one factor drives width, fonts, lineHeight, badges.
+  const widthFactor = surfaceWidth / REFERENCE_WIDTH;
+  const heightFactor = 1.0; // uniform s-policy: height no longer scales design
 
   // ---- Bottom nav ----
   const bottomNavHeight = params.bottomNavHeight ?? 56;
 
   // ---- Layout Tokens ----
-  const horizontalPadding = clamp(12, Math.round(surfaceWidth * 0.04), 18);
+  const horizontalPadding = Math.round(widthFactor * 16);
   const contentWidth = surfaceWidth - horizontalPadding * 2;
   const maxContentWidth = CANONICAL_MAX_SURFACE_WIDTH - horizontalPadding * 2;
 
-  const headerHeight = clamp(50, Math.round(widthFactor * 54), 58);
+  const headerHeight = Math.round(widthFactor * 54);
 
   /**
    * SEARCH HEIGHT — canonical value.
    * APPROVED REFERENCE (v8.9.28+ user-approved screenshots @393dp): 44dp.
    * Single formula; ALL usages and docs derive from THIS definition.
    */
-  const searchHeight = clamp(41, Math.round(widthFactor * 43), 47);
-  const searchGap = clamp(4, Math.round(heightFactor * 6), 8);
+  const searchHeight = Math.round(widthFactor * 43);
+  const searchGap = Math.round(widthFactor * 6);
 
   // Banner: proportion of contentWidth, clamped
-  const bannerHeight = clamp(100, Math.round(contentWidth * REFERENCE_BANNER_RATIO), 130);
+  const bannerHeight = Math.round(contentWidth * REFERENCE_BANNER_RATIO);
 
   // Section gaps (compressed on short screens)
-  const sectionGap = clamp(6, Math.round(heightFactor * 8), 12);
-  const smallGap = clamp(2, Math.round(heightFactor * 4), 6);
+  const sectionGap = Math.round(widthFactor * 8);
+  const smallGap = Math.round(widthFactor * 4);
 
   // Categories — 4 equal items via flex:1
-  const categoryCircleSize = clamp(48, Math.round(widthFactor * 54), 62);
+  const categoryCircleSize = Math.round(widthFactor * 54);
   const categoryItemWidth = contentWidth / 4; // flex: 1 in parent
 
   // Verified stores — 3 visible
-  const storeAvatarSize = clamp(50, Math.round(widthFactor * 56), 64);
+  const storeAvatarSize = Math.round(widthFactor * 56);
   const storeItemWidth = contentWidth / 3;
 
   // Sponsored — horizontal scroll cards
@@ -191,12 +192,12 @@ export const getPhoneLayoutMetrics = (params: {
   const sponsoredImageHeight = sponsoredCardWidth;
 
   // Recently Added — 2 columns
-  const cardGap = clamp(8, Math.round(widthFactor * 10), 12);
+  const cardGap = Math.round(widthFactor * 10);
   const recentCardWidth = (contentWidth - cardGap) / 2;
   const recentImageHeight = Math.round(recentCardWidth * REFERENCE_IMAGE_RATIO);
 
   // Bottom padding — exact bottom nav + safe area + tiny gap
-  const contentBottomPadding = bottomNavHeight + clamp(4, Math.round(heightFactor * 6), 8);
+  const contentBottomPadding = bottomNavHeight + Math.round(widthFactor * 6);
 
   // Sticky header offset = header + search + searchGap
   const stickyHeaderOffset = headerHeight + searchHeight + searchGap;
@@ -258,7 +259,7 @@ if (Dimensions.addEventListener) {
   });
 }
 
-const _ratio = () => clamp(0.88, _w / REFERENCE_WIDTH, 1.12);
+const _ratio = () => _w / REFERENCE_WIDTH; // pure s (owner rule v8.9.84)
 const _surfaceWidth = () => Math.min(_w, CANONICAL_MAX_SURFACE_WIDTH);
 const _horizontalPadding = () => clamp(12, Math.round(_surfaceWidth() * 0.04), 18);
 const _contentWidth = () => _surfaceWidth() - _horizontalPadding() * 2;

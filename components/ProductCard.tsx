@@ -151,7 +151,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
         <View style={[styles.priceTopRow, isAr && styles.rowRTL]}>
           {isDiscountActive(product) ? (
             <>
-              <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]}>
+              <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(14), lineHeight: Math.round(17 * (CARD_WIDTH / 195)) }]}>
                 {isAr ? '\u200E' : ''}{formatPrice(getDiscountedPrice(product))}{isAr ? '\u200E' : ''}
               </Text>
               <View style={[styles.discountBadge, { backgroundColor: '#EF4444' }]}>
@@ -159,7 +159,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
               </View>
             </>
           ) : (
-            <AppText testID="product-card-price" weight={800} style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]}>
+            <AppText testID="product-card-price" weight={800} style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(14), lineHeight: Math.round(17 * (CARD_WIDTH / 195)) }]}>
               {isAr ? '\u200E' : ''}{formatPrice(product.price)}{isAr ? '\u200E' : ''}
             </AppText>
           )}
@@ -173,7 +173,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           </Text>
         ) : null}
         {/* Row 2: title — up to 2 lines */}
-        <AppText weight={600} style={[styles.title, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={2}>
+        <AppText weight={600} style={[styles.title, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(12), lineHeight: Math.round(17 * (CARD_WIDTH / 195)) }]} numberOfLines={2}>
           {title}
         </AppText>
         {/* Row 3: rating + sold count in one row */}

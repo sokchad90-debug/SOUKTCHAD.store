@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { usePhoneLayout } from '@/ui/responsive';
 
 /**
  * TopBadge — ONE component for card + detail.
@@ -13,11 +14,18 @@ interface Props {
   label?: string;
 }
 function TopBadgeInner({ earned, label = 'Top' }: Props) {
+  const layout = usePhoneLayout();
+  const s = layout.widthFactor;
   if (!earned) return null;
   return (
-    <View style={styles.badge} testID="top-badge">
-      <MaterialIcons name="workspace-premium" size={13} color="#B8860B" />
-      <Text style={styles.text}>{label}</Text>
+    <View style={[styles.badge, {
+      gap: 3 * s,
+      borderRadius: 999,
+      paddingHorizontal: 7 * s,
+      paddingVertical: 3 * s,
+    }]} testID="top-badge">
+      <MaterialIcons name="workspace-premium" size={Math.round(13 * s)} color="#B8860B" />
+      <Text style={[styles.text, { fontSize: Math.round(11 * s) }]}>{label}</Text>
     </View>
   );
 }
