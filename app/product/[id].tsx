@@ -89,9 +89,11 @@ export default function ProductDetailScreen() {
   // Review form state
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showReviewsSheet, setShowReviewsSheet] = useState(false);
+  const [reviewFilter, setReviewFilter] = useState<number | 'all'>('all');
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
   const [reviewPhoto, setReviewPhoto] = useState('');
+  const [reviewPhotos, setReviewPhotos] = useState<string[]>([]);
   const [reviewOrderId, setReviewOrderId] = useState('');
 
   const isFr = language === 'fr';
@@ -132,11 +134,20 @@ export default function ProductDetailScreen() {
   const pickReviewPhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Permission required'); return; }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8, allowsEditing: true, aspect: [4, 3] });
-    if (!result.canceled && result.assets[0]) {
-      setReviewPhoto(result.assets[0].uri);
+    const remaining = 4 - reviewPhotos.length;
+    if (remaining <= 0) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'], quality: 0.8,
+      allowsMultipleSelection: true, selectionLimit: remaining,
+      aspect: [4, 3],
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      const uris = result.assets.map(a => a.uri).slice(0, remaining);
+      const next = [...reviewPhotos, ...uris];
+      setReviewPhotos(next);
+      setReviewPhoto(next[0]);
     }
-  }, []);
+  }, [reviewPhotos]);
 
   const handleSubmitReview = useCallback(() => {
     if (!reviewText.trim()) {
@@ -145,12 +156,13 @@ export default function ProductDetailScreen() {
     }
     if (!product) return;
     notifySuccess();
-    addReview(reviewOrderId, product.id, product.sellerId, reviewRating, reviewText.trim(), reviewPhoto || undefined);
+    addReview(reviewOrderId, product.id, product.sellerId, reviewRating, reviewText.trim(), reviewPhotos[0] || undefined, reviewPhotos);
     setShowReviewModal(false);
     setReviewText('');
     setReviewPhoto('');
+    setReviewPhotos([]);
     setReviewRating(5);
-  }, [reviewText, reviewRating, reviewPhoto, reviewOrderId, product, addReview, lb]);
+  }, [reviewText, reviewRating, reviewPhotos, reviewOrderId, product, addReview, lb]);
 
   if (!product) {
     return (
@@ -451,21 +463,82 @@ export default function ProductDetailScreen() {
                         })}
                       </View>
 
-                      {productReviews.map(rev => (
-                        <View key={rev.id} style={{ paddingVertical: scale(12), borderTopWidth: 0.5, borderTopColor: colors.border, gap: scale(4) }}>
-                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text style={{ fontSize: scale(14), fontWeight: '600', color: colors.textPrimary }} selectable={false}>{rev.buyerName}</Text>
-                            <View style={{ flexDirection: 'row' }}>
-                              {[1, 2, 3, 4, 5].map(s => (
-                                <MaterialIcons key={s} name={s <= rev.rating ? 'star' : 'star-border'} size={scale(12)} color="#F59E0B" />
-                              ))}
+                      {/* Filter chips: All / 5 / 4 / 3 / 2 / 1 (like Google) */}
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: scale(8), marginBottom: scale(12) }}>
+                        {([['all', lb('All', 'Tout', 'الكل')], ['5', '5'], ['4', '4'], ['3', '3'], ['2', '2'], ['1', '1']] as const).map(([key, label]) => {
+                          const active = reviewFilter === (key === 'all' ? 'all' : Number(key));
+                          const count = key === 'all' ? productReviews.length : productReviews.filter(r => r.rating === Number(key)).length;
+                          return (
+                            <Pressable
+                              key={key}
+                              onPress={() => setReviewFilter(key === 'all' ? 'all' : Number(key))}
+                              style={{
+                                flexDirection: 'row', alignItems: 'center', gap: scale(4),
+                                paddingHorizontal: scale(12), paddingVertical: scale(6), borderRadius: scale(18),
+                                borderWidth: 1,
+                                backgroundColor: active ? colors.primary : colors.surface,
+                                borderColor: active ? colors.primary : colors.border,
+                              }}
+                            >
+                              {key !== 'all' ? <MaterialIcons name="star" size={scale(12)} color={active ? '#FFF' : '#F59E0B'} /> : null}
+                              <Text style={{ fontSize: scale(12), fontWeight: '600', color: active ? '#FFF' : colors.textPrimary }}>
+                                {key === 'all' ? lb('All', 'Tout', 'الكل') : key}{' '}{count}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+
+                      {(() => {
+                        const filtered = reviewFilter === 'all' ? productReviews : productReviews.filter(r => r.rating === reviewFilter);
+                        if (filtered.length === 0) {
+                          return (
+                            <View style={{ alignItems: 'center', paddingVertical: scale(24), gap: scale(6) }}>
+                              <MaterialIcons name="star-border" size={scale(28)} color={colors.textTertiary} />
+                              <Text style={{ fontSize: scale(13), color: colors.textTertiary }}>{lb('No reviews with this rating', 'Aucun avis pour cette note', 'لا توجد تقييمات بهذا العدد من النجوم')}</Text>
                             </View>
-                          </View>
-                          {rev.text ? <Text style={{ fontSize: scale(13), color: colors.textSecondary, lineHeight: 18 }}>{rev.text}</Text> : null}
-                          {rev.photoUri ? <Image source={{ uri: rev.photoUri }} style={{ width: '100%', height: scale(120), borderRadius: scale(8), marginTop: scale(4) }} contentFit="cover" transition={200} /> : null}
-                          <Text style={{ fontSize: scale(11), color: colors.textTertiary }}>{new Date(rev.createdAt).toLocaleDateString()}</Text>
-                        </View>
-                      ))}
+                          );
+                        }
+                        return filtered.map(rev => {
+                          const photos = (rev.photoUris && rev.photoUris.length > 0) ? rev.photoUris : (rev.photoUri ? [rev.photoUri] : []);
+                          const initial = (rev.buyerName || '?').trim().charAt(0).toUpperCase();
+                          return (
+                            <View key={rev.id} style={{ paddingVertical: scale(14), borderTopWidth: 0.5, borderTopColor: colors.border, gap: scale(6) }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
+                                {rev.buyerAvatar ? (
+                                  <Image source={{ uri: rev.buyerAvatar }} style={{ width: scale(38), height: scale(38), borderRadius: scale(19) }} contentFit="cover" transition={150} />
+                                ) : (
+                                  <View style={{ width: scale(38), height: scale(38), borderRadius: scale(19), backgroundColor: colors.primary + '26', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: scale(16), fontWeight: '700', color: colors.primary, fontFamily: 'Cairo-Bold' }}>{initial}</Text>
+                                  </View>
+                                )}
+                                <View style={{ flex: 1 }}>
+                                  <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.textPrimary, fontFamily: 'Cairo-SemiBold' }} selectable={false}>{rev.buyerName}</Text>
+                                  <Text style={{ fontSize: scale(11), color: colors.textTertiary }}>{new Date(rev.createdAt).toLocaleDateString(isAr ? 'ar' : isFr ? 'fr-FR' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</Text>
+                                </View>
+                                <View style={{ flexDirection: 'row' }}>
+                                  {[1, 2, 3, 4, 5].map(s => (
+                                    <MaterialIcons key={s} name={s <= rev.rating ? 'star' : 'star-border'} size={scale(14)} color="#F59E0B" />
+                                  ))}
+                                </View>
+                              </View>
+                              {rev.text ? <Text style={{ fontSize: scale(13), color: colors.textSecondary, lineHeight: 19 }}>{rev.text}</Text> : null}
+                              {photos.length > 0 ? (
+                                <View style={{ marginTop: scale(4) }}>
+                                  <Text style={{ fontSize: scale(11), fontWeight: '600', color: colors.textTertiary, marginBottom: scale(4) }}>
+                                    {lb('Purchased products', 'Produits achetés', 'المنتجات المشتراة')}
+                                  </Text>
+                                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: scale(8) }}>
+                                    {photos.map((p, i) => (
+                                      <Image key={`${p}-${i}`} source={{ uri: p }} style={{ width: scale(72), height: scale(72), borderRadius: scale(8), backgroundColor: colors.backgroundSecondary }} contentFit="cover" transition={150} />
+                                    ))}
+                                  </ScrollView>
+                                </View>
+                              ) : null}
+                            </View>
+                          );
+                        });
+                      })()}
                     </>
                   ) : (
                     <View style={{ alignItems: 'center', paddingVertical: scale(32), gap: scale(8) }}>
@@ -575,17 +648,33 @@ export default function ProductDetailScreen() {
             <Text style={[styles.reviewFieldLabel, { color: colors.textSecondary }]}>
               {lb('PHOTO PROOF (Optional)', 'PHOTO (Optionnel)', 'صورة إثبات (اختياري)')}
             </Text>
-            {reviewPhoto ? (
-              <View style={styles.reviewPhotoPreview}>
-                <Image source={{ uri: reviewPhoto }} style={styles.reviewPhotoImg} contentFit="cover" transition={200} />
-                <Pressable onPress={() => setReviewPhoto('')} style={[styles.removePhotoBtn, { backgroundColor: colors.errorLight }]}>
-                  <MaterialIcons name="close" size={scale(16)} color={colors.error} />
-                </Pressable>
+            {reviewPhotos.length > 0 ? (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: scale(8) }}>
+                {reviewPhotos.map((uri, i) => (
+                  <View key={`${uri}-${i}`} style={styles.reviewPhotoPreview}>
+                    <Image source={{ uri }} style={{ width: scale(84), height: scale(84), borderRadius: scale(10) }} contentFit="cover" transition={200} />
+                    <Pressable
+                      onPress={() => {
+                        const next = reviewPhotos.filter((_, j) => j !== i);
+                        setReviewPhotos(next);
+                        setReviewPhoto(next[0] || '');
+                      }}
+                      style={[styles.removePhotoBtn, { backgroundColor: colors.errorLight, position: 'absolute', top: scale(4), right: scale(4) }]}
+                    >
+                      <MaterialIcons name="close" size={scale(14)} color={colors.error} />
+                    </Pressable>
+                  </View>
+                ))}
+                {reviewPhotos.length < 4 ? (
+                  <Pressable onPress={pickReviewPhoto} style={[styles.addPhotoBtnSmall, { borderColor: colors.border }]}>
+                    <MaterialIcons name="add-a-photo" size={scale(22)} color={colors.textTertiary} />
+                  </Pressable>
+                ) : null}
               </View>
             ) : (
               <Pressable onPress={pickReviewPhoto} style={[styles.addPhotoBtn, { borderColor: colors.border }]}>
                 <MaterialIcons name="add-a-photo" size={scale(24)} color={colors.textTertiary} />
-                <Text style={[styles.addPhotoText, { color: colors.textTertiary }]}>{lb('Add Photo', 'Ajouter une photo', 'إضافة صورة')}</Text>
+                <Text style={[styles.addPhotoText, { color: colors.textTertiary }]}>{lb('Add Photos (up to 4)', 'Ajouter des photos (max 4)', 'أضف صوراً (حتى 4)')}</Text>
               </Pressable>
             )}
 
@@ -678,6 +767,7 @@ const styles = StyleSheet.create({
   ratingRow: { flexDirection: 'row', gap: scale(8), marginBottom: scale(8) },
   reviewInput: { height: scale(100), borderRadius: scale(12), borderWidth: 1, paddingHorizontal: scale(16), paddingTop: scale(14), fontSize: scale(15), textAlignVertical: 'top' },
   reviewPhotoPreview: { position: 'relative', marginTop: scale(4) },
+  addPhotoBtnSmall: { width: scale(84), height: scale(84), borderRadius: scale(10), borderWidth: 1.5, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', marginTop: scale(4) },
   reviewPhotoImg: { width: '100%', height: scale(160), borderRadius: scale(12) },
   removePhotoBtn: { position: 'absolute', top: scale(8), right: scale(8), width: scale(28), height: scale(28), borderRadius: scale(14), alignItems: 'center', justifyContent: 'center' },
   addPhotoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: scale(56), borderRadius: scale(12), borderWidth: 2, borderStyle: 'dashed', gap: scale(8), marginTop: scale(4) },

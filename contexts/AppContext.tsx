@@ -380,7 +380,7 @@ interface AppContextType {
   placeOrder: (productId: string, paymentMethodId: string, screenshotUri: string, buyerCity: string, shippingId: string, quantity?: number) => { success: boolean; error?: string };
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
   markItemReceived: (orderId: string) => void;
-  addReview: (orderId: string, productId: string, sellerId: string, rating: number, text: string, photoUri?: string) => void;
+  addReview: (orderId: string, productId: string, sellerId: string, rating: number, text: string, photoUri?: string, photoUris?: string[]) => void;
   getReviewsForProduct: (productId: string) => Review[];
   getReviewsForSeller: (sellerId: string) => Review[];
   getFilteredProducts: () => Product[];
@@ -1981,11 +1981,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [orders, products, language]);
 
-  const addReview = useCallback((orderId: string, productId: string, sellerId: string, rating: number, text: string, photoUri?: string) => {
+  const addReview = useCallback((orderId: string, productId: string, sellerId: string, rating: number, text: string, photoUri?: string, photoUris?: string[]) => {
     if (!user) return;
     const newReview: Review = {
       id: `rev${Date.now()}`, orderId, productId, buyerId: user.id, buyerName: user.name,
-      sellerId, rating, text, photoUri, createdAt: new Date().toISOString(),
+      buyerAvatar: (user as any)?.avatar || undefined,
+      sellerId, rating, text, photoUri,
+      photoUris: (photoUris && photoUris.length > 0) ? photoUris : (photoUri ? [photoUri] : undefined),
+      createdAt: new Date().toISOString(),
     };
     setReviews(prev => [newReview, ...prev]);
   }, [user]);

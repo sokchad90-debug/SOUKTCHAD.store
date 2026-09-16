@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable, FlatList, Share, Platform, Animated, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, FlatList, ScrollView, Share, Platform, Animated, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -67,16 +67,20 @@ const ReviewItem = ({
   const [photoFailed, setPhotoFailed] = React.useState(false);
   const isLong = rev.text.length > 150;
   const displayText = expanded || !isLong ? rev.text : rev.text.slice(0, 150) + '...';
-  const showPhoto = rev.photoUri && !photoFailed;
+  const photos = (rev.photoUris && rev.photoUris.length > 0) ? rev.photoUris : (rev.photoUri ? [rev.photoUri] : []);
   return (
     <View style={[styles.reviewCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }, shadows.card]}>
       <View style={styles.reviewHeader}>
         <View style={styles.reviewAvatarWrap}>
-          <View style={[styles.reviewAvatar, { backgroundColor: colors.primary + '30' }]}>
-            <Text style={[styles.reviewAvatarText, { color: colors.primary }]}>
-              {rev.buyerName.charAt(0).toUpperCase()}
-            </Text>
-          </View>
+          {rev.buyerAvatar ? (
+            <Image source={{ uri: rev.buyerAvatar }} style={{ width: scale(40), height: scale(40), borderRadius: scale(20) }} contentFit="cover" transition={150} />
+          ) : (
+            <View style={[styles.reviewAvatar, { backgroundColor: colors.primary + '30' }]}>
+              <Text style={[styles.reviewAvatarText, { color: colors.primary }]}>
+                {rev.buyerName.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
         </View>
         <View style={styles.reviewHeaderInfo}>
           <Text style={[styles.reviewName, { color: colors.textPrimary }]} selectable={false}>{rev.buyerName}</Text>
@@ -95,14 +99,18 @@ const ReviewItem = ({
           </Text>
         </Pressable>
       ) : null}
-      {showPhoto ? (
-        <Image
-          source={{ uri: rev.photoUri }}
-          style={styles.reviewPhoto}
-          contentFit="cover"
-          transition={200}
-          onError={() => setPhotoFailed(true)}
-        />
+      {photos.length > 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: scale(8), marginTop: scale(6) }}>
+          {photos.map((p: string, i: number) => (
+            <Image
+              key={`${p}-${i}`}
+              source={{ uri: p }}
+              style={{ width: scale(72), height: scale(72), borderRadius: scale(8), backgroundColor: colors.backgroundSecondary }}
+              contentFit="cover"
+              transition={150}
+            />
+          ))}
+        </ScrollView>
       ) : null}
       <View style={styles.reviewFooter}>
         <MaterialIcons name="access-time" size={scale(12)} color={colors.textTertiary} />
@@ -210,6 +218,7 @@ export default function SellerStoreScreen() {
   }, [sellerReviews]);
 
   const [activeTab, setActiveTab] = React.useState<'products' | 'reviews'>(tab === 'reviews' ? 'reviews' : 'products');
+  const [reviewFilter, setReviewFilter] = useState<number | 'all'>('all');
   const [fabVisible, setFabVisible] = React.useState(true);
   const lastScrollY = React.useRef(0);
 
@@ -572,7 +581,28 @@ export default function SellerStoreScreen() {
                     <Text style={[styles.emptySub, { color: colors.textTertiary }]}>{lb('Be the first to review', 'Soyez le premier', 'كن أول من يقيّم')}</Text>
                   </View>
                 )}
-                {sellerReviews.map(rev => <ReviewItem key={rev.id} rev={rev} colors={colors} renderStars={renderStars} lb={lb} />)}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: scale(8), marginBottom: scale(10), paddingHorizontal: scale(16) }}>
+                  {([['all', lb('All', 'Tout', 'الكل')], ['5', '5'], ['4', '4'], ['3', '3'], ['2', '2'], ['1', '1']] as const).map(([key]) => {
+                    const active = reviewFilter === (key === 'all' ? 'all' : Number(key));
+                    const count = key === 'all' ? sellerReviews.length : sellerReviews.filter(r => r.rating === Number(key)).length;
+                    return (
+                      <Pressable
+                        key={key}
+                        onPress={() => setReviewFilter(key === 'all' ? 'all' : Number(key))}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: scale(4), paddingHorizontal: scale(12), paddingVertical: scale(6), borderRadius: scale(18), borderWidth: 1, backgroundColor: active ? colors.primary : colors.surface, borderColor: active ? colors.primary : colors.border }}
+                      >
+                        {key !== 'all' ? <MaterialIcons name="star" size={scale(12)} color={active ? '#FFF' : '#F59E0B'} /> : null}
+                        <Text style={{ fontSize: scale(12), fontWeight: '600', color: active ? '#FFF' : colors.textPrimary }}>
+                          {key === 'all' ? lb('All', 'Tout', 'الكل') : key}{' '}{count}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                {(() => {
+                  const list = reviewFilter === 'all' ? sellerReviews : sellerReviews.filter(r => r.rating === reviewFilter);
+                  return list.map(rev => <ReviewItem key={rev.id} rev={rev} colors={colors} renderStars={renderStars} lb={lb} />);
+                })()}
                 <Pressable onPress={() => setActiveTab('products')} style={[styles.backToProductsBtn, { backgroundColor: colors.primary }]}>
                   <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(18)} color="#FFF" />
                   <Text style={styles.backToProductsText}>{lb('Back to Products', 'Retour aux produits', 'العودة للمنتجات')}</Text>

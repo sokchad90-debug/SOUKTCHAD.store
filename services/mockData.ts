@@ -80,10 +80,13 @@ export interface Review {
   productId: string;
   buyerId: string;
   buyerName: string;
+  buyerAvatar?: string;
   sellerId: string;
   rating: number;
   text: string;
   photoUri?: string;
+  /** Reviewer-uploaded photos of the received product (up to 4) */
+  photoUris?: string[];
   createdAt: string;
 }
 
@@ -366,10 +369,30 @@ export const products: Product[] = [
 
 export const mockReviews: Review[] = [
   {
-    id: 'rev1', orderId: 'ord1', productId: 'p13', buyerId: 'user1', buyerName: 'Ahmed',
-    sellerId: 'seller1', rating: 5, text: 'Excellent speaker! Great quality sound, exactly as described.',
-    photoUri: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=800&q=75&fm=jpg',
+    id: 'rev1', orderId: 'ord1', productId: 'p13', buyerId: 'user1', buyerName: 'Ahmed Mahamat',
+    buyerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=75&fm=jpg',
+    sellerId: 'seller1', rating: 5, text: 'Excellent speaker! Great quality sound, exactly as described. Delivered fast to N\'Djamena.',
+    photoUris: [
+      'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=800&q=75&fm=jpg',
+      'https://images.unsplash.com/photo-1589003077984-894e133dabab?w=800&q=75&fm=jpg',
+      'https://images.unsplash.com/photo-1545454675-3531b543be5d?w=800&q=75&fm=jpg',
+    ],
     createdAt: '2024-12-20T14:00:00Z',
+  },
+  {
+    id: 'rev2', orderId: 'ord2', productId: 'p1', buyerId: 'user2', buyerName: 'Fatimé Abakar',
+    sellerId: 'seller1', rating: 4, text: 'Galaxy A54 original, battery lasts all day. Only the charger cable is short.',
+    createdAt: '2024-12-18T09:30:00Z',
+  },
+  {
+    id: 'rev3', orderId: 'ord3', productId: 'p1', buyerId: 'user3', buyerName: 'Ousmane Déby',
+    sellerId: 'seller1', rating: 5, text: 'هاتف أصلي ومضمون، التوصيل كان سريعاً إلى NDjamena. أنصح به بشدة.',
+    createdAt: '2024-12-22T16:45:00Z',
+  },
+  {
+    id: 'rev4', orderId: 'ord4', productId: 'p14', buyerId: 'user4', buyerName: 'Amina Saleh',
+    sellerId: 'seller1', rating: 3, text: 'Laptop works but the screen has a small scratch on the corner. Seller responded quickly.',
+    createdAt: '2024-12-19T11:20:00Z',
   },
 ];
 
