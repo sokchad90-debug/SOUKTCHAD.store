@@ -133,7 +133,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
         ) : null}
         <Pressable
           onPress={handleFavorite}
-          style={[styles.favoriteBtn, isAr && styles.favoriteBtnRTL, { backgroundColor: colors.overlay }]}
+          style={[styles.favoriteBtn, isAr && styles.favoriteBtnRTL, { backgroundColor: colors.overlay, width: Math.round(30 * (CARD_WIDTH / 195)), height: Math.round(30 * (CARD_WIDTH / 195)), borderRadius: Math.round(16 * (CARD_WIDTH / 195)) }]}
           hitSlop={8}
         >
           <Animated.View style={{ transform: [{ scale: heartScale }] }}>
@@ -146,20 +146,20 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
         </Pressable>
       </View>
 
-      <View style={styles.info} testID="product-card-info">
+      <View style={[styles.info, { paddingVertical: cardScale(5), paddingHorizontal: cardScale(8), gap: cardScale(3) }]} testID="product-card-info">
         {/* Row 1: price + Top badge (same row when it fits) */}
         <View style={[styles.priceTopRow, isAr && styles.rowRTL]}>
           {isDiscountActive(product) ? (
             <>
-              <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(14), lineHeight: Math.round(17 * (CARD_WIDTH / 195)) }]}>
+              <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(14), lineHeight: cardScale(17) }]}>
                 {isAr ? '\u200E' : ''}{formatPrice(getDiscountedPrice(product))}{isAr ? '\u200E' : ''}
               </Text>
               <View style={[styles.discountBadge, { backgroundColor: '#EF4444' }]}>
-                <Text style={styles.discountBadgeText}>-{Math.min(30, product.discountPercent || 0)}%</Text>
+                <Text style={[styles.discountBadgeText, { fontSize: cardScale(9) }]}>-{Math.min(30, product.discountPercent || 0)}%</Text>
               </View>
             </>
           ) : (
-            <AppText testID="product-card-price" weight={800} style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(14), lineHeight: Math.round(17 * (CARD_WIDTH / 195)) }]}>
+            <AppText testID="product-card-price" weight={800} style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(14), lineHeight: cardScale(17) }]}>
               {isAr ? '\u200E' : ''}{formatPrice(product.price)}{isAr ? '\u200E' : ''}
             </AppText>
           )}
@@ -173,7 +173,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           </Text>
         ) : null}
         {/* Row 2: title — up to 2 lines */}
-        <AppText weight={600} style={[styles.title, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(12), lineHeight: Math.round(17 * (CARD_WIDTH / 195)) }]} numberOfLines={2}>
+        <AppText weight={600} style={[styles.title, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(12), lineHeight: cardScale(17) }]} numberOfLines={2}>
           {title}
         </AppText>
         {/* Row 3: rating + sold count in one row */}
@@ -198,7 +198,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
         {product?.location ? (
           <View style={[styles.meta, isAr && { flexDirection: 'row-reverse' }]}>
             <MaterialIcons name="location-on" size={cardScale(10)} color={colors.textSecondary} />
-            <Text style={[styles.location, { color: colors.textTertiary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1}>
+            <Text style={[styles.location, { color: colors.textTertiary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(11) }]} numberOfLines={1}>
               {product.location}
             </Text>
           </View>
@@ -209,7 +209,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
             {product?.deliveryType === 'free' || product?.freeShipping ? (
               <View style={[styles.logItem, isAr && styles.rowRTL]}>
                 <MaterialIcons name="local-shipping" size={cardScale(10)} color={DT.color.success} />
-                <Text style={[styles.freeShipText, { color: DT.color.success }]} numberOfLines={1}>
+                <Text style={[styles.freeShipText, { color: DT.color.success, fontSize: cardScale(10), lineHeight: Math.round(cardScale(10) * 1.3) }]} numberOfLines={1}>
                   {language === 'fr' ? 'Livraison offerte' : language === 'ar' ? 'توصيل مجاني' : 'Free delivery'}
                 </Text>
               </View>
@@ -224,15 +224,15 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
             {(product.stock ?? 0) > 0 ? (
               <View style={[styles.logItem, isAr && styles.rowRTL]}>
                 <MaterialIcons name="inventory" size={cardScale(9)} color={DT.color.success} />
-                <Text style={[styles.stockText, { color: isDark ? DT.dark.success : DT.color.success }]} numberOfLines={1}>
+                <Text style={[styles.stockText, { color: isDark ? DT.dark.success : DT.color.success, fontSize: cardScale(10), lineHeight: Math.round(cardScale(10) * 1.3) }]} numberOfLines={1}>
                   {language === 'fr' ? 'Stock' : language === 'ar' ? 'مخزون' : 'Stock'}: {product.stock}
                 </Text>
               </View>
             ) : null}
             {product?.warrantyDays ? (
               <View style={[styles.logItem, isAr && styles.rowRTL]}>
-                <Image source={SHIELD_ICON} style={styles.shieldIcon} contentFit="contain" />
-                <Text style={[styles.warrantyText, { color: colors.textSecondary }]} numberOfLines={1}>
+                <Image source={SHIELD_ICON} style={[styles.shieldIcon, { width: cardScale(10), height: cardScale(10) }]} contentFit="contain" />
+                <Text style={[styles.warrantyText, { color: colors.textSecondary, fontSize: cardScale(10), lineHeight: Math.round(cardScale(10) * 1.3) }]} numberOfLines={1}>
                   {language === 'fr' ? 'Garantie' : language === 'ar' ? 'ضمان' : 'Warranty'} {product.warrantyDays}{language === 'fr' ? 'j' : language === 'ar' ? 'ي' : 'd'}
                 </Text>
               </View>

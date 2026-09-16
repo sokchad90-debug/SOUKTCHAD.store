@@ -259,9 +259,11 @@ if (Dimensions.addEventListener) {
   });
 }
 
-const _ratio = () => _w / REFERENCE_WIDTH; // pure s (owner rule v8.9.84)
+// UNIFIED s: same formula as usePhoneLayout — window width capped at the 480
+// canonical surface, divided by the 390 reference (Honor design). One source.
 const _surfaceWidth = () => Math.min(_w, CANONICAL_MAX_SURFACE_WIDTH);
-const _horizontalPadding = () => clamp(12, Math.round(_surfaceWidth() * 0.04), 18);
+const _ratio = () => _surfaceWidth() / REFERENCE_WIDTH;
+const _horizontalPadding = () => Math.round(_ratio() * 16);
 const _contentWidth = () => _surfaceWidth() - _horizontalPadding() * 2;
 
 /** Reference gap between sticky search bottom and the first list section (approved v8.9.29). */
@@ -310,27 +312,26 @@ export const getCardWidth = () => Math.floor((_contentWidth() - scale(10)) / 2);
  * styles that cannot re-evaluate; reactive code MUST use usePhoneLayout().searchHeight.
  */
 export const SEARCH_BAR_H_BASE = 43;
-export const getSearchBarH = (fontScale: number = 1) =>
-  clamp(43, Math.round(43 * _ratio() * Math.min(fontScale, 1.12)), 47);
+export const getSearchBarH = (fontScale: number = 1) => Math.round(43 * _ratio() * Math.min(fontScale, 1.12));
 export const getSearchBarHeight = getSearchBarH;
 export const SEARCH_BAR_H = getSearchBarH();
-export const getBannerHeight = () => clamp(100, Math.round(_contentWidth() * REFERENCE_BANNER_RATIO), 130);
+export const getBannerHeight = () => Math.round(_contentWidth() * REFERENCE_BANNER_RATIO);
 export const BANNER_HEIGHT = getBannerHeight();
-export const getCategoryCircleSize = () => clamp(48, Math.round(54 * _ratio()), 62);
+export const getCategoryCircleSize = () => Math.round(54 * _ratio());
 export const CATEGORY_CIRCLE = getCategoryCircleSize();
 
-export const AVATAR_SIZE = clamp(50, Math.round(56 * _ratio()), 64);
+export const AVATAR_SIZE = Math.round(56 * _ratio());
 export const AVATAR_RADIUS = Math.round(AVATAR_SIZE / 2);
 export const AVATAR_BORDER = scale(2);
 export const VERIFIED_STORE_ITEM_W = Math.floor(CONTENT_WIDTH / 3);
-export const VERIFIED_BADGE = clamp(18, scale(20), 22);
+export const VERIFIED_BADGE = scale(20);
 export const PINNED_CARD_W = Math.floor((CONTENT_WIDTH - scale(12)) / 3);
 export const PINNED_IMG_H = PINNED_CARD_W;
 export const SEARCH_TO_BANNER_GAP = scale(6);
 export const SECTION_SPACING = scale(8);
 export const SEARCH_BTN_W = SEARCH_BAR_H;
-export const EMPTY_IMG = clamp(132, Math.round(CONTENT_WIDTH * 0.41), 176);
+export const EMPTY_IMG = Math.round(CONTENT_WIDTH * 0.41);
 export const PINNED_DISCOUNT_BADGE = scale(18);
-export const NOTIF_BTN = clamp(30, scale(32), 36);
-export const LOGO_IMG = clamp(22, scale(24), 28);
+export const NOTIF_BTN = scale(32);
+export const LOGO_IMG = scale(24);
 export const CARD_WIDTH = getCardWidth();
