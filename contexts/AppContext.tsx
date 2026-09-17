@@ -2292,7 +2292,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [categories]);
 
   const getPinnedProducts = useCallback((): Product[] => {
-    return products.filter(p => p.isPinned);
+    // Deterministic sponsored order: pinnedUntil desc (longest campaign first),
+    // tie-break postedDate desc. Prevents locally-added/DB products from jumping
+    // to the front of the sponsored row (owner-reported AR swipe issue).
+    return products
+      .filter(p => p.isPinned)
+      .slice()
+      .sort((a, b) => {
+        const pu = (b.pinnedUntil || '').localeCompare(a.pinnedUntil || '');
+        if (pu !== 0) return pu;
+        return (b.postedDate || '').localeCompare(a.postedDate || '');
+      });
   }, [products]);
 
   // Find a seller by ID — searches both AppContext sellers (from DB) and mockData fallback
