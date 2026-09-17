@@ -152,7 +152,7 @@ function HomeListHeader({
               {lb('Verified Stores', 'Boutiques vérifiées', 'متاجر موثّقة')}
             </AppText>
             <Pressable onPress={() => router.push('/verified-stores' as any)} style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
-              <Text style={[styles.seeAllText, isAr && { fontSize: 11 * layout.widthFactor, fontFamily: 'Cairo-Medium', fontWeight: '500' }, { color: colors.verified }]}>{lb('See All', 'Voir tout', 'عرض الكل')}</Text>
+              <Text style={[styles.seeAllText, { color: colors.verified }]}>{lb('See All', 'Voir tout', 'عرض الكل')}</Text>
               <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.verified} />
             </Pressable>
           </View>
@@ -210,7 +210,7 @@ function HomeListHeader({
           <Pressable onPress={() => router.push('/promoted')} style={[styles.sectionHeaderRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
             <AppText weight={700} style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>{t('pinnedProducts')}</AppText>
             <View style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
-              <Text style={[styles.seeAllText, isAr && { fontSize: 11 * layout.widthFactor, fontFamily: 'Cairo-Medium', fontWeight: '500' }, { color: colors.primary }]}>{lb('See All', 'Voir tout', 'عرض الكل')}</Text>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>{lb('See All', 'Voir tout', 'عرض الكل')}</Text>
               <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.primary} />
             </View>
           </Pressable>
@@ -253,11 +253,7 @@ function HomeListHeader({
                     {hasDiscount ? (
                       <Text style={[styles.pinnedOldPrice, { color: colors.textTertiary, textAlign: isAr ? 'right' : 'left' }]}>{formatPrice(product?.price || 0)}</Text>
                     ) : null}
-                    {isAr ? (
-                      <AppText weight={500} style={{ color: colors.textPrimary, textAlign: 'right', fontSize: 11 * layout.widthFactor, lineHeight: 17 * layout.widthFactor, minHeight: 34 * layout.widthFactor, marginTop: layout.widthFactor }} numberOfLines={2} ellipsizeMode="tail">{title}</AppText>
-                    ) : (
-                      <Text style={[styles.pinnedTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1} adjustsFontSizeToFit={true} minimumFontScale={0.7} ellipsizeMode="tail">{title}</Text>
-                    )}
+                    <Text style={[styles.pinnedTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1} adjustsFontSizeToFit={true} minimumFontScale={0.7} ellipsizeMode="tail">{title}</Text>
                   </View>
                 </Pressable>
               );
@@ -284,7 +280,7 @@ function HomeListHeader({
         </AppText>
         {!(activeFilterCount > 0) ? (
           <Pressable onPress={() => router.push('/all-products' as any)} style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
-            <Text style={[styles.seeAllText, isAr && { fontSize: 11 * layout.widthFactor, fontFamily: 'Cairo-Medium', fontWeight: '500' }, { color: colors.verified }]}>{lb('See All', 'Tout voir', 'عرض الكل')}</Text>
+            <Text style={[styles.seeAllText, { color: colors.verified }]}>{lb('See All', 'Tout voir', 'عرض الكل')}</Text>
             <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={18} color={colors.verified} />
           </Pressable>
         ) : null}
@@ -571,7 +567,7 @@ export default function HomeScreen() {
                   weight={400}
                   maxScale={1.2}
                   style={[styles.searchInput, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}
-                  placeholder={isAr ? 'ابحث عن منتج…' : 'Quel produit recherchez-vous ?'}
+                  placeholder={isAr ? 'ما المنتج الذي تبحث عنه؟' : 'Quel produit recherchez-vous ?'}
                   placeholderTextColor={colors.textTertiary}
                   value={searchQuery}
                   onChangeText={setSearchQuery}

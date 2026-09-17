@@ -527,41 +527,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Synchronous cache of locally-persisted products, used as a fallback in
   // getProductById before the async merge into `products` state completes.
   const localProductsRef = useRef<Product[]>([]);
-  // Load locally-added products from AsyncStorage and merge them ahead of mock products.
-  // v8.9.87 migration: stale cached copies of CATALOG products (from older app versions)
-  // lost newer fields (freeShipping/stock/warranty) and made card details vanish in some
-  // languages. On app-data-version change we keep ONLY user-created products and drop
-  // cached catalog copies so the built-in data always loads fresh.
+  // Load locally-added products from AsyncStorage and merge them ahead of mock products
   useEffect(() => {
-    (async () => {
-      try {
-        const APP_DATA_VERSION = '8.9.86-data-v2';
-        const storedVer = await AsyncStorage.getItem('sokchad_data_version');
-        if (storedVer && storedVer !== APP_DATA_VERSION) {
-          const raw = await AsyncStorage.getItem('sokchad_products_local');
-          if (raw) {
-            try {
-              const arr: Product[] = JSON.parse(raw);
-              const userCreated = arr.filter(p => String(p.id || '').startsWith('local'));
-              await AsyncStorage.setItem('sokchad_products_local', JSON.stringify(userCreated));
-            } catch { /* corrupt cache — cleared below */ }
+    AsyncStorage.getItem('sokchad_products_local').then(data => {
+      if (data) {
+        try {
+          const localProducts: Product[] = JSON.parse(data);
+          if (Array.isArray(localProducts) && localProducts.length > 0) {
+            localProductsRef.current = localProducts;
+            setProducts(prev => [...localProducts, ...prev.filter(p => !localProducts.some(lp => lp.id === p.id))]);
           }
-        }
-        await AsyncStorage.setItem('sokchad_data_version', APP_DATA_VERSION);
-      } catch { /* storage unavailable — continue */ }
-
-      AsyncStorage.getItem('sokchad_products_local').then(data => {
-        if (data) {
-          try {
-            const localProducts: Product[] = JSON.parse(data);
-            if (Array.isArray(localProducts) && localProducts.length > 0) {
-              localProductsRef.current = localProducts;
-              setProducts(prev => [...localProducts, ...prev.filter(p => !localProducts.some(lp => lp.id === p.id))]);
-            }
-          } catch (e) { console.log('load local products error:', e); }
-        }
-      }).catch(() => {});
-    })();
+        } catch (e) { console.log('load local products error:', e); }
+      }
+    }).catch(() => {});
   }, []);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
