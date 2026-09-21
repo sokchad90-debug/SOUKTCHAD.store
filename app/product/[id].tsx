@@ -103,6 +103,7 @@ export default function ProductDetailScreen() {
   const product = getProductById(id);
   // ─── Variant selection (colors/sizes) ───
   const [selectedColor, setSelectedColor] = useState<number | null>(null);
+  const [optionsSheetOpen, setOptionsSheetOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const activeColors = product?.colors || [];
   const activeImage = selectedColor != null && activeColors[selectedColor]
@@ -110,6 +111,22 @@ export default function ProductDetailScreen() {
     : product?.images[0];
   const selectedColorData = selectedColor != null ? activeColors[selectedColor] : null;
   const sizesOn = product?.sizesEnabled === true && Array.isArray(product?.sizes) && product.sizes.length > 0;
+  const sizesLabelKey = (product as any)?.sizesLabel || 'size';
+  const sizesLabelText = isAr
+    ? (sizesLabelKey === 'shoeSize' ? 'أرقام المقاسات' : sizesLabelKey === 'storage' ? 'السعة التخزينية' : sizesLabelKey === 'bracelet' ? 'مقاس السوار' : 'المقاسات')
+    : isFr
+    ? (sizesLabelKey === 'shoeSize' ? 'Pointures' : sizesLabelKey === 'storage' ? 'Stockage' : sizesLabelKey === 'bracelet' ? 'Bracelet' : 'Tailles')
+    : (sizesLabelKey === 'shoeSize' ? 'Shoe sizes' : sizesLabelKey === 'storage' ? 'Storage' : sizesLabelKey === 'bracelet' ? 'Bracelet size' : 'Sizes');
+  function sizesLabelComboStock(prod: any, size: string | undefined, colorData: any): number {
+    const cname = colorData?.name || '';
+    const vStock = prod?.variantStock as Record<string, number> | undefined;
+    if (!vStock || !size) return (colorData?.stock ?? 1);
+    const key = cname + '/' + size;
+    if (key in vStock) return vStock[key];
+    const vals = Object.entries(vStock).filter(([k]) => k.startsWith(cname + '/'));
+    if (vals.length > 0) return vals.reduce((s: number, entry: [string, number]) => s + entry[1], 0);
+    return (colorData?.stock ?? 1);
+  }
   // Stock of the CURRENT selection: combination color/size when sizes are on,
   // otherwise per-color stock. Shown clearly; base stock is NOT presented as per-variant.
   const selectedColorStock = useMemo(() => {
@@ -278,8 +295,8 @@ export default function ProductDetailScreen() {
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 50 + 12 + 16 + 16 }} showsVerticalScrollIndicator={false}>
         {/* Hero Image */}
-        <View style={[styles.imageContainer, { width: heroW, height: heroW }]}>
-          <Image source={{ uri: activeImage }} style={styles.heroImage} contentFit="cover" transition={200} />
+        <View style={[styles.imageContainer, styles.heroImageBg, { width: heroW, height: heroW }]}>
+          <Image source={{ uri: activeImage }} style={styles.heroImage} contentFit="contain" transition={200} />
           <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: scale(8) }, isAr && { left: 'auto', right: scale(16) }]}>
             <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color="#FFF" />
           </Pressable>
@@ -408,87 +425,37 @@ export default function ProductDetailScreen() {
               </Text>
             </View>
           ) : null}
-          {/* ============ COLORS (variant picker) ============ */}
-          {activeColors.length > 0 ? (
-            <View style={[styles.variantCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-              <Text style={[styles.variantLabel, { color: colors.textPrimary }]}>
-                {lb('Color', 'Couleur', 'اللون')}
-                {selectedColorData ? <Text style={{ fontWeight: '600' }}> : {selectedColorData.name}</Text> : null}
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: scale(10) }}>
-                {activeColors.map((c, i) => {
-                  const out = (c.stock ?? 1) <= 0;
-                  const active = selectedColor === i;
-                  return (
-                    <Pressable
-                      key={`${c.name}-${i}`}
-                      onPress={() => { impactLight(); setSelectedColor(i); }}
-                      disabled={out}
-                      style={[styles.colorThumb, active && { borderColor: colors.primary, borderWidth: 2 }, out && { opacity: 0.35 }]}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${lb('Color', 'Couleur', 'اللون')}: ${c.name}`}
-                    >
-                      <Image source={{ uri: c.image }} style={{ width: '100%', height: scale(72) }} contentFit="cover" transition={150} />
-                      {active ? (
-                        <View style={[styles.colorCheck, { backgroundColor: colors.primary }]}>
-                          <MaterialIcons name="check" size={scale(12)} color="#FFF" />
-                        </View>
-                      ) : null}
-                      {out ? <View style={[styles.colorOutLine, { backgroundColor: colors.error }]} /> : null}
-                      <Text style={[styles.colorName, { color: out ? colors.textTertiary : colors.textPrimary }]} numberOfLines={1}>{c.name}</Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-              {selectedColorData ? (
-                sizesOn && !selectedSize ? (
-                  <Text style={[styles.colorStockWarn, { color: colors.textTertiary }]}>
-                    {lb('Select a size to see availability', 'Choisissez une taille pour voir la disponibilité', 'اختر المقاس لمعرفة التوفر')}
+          {/* ===== Options summary rows (one per dimension) ===== */}
+          {activeColors.length > 0 || sizesOn ? (
+            <View style={[styles.optionsRowsCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+              {activeColors.length > 0 ? (
+                <Pressable onPress={() => { impactLight(); setOptionsSheetOpen(true); }} style={[styles.optionRow, isAr && { flexDirection: 'row-reverse' }]}>
+                  <MaterialIcons name="palette" size={scale(18)} color={colors.primary} />
+                  <Text style={[styles.optionRowText, { color: colors.textPrimary }]}>
+                    {lb('Color', 'Couleur', 'اللون')}: {selectedColorData?.name || lb('Select', 'Choisir', 'اختر')}
                   </Text>
-                ) : (currentSelectionStock ?? 0) <= 0 ? (
-                  <Text style={[styles.colorStockWarn, { color: colors.error }]}>
-                    {lb('Not available', 'Non disponible', 'غير متوفر')}
+                  <View style={styles.optionRowChange}>
+                    <Text style={{ fontSize: scale(13), fontWeight: '600', color: colors.primary }}>{lb('Change', 'Modifier', 'تغيير')}</Text>
+                    <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(16)} color={colors.primary} />
+                  </View>
+                </Pressable>
+              ) : null}
+              {sizesOn ? (
+                <Pressable onPress={() => { impactLight(); setOptionsSheetOpen(true); }} style={[styles.optionRow, isAr && { flexDirection: 'row-reverse' }, { borderTopWidth: 0.5, borderTopColor: colors.borderLight }]}>
+                  <MaterialIcons name="checkroom" size={scale(18)} color={colors.primary} />
+                  <Text style={[styles.optionRowText, { color: colors.textPrimary }]}>
+                    {sizesLabelText}: {selectedSize || lb('Select', 'Choisir', 'اختر')}
                   </Text>
-                ) : (currentSelectionStock as number) < 5 ? (
-                  <Text style={[styles.colorStockWarn, { color: colors.error }]}>
-                    {lb(`Only ${currentSelectionStock} left in this color`, `Plus que ${currentSelectionStock} dans cette couleur`, `بقي ${currentSelectionStock} فقط من هذا اللون`)}
-                  </Text>
-                ) : (
-                  <Text style={[styles.colorStockOk, { color: colors.success }]}>
-                    {lb(`${currentSelectionStock} available in this color`, `${currentSelectionStock} disponibles dans cette couleur`, `${currentSelectionStock} متوفر من هذا اللون`)}
-                  </Text>
-                )
+                  <View style={styles.optionRowChange}>
+                    <Text style={{ fontSize: scale(13), fontWeight: '600', color: colors.primary }}>{lb('Change', 'Modifier', 'تغيير')}</Text>
+                    <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(16)} color={colors.primary} />
+                  </View>
+                </Pressable>
               ) : null}
             </View>
           ) : null}
 
-          {/* ============ SIZES (only when seller enabled them) ============ */}
-          {sizesOn ? (
-            <View style={[styles.variantCard, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-              <Text style={[styles.variantLabel, { color: colors.textPrimary }]}>
-                {lb('Size', 'Taille', 'المقاس')}
-                {selectedSize ? <Text style={{ fontWeight: '600' }}> : {selectedSize}</Text> : null}
-              </Text>
-              <View style={styles.sizesRow}>
-                {(product.sizes || []).map(sz => {
-                  const active = selectedSize === sz;
-                  return (
-                    <Pressable
-                      key={sz}
-                      onPress={() => { impactLight(); setSelectedSize(sz); }}
-                      style={[styles.sizeChip, active && { backgroundColor: colors.primary, borderColor: colors.primary }]}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${lb('Size', 'Taille', 'المقاس')}: ${sz}`}
-                    >
-                      <Text style={[styles.sizeChipText, { color: active ? '#FFF' : colors.textPrimary }]}>{sz}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          ) : null}
-
-          <DisclaimerBanner compact />
+          <DisclaimerBanner compact />          <DisclaimerBanner compact />
 
           {description && description.trim() ? (
             <>
@@ -827,6 +794,110 @@ export default function ProductDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal visible={optionsSheetOpen} transparent animationType="slide" onRequestClose={() => setOptionsSheetOpen(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }} onPress={() => setOptionsSheetOpen(false)}>
+          <Pressable style={{ backgroundColor: colors.surface, borderTopLeftRadius: scale(24), borderTopRightRadius: scale(24), maxHeight: '85%', paddingBottom: Math.max(insets.bottom, scale(16)) }} onPress={e => e.stopPropagation()}>
+            <View style={{ alignItems: 'center', paddingTop: scale(12), paddingBottom: scale(8) }}>
+              <View style={{ width: scale(40), height: scale(4), borderRadius: scale(2), backgroundColor: colors.border }} />
+            </View>
+            <Text style={{ fontSize: scale(17), fontWeight: '700', color: colors.textPrimary, textAlign: 'center', fontFamily: 'Cairo-Bold', paddingBottom: scale(8) }}>
+              {lb('Choose options', 'Choisir les options', 'اختر الخيارات')}
+            </Text>
+            <ScrollView style={{ paddingHorizontal: scale(20) }} showsVerticalScrollIndicator={false}>
+              {activeColors.length > 0 ? (
+                <View>
+                  <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.textPrimary, fontFamily: 'Cairo-Bold', marginBottom: scale(10) }}>
+                    {lb('Color', 'Couleur', 'اللون')}
+                    {selectedColorData ? <Text style={{ fontWeight: '600' }}>{' : '}{selectedColorData.name}</Text> : null}
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: scale(10), paddingBottom: scale(8) }}>
+                    {activeColors.map((c, i) => {
+                      const out = (c.stock ?? 1) <= 0;
+                      const active = selectedColor === i;
+                      return (
+                        <Pressable
+                          key={c.name + '-' + i}
+                          onPress={() => { impactLight(); setSelectedColor(i); }}
+                          disabled={out}
+                          style={[styles.colorThumb, active && { borderColor: colors.primary, borderWidth: 2 }, out && { opacity: 0.35 }]}
+                        >
+                          <Image source={{ uri: c.image }} style={{ width: '100%', height: scale(72) }} contentFit="cover" transition={150} />
+                          {active ? (
+                            <View style={[styles.colorCheck, { backgroundColor: colors.primary }]}>
+                              <MaterialIcons name="check" size={scale(12)} color="#FFF" />
+                            </View>
+                          ) : null}
+                          {out ? <View style={[styles.colorOutLine, { backgroundColor: colors.error }]} /> : null}
+                          <Text style={[styles.colorName, { color: out ? colors.textTertiary : colors.textPrimary }]} numberOfLines={2}>{c.name}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              ) : null}
+              {sizesOn ? (
+                <View>
+                  <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.textPrimary, fontFamily: 'Cairo-Bold', marginTop: scale(16), marginBottom: scale(10) }}>
+                    {sizesLabelText}
+                    {selectedSize ? <Text style={{ fontWeight: '600' }}>{' : '}{selectedSize}</Text> : null}
+                  </Text>
+                  <View style={styles.sizesRow}>
+                    {(product.sizes || []).map(sz => {
+                      const out = sizesLabelComboStock(product, sz, selectedColorData) <= 0;
+                      const active = selectedSize === sz;
+                      return (
+                        <Pressable
+                          key={sz}
+                          onPress={() => { if (!out) { impactLight(); setSelectedSize(sz); } }}
+                          disabled={out}
+                          style={[styles.sizeChip, active && { backgroundColor: colors.primary, borderColor: colors.primary }, out && { opacity: 0.35 }]}
+                        >
+                          <Text style={[styles.sizeChipText, { color: out ? colors.textTertiary : active ? '#FFF' : colors.textPrimary }]}>{sz}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : null}
+            </ScrollView>
+            <View style={{ paddingHorizontal: scale(20), paddingTop: scale(12) }}>
+              {selectedColorData && sizesOn && selectedSize ? (() => {
+                const comboStock = sizesLabelComboStock(product, selectedSize, selectedColorData);
+                return (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.success + '18', borderRadius: scale(12), paddingHorizontal: scale(12), paddingVertical: scale(10), gap: scale(8), marginBottom: scale(10) }}>
+                    <MaterialIcons name="inventory-2" size={scale(18)} color={comboStock > 0 ? colors.success : colors.error} />
+                    <Text style={{ fontSize: scale(13), fontWeight: '600', color: comboStock > 0 ? colors.success : colors.error }}>
+                      {comboStock > 0
+                        ? lb('In stock: ' + comboStock + ' pieces', 'En stock : ' + comboStock + ' pièces', 'متوفر: ' + comboStock + ' قطعة')
+                        : lb('Out of stock', 'Rupture de stock', 'نفد المخزون')}
+                    </Text>
+                  </View>
+                );
+              })() : null}
+              <Pressable
+                onPress={() => {
+                  if (activeColors.length > 0 && selectedColor == null) { impactLight(); return; }
+                  if (sizesOn && !selectedSize) { impactLight(); return; }
+                  impactMedium();
+                  setOptionsSheetOpen(false);
+                }}
+                disabled={activeColors.length > 0 && selectedColor == null || (sizesOn && !selectedSize)}
+                style={({ pressed }) => [{
+                  flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: scale(6),
+                  height: scale(50), borderRadius: borderRadius.md, backgroundColor: colors.primary,
+                  opacity: (activeColors.length > 0 && selectedColor == null) || (sizesOn && !selectedSize) ? 0.5 : pressed ? 0.9 : 1,
+                }]}
+              >
+                <MaterialIcons name="check" size={scale(20)} color="#FFF" />
+                <Text style={{ color: '#FFF', fontSize: scale(15), fontWeight: '700', fontFamily: 'Cairo-Bold' }}>
+                  {lb('Confirm selection', 'Confirmer la sélection', 'تأكيد الاختيار')}
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -836,6 +907,7 @@ const styles = StyleSheet.create({
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   imageContainer: { position: 'relative' },
   heroImage: { width: '100%', height: '100%' },
+  heroImageBg: { backgroundColor: '#F5F4FA', alignItems: 'center', justifyContent: 'center' },
   backBtn: { position: 'absolute', left: scale(16), width: scale(40), height: scale(40), borderRadius: scale(20), backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
   topRightBtns: { position: 'absolute', right: scale(16), flexDirection: 'row', gap: scale(8) },
   topRightBtn: { width: scale(40), height: scale(40), borderRadius: scale(20), backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
@@ -908,6 +980,10 @@ const styles = StyleSheet.create({
   reviewFieldLabel: { fontSize: scale(11), fontWeight: '700', letterSpacing: 0.8, marginBottom: scale(6), marginTop: scale(10) },
   ratingRow: { flexDirection: 'row', gap: scale(8), marginBottom: scale(8) },
   reviewInput: { height: scale(100), borderRadius: scale(12), borderWidth: 1, paddingHorizontal: scale(16), paddingTop: scale(14), fontSize: scale(15), textAlignVertical: 'top' },
+  optionsRowsCard: { borderRadius: scale(14), borderWidth: 1, overflow: 'hidden', marginBottom: scale(10) },
+  optionRow: { flexDirection: 'row', alignItems: 'center', gap: scale(10), paddingHorizontal: scale(14), paddingVertical: scale(13) },
+  optionRowText: { flex: 1, fontSize: scale(14), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
+  optionRowChange: { flexDirection: 'row', alignItems: 'center', gap: scale(2) },
   variantCard: { borderRadius: scale(14), borderWidth: 1, padding: scale(12), marginBottom: scale(10), gap: scale(8) },
   variantLabel: { fontSize: scale(14), fontWeight: '700', fontFamily: 'Cairo-Bold' },
   colorThumb: { width: scale(72), borderRadius: scale(12), borderWidth: 1.5, borderColor: 'transparent', overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-start' },
