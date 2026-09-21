@@ -109,8 +109,34 @@ export default function ProductDetailScreen() {
     ? activeColors[selectedColor].image
     : product?.images[0];
   const selectedColorData = selectedColor != null ? activeColors[selectedColor] : null;
-  const selectedColorStock = selectedColorData?.stock;
   const sizesOn = product?.sizesEnabled === true && Array.isArray(product?.sizes) && product.sizes.length > 0;
+  // Stock of the CURRENT selection: combination color/size when sizes are on,
+  // otherwise per-color stock. Shown clearly; base stock is NOT presented as per-variant.
+  const selectedColorStock = useMemo(() => {
+    const vStock = (product as any)?.variantStock as Record<string, number> | undefined;
+    const cname = selectedColorData?.name;
+    if (sizesOn && cname && selectedSize && vStock) {
+      const key = `${cname}/${selectedSize}`;
+      if (key in vStock) return vStock[key];
+    }
+    if (!sizesOn && cname && vStock) {
+      // color-only product: any combo with stock counts for that color
+      const vals = Object.entries(vStock).filter(([k]) => k.startsWith(cname + '/'));
+      if (vals.length > 0) return vals.reduce((s, [, v]) => s + v, 0);
+    }
+    return selectedColorData?.stock;
+  }, [product, selectedColorData, selectedSize, sizesOn]);
+  // Price of current selection (base price unless color has an override)
+  const selectedPrice = useMemo(() => {
+    const vPrices = (product as any)?.variantPrices as Record<string, number> | undefined;
+    const cname = selectedColorData?.name;
+    if (vPrices && cname && vPrices[cname] != null) return vPrices[cname];
+    return product?.price;
+  }, [product, selectedColorData]);
+  // Stock of current selection (color only, or color+size) for the availability line
+  const currentSelectionStock = (sizesOn && selectedSize)
+    ? ((product as any)?.variantStock?.[`${selectedColorData?.name}/${selectedSize}`] ?? selectedColorStock)
+    : selectedColorStock;
   const productReviews = useMemo(() => product ? getReviewsForProduct(id) : [], [id, product, getReviewsForProduct]);
   const [savedSellerProfile, setSavedSellerProfile] = React.useState<any>(null);
 
@@ -402,7 +428,7 @@ export default function ProductDetailScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={`${lb('Color', 'Couleur', 'اللون')}: ${c.name}`}
                     >
-                      <Image source={{ uri: c.image }} style={{ width: '100%', height: '100%' }} contentFit="cover" transition={150} />
+                      <Image source={{ uri: c.image }} style={{ width: '100%', height: scale(72) }} contentFit="cover" transition={150} />
                       {active ? (
                         <View style={[styles.colorCheck, { backgroundColor: colors.primary }]}>
                           <MaterialIcons name="check" size={scale(12)} color="#FFF" />
@@ -414,10 +440,24 @@ export default function ProductDetailScreen() {
                   );
                 })}
               </ScrollView>
-              {selectedColorData && (selectedColorStock ?? 0) > 0 && (selectedColorStock as number) < 5 ? (
-                <Text style={[styles.colorStockWarn, { color: colors.error }]}>
-                  {lb(`Only ${selectedColorStock} left in this color`, `Plus que ${selectedColorStock} dans cette couleur`, `بقي ${selectedColorStock} فقط من هذا اللون`)}
-                </Text>
+              {selectedColorData ? (
+                sizesOn && !selectedSize ? (
+                  <Text style={[styles.colorStockWarn, { color: colors.textTertiary }]}>
+                    {lb('Select a size to see availability', 'Choisissez une taille pour voir la disponibilité', 'اختر المقاس لمعرفة التوفر')}
+                  </Text>
+                ) : (currentSelectionStock ?? 0) <= 0 ? (
+                  <Text style={[styles.colorStockWarn, { color: colors.error }]}>
+                    {lb('Not available', 'Non disponible', 'غير متوفر')}
+                  </Text>
+                ) : (currentSelectionStock as number) < 5 ? (
+                  <Text style={[styles.colorStockWarn, { color: colors.error }]}>
+                    {lb(`Only ${currentSelectionStock} left in this color`, `Plus que ${currentSelectionStock} dans cette couleur`, `بقي ${currentSelectionStock} فقط من هذا اللون`)}
+                  </Text>
+                ) : (
+                  <Text style={[styles.colorStockOk, { color: colors.success }]}>
+                    {lb(`${currentSelectionStock} available in this color`, `${currentSelectionStock} disponibles dans cette couleur`, `${currentSelectionStock} متوفر من هذا اللون`)}
+                  </Text>
+                )
               ) : null}
             </View>
           ) : null}
@@ -678,7 +718,7 @@ export default function ProductDetailScreen() {
               Alert.alert(lb('Choose a color', 'Choisissez une couleur', 'اختر اللون'), lb('Please select a color first.', 'Veuillez choisir une couleur.', 'يرجى اختيار لون أولاً.'));
               return;
             }
-            if (selectedColorData && (selectedColorStock ?? 0) <= 0) {
+            if (selectedColorData && (currentSelectionStock ?? 0) <= 0) {
               impactLight();
               Alert.alert(lb('Out of stock', 'Rupture de stock', 'نفد المخزون'), lb('This color is out of stock. Pick another.', 'Cette couleur est épuisée. Choisissez-en une autre.', 'هذا اللون نفد مخزونه، اختر لوناً آخر.'));
               return;
@@ -870,11 +910,12 @@ const styles = StyleSheet.create({
   reviewInput: { height: scale(100), borderRadius: scale(12), borderWidth: 1, paddingHorizontal: scale(16), paddingTop: scale(14), fontSize: scale(15), textAlignVertical: 'top' },
   variantCard: { borderRadius: scale(14), borderWidth: 1, padding: scale(12), marginBottom: scale(10), gap: scale(8) },
   variantLabel: { fontSize: scale(14), fontWeight: '700', fontFamily: 'Cairo-Bold' },
-  colorThumb: { width: scale(64), height: scale(64), borderRadius: scale(10), borderWidth: 1.5, borderColor: 'transparent', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  colorThumb: { width: scale(72), borderRadius: scale(12), borderWidth: 1.5, borderColor: 'transparent', overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-start' },
   colorCheck: { position: 'absolute', top: scale(3), right: scale(3), width: scale(18), height: scale(18), borderRadius: scale(9), alignItems: 'center', justifyContent: 'center' },
   colorOutLine: { position: 'absolute', left: 0, right: 0, top: '50%', height: 2, transform: [{ rotate: '-45deg' }] },
-  colorName: { fontSize: scale(11), fontWeight: '600', marginTop: scale(4), textAlign: 'center' },
+  colorName: { fontSize: scale(11), fontWeight: '600', marginTop: scale(4), textAlign: 'center', minHeight: scale(16) },
   colorStockWarn: { fontSize: scale(12), fontWeight: '600', marginTop: scale(4) },
+  colorStockOk: { fontSize: scale(12), fontWeight: '600', marginTop: scale(4) },
   sizesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: scale(10) },
   sizeChip: { paddingHorizontal: scale(16), paddingVertical: scale(10), borderRadius: scale(10), borderWidth: 1, minWidth: scale(48), alignItems: 'center' },
   sizeChipText: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
