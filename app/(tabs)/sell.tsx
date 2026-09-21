@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TextInput, Pressable, ScrollView,
   KeyboardAvoidingView, Platform, Alert, Modal, ActivityIndicator,
-} from 'react-native';
+  Switch } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -105,6 +105,12 @@ export default function SellScreen() {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [selectedCat, setSelectedCat] = useState('');
+  // ─── Variants (colors + sizes) — fashion categories only ───
+  const [productColors, setProductColors] = useState<{ name: string; image: string; stock?: number }[]>([]);
+  const [sizesEnabled, setSizesEnabled] = useState(false);
+  const [sizesInput, setSizesInput] = useState('');
+  const FASHION_CATS = ['fashion', 'fashion_women', 'fashion_men', 'fashion_kids', 'fashion_traditional', 'fashion_professional', 'fashion_headwear', 'fashion_kids'];
+  const isFashionCat = FASHION_CATS.includes(selectedCat);
   const [condition, setCondition] = useState<'new' | 'used' | 'like_new'>('new');
   const [location, setLocation] = useState('');
   const [detailedAddress, setDetailedAddress] = useState('');
@@ -234,10 +240,10 @@ export default function SellScreen() {
     }
     setIsSaving(true);
     try {
-      await addProduct({ title: { en: title, fr: title, ar: title }, description: { en: description, fr: description, ar: description }, price: parseInt(price) || 0, images: images.map(img => img.uri), categoryId: selectedCat, sellerId: user?.id || 'user1', condition: hideCondition ? 'new' : condition, location, stock: parseInt(stock) || 0, maxOrderQty: parseInt(maxOrderQty) || undefined, warrantyDays: warrantyEnabled ? (parseInt(warrantyDays) || 7) : undefined, deliveryType: deliveryType !== 'none' ? deliveryType : undefined, deliveryFee: deliveryType === 'paid' ? (parseInt(deliveryFee) || 0) : undefined, sameCityOnly, deliveryCities: sameCityOnly ? [location] : selectedDeliveryCities, deliveryMethods: ['motorcycle', 'taxi'] } as any);
+      await addProduct({ title: { en: title, fr: title, ar: title }, description: { en: description, fr: description, ar: description }, price: parseInt(price) || 0, images: images.map(img => img.uri), categoryId: selectedCat, ...(isFashionCat && productColors.length > 0 ? { colors: productColors } : {}), ...(isFashionCat && sizesEnabled ? { sizesEnabled: true, sizes: sizesInput.split(',').map(s => s.trim()).filter(Boolean) } : { sizesEnabled: false }), sellerId: user?.id || 'user1', condition: hideCondition ? 'new' : condition, location, stock: parseInt(stock) || 0, maxOrderQty: parseInt(maxOrderQty) || undefined, warrantyDays: warrantyEnabled ? (parseInt(warrantyDays) || 7) : undefined, deliveryType: deliveryType !== 'none' ? deliveryType : undefined, deliveryFee: deliveryType === 'paid' ? (parseInt(deliveryFee) || 0) : undefined, sameCityOnly, deliveryCities: sameCityOnly ? [location] : selectedDeliveryCities, deliveryMethods: ['motorcycle', 'taxi'] } as any);
       notifySuccess();
       Alert.alert(lb('Published!', 'Publié!', 'تم النشر!'), lb('Your listing is now live.', 'Votre annonce est en ligne.', 'إعلانك متاح الآن.'));
-      setTitle(''); setDescription(''); setPrice(''); setSelectedCat(''); setLocation(''); setDetailedAddress(''); setStock(''); setMaxOrderQty(''); setImages([]); setActivePreview(0);
+      setTitle(''); setDescription(''); setPrice(''); setSelectedCat(''); setProductColors([]); setSizesEnabled(false); setSizesInput(''); setLocation(''); setDetailedAddress(''); setStock(''); setMaxOrderQty(''); setImages([]); setActivePreview(0);
     } finally {
       setIsSaving(false);
     }
@@ -358,6 +364,75 @@ export default function SellScreen() {
               </View>
             </View>
           )}
+
+          {isFashionCat ? (
+            <View style={{ backgroundColor: colors.surface, borderRadius: scale(14), borderWidth: 1, borderColor: colors.border, padding: scale(12), marginBottom: scale(12), gap: scale(10) }}>
+              <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.textPrimary, fontFamily: 'Cairo-Bold' }}>
+                {language === 'fr' ? 'Couleurs et tailles' : language === 'ar' ? 'الألوان والمقاسات' : 'Colors & Sizes'}
+              </Text>
+
+              <Text style={{ fontSize: scale(12), fontWeight: '600', color: colors.textSecondary }}>
+                {language === 'fr' ? 'Couleurs (nom + photo + stock)' : language === 'ar' ? 'الألوان (اسم + صورة + مخزون)' : 'Colors (name + photo + stock)'}
+              </Text>
+              {productColors.map((c, i) => (
+                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
+                  <Image source={{ uri: c.image }} style={{ width: scale(44), height: scale(44), borderRadius: scale(8) }} contentFit="cover" />
+                  <TextInput
+                    placeholder={language === 'fr' ? 'Nom de la couleur' : language === 'ar' ? 'اسم اللون' : 'Color name'}
+                    placeholderTextColor={colors.textTertiary}
+                    value={c.name}
+                    onChangeText={(t) => setProductColors(prev => prev.map((x, j) => j === i ? { ...x, name: t } : x))}
+                    style={[styles.input, { flex: 1, height: scale(40), backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]}
+                  />
+                  <TextInput
+                    placeholder="0"
+                    placeholderTextColor={colors.textTertiary}
+                    keyboardType="numeric"
+                    value={c.stock != null ? String(c.stock) : ''}
+                    onChangeText={(t) => setProductColors(prev => prev.map((x, j) => j === i ? { ...x, stock: parseInt(t) || 0 } : x))}
+                    style={[styles.input, { width: scale(60), height: scale(40), backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]}
+                  />
+                  <Pressable onPress={() => setProductColors(prev => prev.filter((_, j) => j !== i))} hitSlop={8}>
+                    <MaterialIcons name="delete" size={scale(20)} color={colors.error} />
+                  </Pressable>
+                </View>
+              ))}
+              {productColors.length < 6 ? (
+                <Pressable
+                  onPress={async () => {
+                    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                    if (status !== 'granted') return;
+                    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8, allowsEditing: true, aspect: [1, 1] });
+                    if (!result.canceled && result.assets[0]) {
+                      setProductColors(prev => [...prev, { name: '', image: result.assets[0].uri, stock: 5 }]);
+                    }
+                  }}
+                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: scale(6), borderWidth: 1.5, borderStyle: 'dashed', borderRadius: scale(10), paddingVertical: scale(10), borderColor: colors.primary }}
+                >
+                  <MaterialIcons name="add-a-photo" size={scale(18)} color={colors.primary} />
+                  <Text style={{ fontSize: scale(13), fontWeight: '600', color: colors.primary }}>
+                    {language === 'fr' ? 'Ajouter une couleur' : language === 'ar' ? 'إضافة لون' : 'Add color'}
+                  </Text>
+                </Pressable>
+              ) : null}
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: scale(4) }}>
+                <Text style={{ fontSize: scale(13), fontWeight: '600', color: colors.textPrimary }}>
+                  {language === 'fr' ? 'Activer les tailles' : language === 'ar' ? 'تفعيل المقاسات' : 'Enable sizes'}
+                </Text>
+                <Switch value={sizesEnabled} onValueChange={setSizesEnabled} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#FFF" />
+              </View>
+              {sizesEnabled ? (
+                <TextInput
+                  placeholder={language === 'fr' ? 'S, M, L, XL, XXL ou 38, 40, 42' : language === 'ar' ? 'S, M, L, XL, XXL أو 38, 40, 42' : 'S, M, L, XL, XXL or 38, 40, 42'}
+                  placeholderTextColor={colors.textTertiary}
+                  value={sizesInput}
+                  onChangeText={setSizesInput}
+                  style={[styles.input, { height: scale(40), backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]}
+                />
+              ) : null}
+            </View>
+          ) : null}
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>{t('title')} *</Text>
           <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.border }]} placeholder={lb('e.g. Samsung Galaxy A54', 'Ex: Samsung Galaxy A54', 'مثال: سامسونج جالاكسي')} placeholderTextColor={colors.textTertiary} value={title} onChangeText={setTitle} />

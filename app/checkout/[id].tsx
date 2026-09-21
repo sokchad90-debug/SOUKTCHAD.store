@@ -9,6 +9,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
 import { getSellerById } from '@/services/mockData';
 import { formatPrice } from '@/constants/config';
+import { peekPendingVariantSelection, clearPendingVariantSelection } from '@/services/mockData';
 import { COUNTRY_CITIES } from '@/constants/countries';
 import { borderRadius, shadows } from '@/constants/theme';
 import DisclaimerBanner from '@/components/DisclaimerBanner';
@@ -59,6 +60,7 @@ export default function CheckoutScreen() {
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
   const [timerActive, setTimerActive] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [variant, setVariant] = useState(() => peekPendingVariantSelection(String(id)));
 
   const isFr = language === 'fr';
   const isAr = language === 'ar';
@@ -196,8 +198,9 @@ export default function CheckoutScreen() {
 
   const handleSubmitOrder = () => {
     if (!transferMessage.trim()) { Alert.alert(lb('Transfer message required', 'Message de transfert requis', 'رسالة التحويل مطلوبة')); return; }
-    const result = placeOrder(product.id, selectedPayment, transferMessage, selectedCity, selectedShipping, quantity);
+    const result = placeOrder(product.id, selectedPayment, transferMessage, selectedCity, selectedShipping, quantity, variant ? { color: variant.colorName, size: variant.size } : undefined);
     if (!result.success) { notifyError(); Alert.alert('Error', result.error || 'Unknown error'); return; }
+    clearPendingVariantSelection();
     notifySuccess(); setTimerActive(false); setOrderPlaced(true);
   };
 
@@ -317,6 +320,16 @@ export default function CheckoutScreen() {
         {/* STEP 2: Payment */}
         {step === 'payment' ? (
           <View>
+          {variant ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: scale(12), borderWidth: 1, borderColor: colors.borderLight, paddingHorizontal: scale(12), paddingVertical: scale(10), gap: scale(10), marginBottom: scale(12) }}>
+              {variant.colorImage ? <Image source={{ uri: variant.colorImage }} style={{ width: scale(44), height: scale(44), borderRadius: scale(8) }} contentFit="cover" /> : null}
+              <View style={{ flex: 1 }}>
+                {variant.colorName ? <Text style={{ fontSize: scale(13), fontWeight: '700', color: colors.textPrimary, fontFamily: 'Cairo-SemiBold' }}>{lb('Color', 'Couleur', 'اللون')}: {variant.colorName}</Text> : null}
+                {variant.size ? <Text style={{ fontSize: scale(12), color: colors.textSecondary }}>{lb('Size', 'Taille', 'المقاس')}: {variant.size}</Text> : null}
+              </View>
+              <MaterialIcons name="check-circle" size={scale(20)} color={colors.success} />
+            </View>
+          ) : null}
             <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>{lb('SELECT PAYMENT METHOD', 'MODE DE PAIEMENT', 'طريقة الدفع')}</Text>
             {availableMethods.length === 0 ? (
               <View style={[styles.emptyBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>

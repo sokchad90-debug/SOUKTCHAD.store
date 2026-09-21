@@ -377,7 +377,7 @@ interface AppContextType {
   removeProductDiscount: (productId: string) => void;
   sendMessage: (conversationId: string, text: string) => void;
   startConversation: (sellerId: string, productId: string, initialMessage: string) => string;
-  placeOrder: (productId: string, paymentMethodId: string, screenshotUri: string, buyerCity: string, shippingId: string, quantity?: number) => { success: boolean; error?: string };
+  placeOrder: (productId: string, paymentMethodId: string, screenshotUri: string, buyerCity: string, shippingId: string, quantity?: number, variant?: { color?: string; size?: string }) => { success: boolean; error?: string };
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
   markItemReceived: (orderId: string) => void;
   addReview: (orderId: string, productId: string, sellerId: string, rating: number, text: string, photoUri?: string, photoUris?: string[]) => void;
@@ -1883,7 +1883,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return convId;
   }, [user, sendMessage]);
 
-  const placeOrder = useCallback((productId: string, paymentMethodId: string, screenshotUri: string, buyerCity: string, shippingId: string, quantity: number = 1): { success: boolean; error?: string } => {
+  const placeOrder = useCallback((productId: string, paymentMethodId: string, screenshotUri: string, buyerCity: string, shippingId: string, quantity: number = 1, variant?: { color?: string; size?: string }): { success: boolean; error?: string } => {
     if (!user) return { success: false, error: 'not_logged_in' };
     const product = products.find(p => p.id === productId);
     if (!product) return { success: false, error: 'product_not_found' };
@@ -1897,6 +1897,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       id: `ord${Date.now()}`, orderNumber, productId, buyerId: user.id, sellerId: product.sellerId,
       amount: finalAmount, paymentMethodId, referenceId: screenshotUri,
       status: 'pending', createdAt: new Date().toISOString(), buyerPhone: `${buyerCity}|${shippingId}|qty:${quantity}`,
+      ...(variant && (variant.color || variant.size) ? {
+        variantColor: variant.color || undefined,
+        variantSize: variant.size || undefined,
+      } : {}),
     };
     setOrders(prev => [newOrder, ...prev]);
     const pTitle = product?.title?.en || 'Product';
