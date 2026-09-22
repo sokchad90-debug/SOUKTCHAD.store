@@ -72,42 +72,7 @@ export interface Product {
   warrantyDays?: number; // return-guarantee window (seller-editable)
   deliveryType?: 'free' | 'paid';
   deliveryFee?: number;
-  // ─── Variants (per-product optional toggle, category-appropriate) ───
-  colors?: { name: string; image: string; stock?: number }[];
-  /** second dimension label: 'size' | 'shoeSize' | 'storage' | 'bracelet' | 'dimension' */
-  sizesLabel?: 'size' | 'shoeSize' | 'storage' | 'bracelet' | 'dimension';
-  sizesEnabled?: boolean;
-  sizes?: string[];
-  /** stock per combination key `${colorName}/${size}`; falls back to color.stock */
-  variantStock?: Record<string, number>;
-  /** optional per-color price override (base price otherwise) */
-  variantPrices?: Record<string, number>;
 }
-
-export interface ProductVariantColors {
-  name: string; image: string; stock?: number;
-}
-
-/** Pending variant selection carried from product page → checkout → order */
-export interface PendingVariantSelection {
-  productId: string;
-  colorName?: string;
-  colorImage?: string;
-  size?: string;
-}
-let pendingSelection: PendingVariantSelection | null = null;
-export const setPendingVariantSelection = (sel: PendingVariantSelection | null) => { pendingSelection = sel; };
-/** Read WITHOUT consuming — survives checkout remounts (step navigation). */
-export const peekPendingVariantSelection = (productId: string): PendingVariantSelection | null => {
-  return pendingSelection && pendingSelection.productId === productId ? pendingSelection : null;
-};
-/** Call once the order is successfully placed. */
-export const clearPendingVariantSelection = () => { pendingSelection = null; };
-/** @deprecated kept for compatibility */
-export const consumePendingVariantSelection = (productId: string): PendingVariantSelection | null => {
-  const s = peekPendingVariantSelection(productId);
-  return s;
-};
 
 export interface Review {
   id: string;
@@ -272,25 +237,11 @@ export const products: Product[] = [
     postedDate: '2024-12-12', isPinned: false, isFeatured: false, views: 89,
   },
   {
-    id: 'p5', title: { en: "Men's Classic Bomber Jacket", fr: 'Blouson Homme Classique', ar: 'بلوفر رجالي كلاسيكي' },
-    description: { en: 'Classic bomber jacket for men, warm and stylish. Premium quality fabric with smooth zipper.', fr: 'Blouson bomber classique pour homme, chaud et élégant. Tissu de qualité premium.', ar: 'بلوفر رجالي كلاسيكي، دافئ وأنيق. قماش فاخر بسحاب ناعم.' },
+    id: 'p5', title: { en: "Men's Traditional Boubou", fr: 'Boubou Traditionnel Homme', ar: 'بوبو رجالي تقليدي' },
+    description: { en: 'Handcrafted traditional boubou with beautiful embroidery. Premium cotton fabric.', fr: 'Boubou traditionnel fait main avec de belles broderies. Tissu coton premium.', ar: 'بوبو تقليدي مصنوع يدوياً بتطريز جميل. قماش قطن فاخر.' },
     price: 25000, images: ['https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=75&fm=jpg'],
     categoryId: 'fashion_traditional', sellerId: 'seller2', condition: 'new', location: 'Moundou',
-    postedDate: '2024-12-14', isPinned: false, isFeatured: true, views: 203,
-    colors: [
-      { name: 'Marron', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=75&fm=jpg' },
-      { name: 'Noir', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&q=75&fm=jpg' },
-      { name: 'Bleu', image: 'https://images.unsplash.com/photo-1520975954732-35dd22299614?w=800&q=75&fm=jpg' },
-      { name: 'Gris', image: 'https://images.unsplash.com/photo-1611312449408-fcece27cdbb7?w=800&q=75&fm=jpg' },
-    ],
-    sizesLabel: 'size', sizesEnabled: true, sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-    variantStock: {
-      'Marron/M': 5, 'Marron/L': 3, 'Marron/XL': 0,
-      'Noir/M': 12, 'Noir/L': 7, 'Noir/XL': 4, 'Noir/S': 2,
-      'Bleu/M': 6, 'Bleu/XL': 0,
-      'Gris/M': 0,
-    },
-    stock: 35, maxOrderQty: 5,
+    postedDate: '2024-12-14', isPinned: false, isFeatured: true, views: 203, stock: 20, maxOrderQty: 10,
   },
   {
     id: 'p6', title: { en: 'Nike Air Max Sneakers', fr: 'Baskets Nike Air Max', ar: 'أحذية نايك اير ماكس' },

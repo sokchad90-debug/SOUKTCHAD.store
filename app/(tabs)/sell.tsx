@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TextInput, Pressable, ScrollView,
   KeyboardAvoidingView, Platform, Alert, Modal, ActivityIndicator,
-  Switch } from 'react-native';
+} from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -105,31 +105,6 @@ export default function SellScreen() {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [selectedCat, setSelectedCat] = useState('');
-  // ─── Variants: optional per-product toggle, category-appropriate dimensions ───
-  const [hasVariants, setHasVariants] = useState(false); // master toggle, OFF by default
-  const [productColors, setProductColors] = useState<{ name: string; image: string; stock?: number }[]>([]);
-  const [sizesEnabled, setSizesEnabled] = useState(false);
-  const [sizesInput, setSizesInput] = useState('');
-  // Category → second-dimension config (label + placeholder per language)
-  const VARIANT_SECOND_DIM: Record<string, { label: string; placeholder: { fr: string; ar: string; en: string }; key: string }> = {
-    fashion: { label: 'Taille', placeholder: { fr: 'S, M, L, XL, XXL', ar: 'S, M, L, XL, XXL', en: 'S, M, L, XL, XXL' }, key: 'size' },
-    fashion_women: { label: 'Taille', placeholder: { fr: 'S, M, L, XL, XXL', ar: 'S, M, L, XL, XXL', en: 'S, M, L, XL, XXL' }, key: 'size' },
-    fashion_men: { label: 'Taille', placeholder: { fr: 'S, M, L, XL, XXL', ar: 'S, M, L, XL, XXL', en: 'S, M, L, XL, XXL' }, key: 'size' },
-    fashion_kids: { label: 'Taille', placeholder: { fr: '2, 4, 6, 8, 10 ans', ar: '2، 4، 6، 8، 10 سنة', en: '2, 4, 6, 8, 10 yrs' }, key: 'size' },
-    fashion_traditional: { label: 'Taille', placeholder: { fr: 'S, M, L, XL', ar: 'S، M، L، XL', en: 'S, M, L, XL' }, key: 'size' },
-    shoes: { label: 'Pointure', placeholder: { fr: '38, 39, 40, 41, 42, 43', ar: '38، 39، 40، 41، 42، 43', en: '38, 39, 40, 41, 42, 43' }, key: 'shoeSize' },
-    shoes_men: { label: 'Pointure', placeholder: { fr: '39, 40, 41, 42, 43', ar: '39، 40، 41، 42، 43', en: '39, 40, 41, 42, 43' }, key: 'shoeSize' },
-    shoes_women: { label: 'Pointure', placeholder: { fr: '36, 37, 38, 39, 40', ar: '36، 37، 38، 39، 40', en: '36, 37, 38, 39, 40' }, key: 'shoeSize' },
-    shoes_kids: { label: 'Pointure', placeholder: { fr: '26, 28, 30, 32', ar: '26، 28، 30، 32', en: '26, 28, 30, 32' }, key: 'shoeSize' },
-    electronics_phones: { label: 'Stockage', placeholder: { fr: '64 Go, 128 Go, 256 Go, 512 Go', ar: '64 جيجا، 128 جيجا، 256 جيجا', en: '64GB, 128GB, 256GB' }, key: 'storage' },
-    electronics_wearables: { label: 'Bracelet', placeholder: { fr: 'S, M, L (bracelet)', ar: 'S، M، L (سوار)', en: 'S, M, L (bracelet)' }, key: 'bracelet' },
-    electromenager_clim: { label: 'Dimension', placeholder: { fr: '1HP, 1.5HP, 2HP', ar: '1 حصان، 1.5 حصان، 2 حصان', en: '1HP, 1.5HP, 2HP' }, key: 'dimension' },
-    electromenager_froid: { label: 'Capacité', placeholder: { fr: '150L, 250L, 300L, 400L', ar: '150 لتر، 250 لتر، 400 لتر', en: '150L, 250L, 400L' }, key: 'dimension' },
-    furniture: { label: 'Dimension', placeholder: { fr: '1 place, 2 places, 3 places', ar: 'مقعد واحد، مقعدين، 3 مقاعد', en: '1-seat, 2-seat, 3-seat' }, key: 'dimension' },
-    furniture_salon: { label: 'Dimension', placeholder: { fr: '2 places, 3+2, angle', ar: 'مقعدان، 3+2، زاوية', en: '2-seat, 3+2, corner' }, key: 'dimension' },
-  };
-  const hasSecondDim = !!VARIANT_SECOND_DIM[selectedCat];
-  const secondDim = VARIANT_SECOND_DIM[selectedCat];
   const [condition, setCondition] = useState<'new' | 'used' | 'like_new'>('new');
   const [location, setLocation] = useState('');
   const [detailedAddress, setDetailedAddress] = useState('');
@@ -259,10 +234,10 @@ export default function SellScreen() {
     }
     setIsSaving(true);
     try {
-      await addProduct({ title: { en: title, fr: title, ar: title }, description: { en: description, fr: description, ar: description }, price: parseInt(price) || 0, images: images.map(img => img.uri), categoryId: selectedCat, ...(hasVariants && productColors.length > 0 ? { colors: productColors } : {}), ...(hasVariants && sizesEnabled && secondDim ? { sizesLabel: secondDim.key, sizesEnabled: true, sizes: sizesInput.split(',').map(s => s.trim()).filter(Boolean) } : { sizesEnabled: false }), sellerId: user?.id || 'user1', condition: hideCondition ? 'new' : condition, location, stock: parseInt(stock) || 0, maxOrderQty: parseInt(maxOrderQty) || undefined, warrantyDays: warrantyEnabled ? (parseInt(warrantyDays) || 7) : undefined, deliveryType: deliveryType !== 'none' ? deliveryType : undefined, deliveryFee: deliveryType === 'paid' ? (parseInt(deliveryFee) || 0) : undefined, sameCityOnly, deliveryCities: sameCityOnly ? [location] : selectedDeliveryCities, deliveryMethods: ['motorcycle', 'taxi'] } as any);
+      await addProduct({ title: { en: title, fr: title, ar: title }, description: { en: description, fr: description, ar: description }, price: parseInt(price) || 0, images: images.map(img => img.uri), categoryId: selectedCat, sellerId: user?.id || 'user1', condition: hideCondition ? 'new' : condition, location, stock: parseInt(stock) || 0, maxOrderQty: parseInt(maxOrderQty) || undefined, warrantyDays: warrantyEnabled ? (parseInt(warrantyDays) || 7) : undefined, deliveryType: deliveryType !== 'none' ? deliveryType : undefined, deliveryFee: deliveryType === 'paid' ? (parseInt(deliveryFee) || 0) : undefined, sameCityOnly, deliveryCities: sameCityOnly ? [location] : selectedDeliveryCities, deliveryMethods: ['motorcycle', 'taxi'] } as any);
       notifySuccess();
       Alert.alert(lb('Published!', 'Publié!', 'تم النشر!'), lb('Your listing is now live.', 'Votre annonce est en ligne.', 'إعلانك متاح الآن.'));
-      setTitle(''); setDescription(''); setPrice(''); setSelectedCat(''); setProductColors([]); setSizesEnabled(false); setSizesInput(''); setLocation(''); setDetailedAddress(''); setStock(''); setMaxOrderQty(''); setImages([]); setActivePreview(0);
+      setTitle(''); setDescription(''); setPrice(''); setSelectedCat(''); setLocation(''); setDetailedAddress(''); setStock(''); setMaxOrderQty(''); setImages([]); setActivePreview(0);
     } finally {
       setIsSaving(false);
     }
@@ -383,103 +358,6 @@ export default function SellScreen() {
               </View>
             </View>
           )}
-
-          {/* Master toggle: this product has multiple options (OFF by default) */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface, borderRadius: scale(14), borderWidth: 1, borderColor: colors.border, padding: scale(12), marginBottom: scale(12) }}>
-            <View style={{ flex: 1, gap: scale(2) }}>
-              <Text style={{ fontSize: scale(13), fontWeight: '700', color: colors.textPrimary, fontFamily: 'Cairo-Bold' }}>
-                {language === 'fr' ? 'Ce produit a plusieurs options' : language === 'ar' ? 'هذا المنتج له خيارات متعددة' : 'This product has multiple options'}
-              </Text>
-              <Text style={{ fontSize: scale(11), color: colors.textTertiary, fontFamily: 'Cairo-Regular' }}>
-                {language === 'fr' ? 'Couleurs, tailles, capacité… (facultatif)' : language === 'ar' ? 'ألوان، مقاسات، سعات… (اختياري)' : 'Colors, sizes, storage… (optional)'}
-              </Text>
-            </View>
-            <Switch value={hasVariants} onValueChange={setHasVariants} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#FFF" />
-          </View>
-
-          {hasVariants ? (
-            <View style={{ backgroundColor: colors.surface, borderRadius: scale(14), borderWidth: 1, borderColor: colors.border, padding: scale(12), marginBottom: scale(12), gap: scale(10) }}>
-              <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.textPrimary, fontFamily: 'Cairo-Bold' }}>
-                {language === 'fr' ? 'Couleurs et tailles' : language === 'ar' ? 'الألوان والمقاسات' : 'Colors & Sizes'}
-              </Text>
-
-              <Text style={{ fontSize: scale(12), fontWeight: '600', color: colors.textSecondary }}>
-                {language === 'fr' ? 'Couleurs (nom + photo + stock)' : language === 'ar' ? 'الألوان (اسم + صورة + مخزون)' : 'Colors (name + photo + stock)'}
-              </Text>
-              {productColors.map((c, i) => (
-                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
-                  <Image source={{ uri: c.image }} style={{ width: scale(44), height: scale(44), borderRadius: scale(8) }} contentFit="cover" />
-                  <TextInput
-                    placeholder={language === 'fr' ? 'Nom de la couleur' : language === 'ar' ? 'اسم اللون' : 'Color name'}
-                    placeholderTextColor={colors.textTertiary}
-                    value={c.name}
-                    onChangeText={(t) => setProductColors(prev => prev.map((x, j) => j === i ? { ...x, name: t } : x))}
-                    style={[styles.input, { flex: 1, height: scale(40), backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]}
-                  />
-                  <TextInput
-                    placeholder="0"
-                    placeholderTextColor={colors.textTertiary}
-                    keyboardType="numeric"
-                    value={c.stock != null ? String(c.stock) : ''}
-                    onChangeText={(t) => setProductColors(prev => prev.map((x, j) => j === i ? { ...x, stock: parseInt(t) || 0 } : x))}
-                    style={[styles.input, { width: scale(60), height: scale(40), backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]}
-                  />
-                  <Pressable onPress={() => setProductColors(prev => prev.filter((_, j) => j !== i))} hitSlop={8}>
-                    <MaterialIcons name="delete" size={scale(20)} color={colors.error} />
-                  </Pressable>
-                </View>
-              ))}
-              {productColors.length < 6 ? (
-                <Pressable
-                  onPress={async () => {
-                    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                    if (status !== 'granted') return;
-                    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8, allowsEditing: true, aspect: [1, 1] });
-                    if (!result.canceled && result.assets[0]) {
-                      setProductColors(prev => [...prev, { name: '', image: result.assets[0].uri, stock: 5 }]);
-                    }
-                  }}
-                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: scale(6), borderWidth: 1.5, borderStyle: 'dashed', borderRadius: scale(10), paddingVertical: scale(10), borderColor: colors.primary }}
-                >
-                  <MaterialIcons name="add-a-photo" size={scale(18)} color={colors.primary} />
-                  <Text style={{ fontSize: scale(13), fontWeight: '600', color: colors.primary }}>
-                    {language === 'fr' ? 'Ajouter une couleur' : language === 'ar' ? 'إضافة لون' : 'Add color'}
-                  </Text>
-                </Pressable>
-              ) : null}
-
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: scale(4) }}>
-                <Text style={{ fontSize: scale(13), fontWeight: '600', color: colors.textPrimary }}>
-                  {secondDim
-                  ? (secondDim.key === 'shoeSize' ? (language === 'fr' ? 'Activer les pointures' : language === 'ar' ? 'تفعيل أرقام المقاسات' : 'Enable shoe sizes')
-                   : secondDim.key === 'storage' ? (language === 'fr' ? 'Activer le stockage' : language === 'ar' ? 'تفعيل السعة' : 'Enable storage')
-                   : secondDim.key === 'bracelet' ? (language === 'fr' ? 'Activer le bracelet' : language === 'ar' ? 'تفعيل السوار' : 'Enable bracelet')
-                   : language === 'fr' ? 'Activer les tailles' : language === 'ar' ? 'تفعيل المقاسات' : 'Enable sizes')
-                  : (language === 'fr' ? 'Activer les tailles' : language === 'ar' ? 'تفعيل المقاسات' : 'Enable sizes')}
-                </Text>
-                <Switch value={sizesEnabled} onValueChange={setSizesEnabled} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#FFF" />
-              </View>
-              {sizesEnabled ? (
-                <View style={{ gap: scale(6) }}>
-                <Text style={{ fontSize: scale(12), fontWeight: '600', color: colors.textSecondary }}>
-                  {secondDim
-                    ? (secondDim.key === 'shoeSize' ? (language === 'fr' ? 'Pointures disponibles' : language === 'ar' ? 'أرقام المقاسات المتاحة' : 'Available shoe sizes')
-                     : secondDim.key === 'storage' ? (language === 'fr' ? 'Capacités disponibles' : language === 'ar' ? 'السعات المتاحة' : 'Available capacities')
-                     : secondDim.key === 'bracelet' ? (language === 'fr' ? 'Tailles de bracelet' : language === 'ar' ? 'مقاسات السوار' : 'Bracelet sizes')
-                     : language === 'fr' ? 'Tailles disponibles' : language === 'ar' ? 'المقاسات المتاحة' : 'Available sizes')
-                    : (language === 'fr' ? 'Tailles disponibles' : language === 'ar' ? 'المقاسات المتاحة' : 'Available sizes')}
-                </Text>
-                <TextInput
-                  placeholder={secondDim ? secondDim.placeholder[language === 'fr' ? 'fr' : language === 'ar' ? 'ar' : 'en'] : 'S, M, L, XL'}
-                  placeholderTextColor={colors.textTertiary}
-                  value={sizesInput}
-                  onChangeText={setSizesInput}
-                  style={[styles.input, { height: scale(40), backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]}
-                />
-                </View>
-              ) : null}
-            </View>
-          ) : null}
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>{t('title')} *</Text>
           <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.border }]} placeholder={lb('e.g. Samsung Galaxy A54', 'Ex: Samsung Galaxy A54', 'مثال: سامسونج جالاكسي')} placeholderTextColor={colors.textTertiary} value={title} onChangeText={setTitle} />

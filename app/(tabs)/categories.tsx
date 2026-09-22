@@ -210,10 +210,10 @@ export default function CategoriesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   row: { gap: scale(12), marginBottom: scale(16) },
-  categoryCard: { borderRadius: scale(16), borderWidth: 1, borderColor: '#EEF2F7', padding: scale(6), paddingTop: scale(6), alignItems: 'center', gap: scale(4) },
+  categoryCard: { borderRadius: scale(16), borderWidth: 1, borderColor: '#EEF2F7', padding: scale(8), alignItems: 'center', gap: scale(6) },
   categoryIconWrap: { width: '100%', borderRadius: scale(14), alignItems: 'center', justifyContent: 'center' },
   categoryImage: { width: '100%', height: '100%' },
-  categoryName: { fontSize: scale(13), fontWeight: '600', textAlign: 'center', minHeight: scale(34), lineHeight: scale(17) },
+  categoryName: { fontSize: scale(13), fontWeight: '600', textAlign: 'center', minHeight: scale(32), lineHeight: scale(16) },
   crumbRow: { flexDirection: 'row', alignItems: 'center', gap: scale(8), paddingHorizontal: scale(16), paddingTop: scale(12), paddingBottom: scale(4) },
   crumbText: { fontSize: scale(13), fontWeight: '600', flex: 1 },
   seeAllBtn: { borderWidth: 1, borderRadius: scale(14), paddingHorizontal: scale(12), paddingVertical: scale(6) },
