@@ -6,7 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import TopBadge from '@/components/TopBadge';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
-import { getSellerById } from '@/services/mockData';
+import { getSellerById, setPendingVariantSelection } from '@/services/mockData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatPrice } from '@/constants/config';
 import { borderRadius, shadows } from '@/constants/theme';
@@ -95,12 +95,35 @@ export default function ProductDetailScreen() {
   const [reviewPhoto, setReviewPhoto] = useState('');
   const [reviewPhotos, setReviewPhotos] = useState<string[]>([]);
   const [reviewOrderId, setReviewOrderId] = useState('');
+  // ─── Variants: colors/sizes ───
+  const [selColor, setSelColor] = useState(-1);
+  const [selSize, setSelSize] = useState('');
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const isFr = language === 'fr';
   const isAr = language === 'ar';
   const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
 
   const product = getProductById(id);
+  const pColors = product?.colors ?? [];
+  const pSizesOn = product?.sizesEnabled === true;
+  const pSizes = pSizesOn ? (product?.sizes ?? []) : [];
+  const pColorInfo = selColor >= 0 && selColor < pColors.length ? pColors[selColor] : null;
+  const heroUri = pColorInfo ? pColorInfo.image : (product?.images[0] || '');
+  const sLabelKey = (product as any)?.sizesLabel || 'size';
+  const sLabelText = isAr
+    ? (sLabelKey === 'shoeSize' ? 'أرقام المقاسات' : sLabelKey === 'storage' ? 'السعة التخزينية' : sLabelKey === 'bracelet' ? 'مقاس السوار' : 'المقاسات')
+    : isFr
+    ? (sLabelKey === 'shoeSize' ? 'Pointures' : sLabelKey === 'storage' ? 'Stockage' : sLabelKey === 'bracelet' ? 'Bracelet' : 'Tailles')
+    : (sLabelKey === 'shoeSize' ? 'Shoe sizes' : sLabelKey === 'storage' ? 'Storage' : sLabelKey === 'bracelet' ? 'Bracelet size' : 'Sizes');
+  const comboStock = (colorName: string | undefined, size: string | undefined): number => {
+    if (!colorName) return 0;
+    const vStock = (product as any)?.variantStock;
+    if (vStock && size) { const k = colorName + '/' + size; if (k in vStock) return vStock[k]; }
+    if (vStock && colorName) { const vals = Object.entries(vStock).filter(([k]) => k.startsWith(colorName + '/')); if (vals.length > 0) return vals.reduce((s: number, e: [string, unknown]) => s + (e[1] as number), 0); }
+    return 0;
+  };
+  const currentStock = pColorInfo ? comboStock(pColorInfo.name, pSizesOn ? selSize : undefined) : (product?.stock ?? 0);
   const productReviews = useMemo(() => product ? getReviewsForProduct(id) : [], [id, product, getReviewsForProduct]);
   const [savedSellerProfile, setSavedSellerProfile] = React.useState<any>(null);
 
@@ -236,8 +259,8 @@ export default function ProductDetailScreen() {
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 50 + 12 + 16 + 16 }} showsVerticalScrollIndicator={false}>
         {/* Hero Image */}
-        <View style={[styles.imageContainer, { width: heroW, height: heroW }]}>
-          <Image source={{ uri: product.images[0] }} style={styles.heroImage} contentFit="cover" transition={200} />
+        <View style={[styles.imageContainer, { width: heroW, height: heroW, backgroundColor: '#F5F4FA' }]}>
+          <Image source={{ uri: heroUri }} style={styles.heroImage} contentFit="contain" transition={200} />
           <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: scale(8) }, isAr && { left: 'auto', right: scale(16) }]}>
             <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color="#FFF" />
           </Pressable>
@@ -364,6 +387,35 @@ export default function ProductDetailScreen() {
               <Text style={[styles.stockBadgeText, { color: colors.verified }]}>
                 {lb(`Seller warranty: ${product.warrantyDays} days`, `Garantie vendeur: ${product.warrantyDays}j`, `ضمان البائع: ${product.warrantyDays} أيام`)}
               </Text>
+            </View>
+          ) : null}
+
+          {pColors.length > 0 || pSizesOn ? (
+            <View style={{ backgroundColor: colors.surface, borderRadius: scale(14), borderWidth: 1, borderColor: colors.borderLight, marginBottom: scale(10), overflow: 'hidden' }}>
+              {pColors.length > 0 ? (
+                <Pressable onPress={() => setSheetOpen(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10), paddingHorizontal: scale(14), paddingVertical: scale(13), borderBottomWidth: pSizesOn ? 0.5 : 0, borderBottomColor: colors.borderLight }}>
+                  <MaterialIcons name="palette" size={scale(18)} color={colors.primary} />
+                  <Text style={{ flex: 1, fontSize: scale(14), fontWeight: '600', fontFamily: 'Cairo-SemiBold', color: colors.textPrimary }}>
+                    {lb('Color', 'Couleur', 'اللون') + ': ' + (pColorInfo ? pColorInfo.name : lb('Select', 'Choisir', 'اختر'))}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(2) }}>
+                    <Text style={{ fontSize: scale(13), fontWeight: '600', color: colors.primary }}>{lb('Change', 'Modifier', 'تغيير')}</Text>
+                    <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(16)} color={colors.primary} />
+                  </View>
+                </Pressable>
+              ) : null}
+              {pSizesOn ? (
+                <Pressable onPress={() => setSheetOpen(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10), paddingHorizontal: scale(14), paddingVertical: scale(13) }}>
+                  <MaterialIcons name="checkroom" size={scale(18)} color={colors.primary} />
+                  <Text style={{ flex: 1, fontSize: scale(14), fontWeight: '600', fontFamily: 'Cairo-SemiBold', color: colors.textPrimary }}>
+                    {sLabelText + ': ' + (selSize || lb('Select', 'Choisir', 'اختر'))}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(2) }}>
+                    <Text style={{ fontSize: scale(13), fontWeight: '600', color: colors.primary }}>{lb('Change', 'Modifier', 'تغيير')}</Text>
+                    <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(16)} color={colors.primary} />
+                  </View>
+                </Pressable>
+              ) : null}
             </View>
           ) : null}
 
@@ -592,7 +644,10 @@ export default function ProductDetailScreen() {
         {!isSeller ? (
           <Pressable onPress={() => {
             if (!isLoggedIn) { setShowLogin(true); return; }
+            if (pColors.length > 0 && selColor < 0) { impactLight(); return; }
+            if (pSizesOn && !selSize) { impactLight(); return; }
             impactMedium();
+            setPendingVariantSelection({ productId: product.id, colorName: pColorInfo?.name, colorImage: pColorInfo?.image, size: pSizesOn ? selSize : undefined });
             router.push(`/checkout/${product.id}`);
           }} style={({ pressed }) => [styles.ctaPrimary, { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }]}>
             <MaterialIcons name="shopping-cart" size={scale(18)} color="#FFF" />
@@ -684,6 +739,86 @@ export default function ProductDetailScreen() {
             </Pressable>
           </View>
         </View>
+      </Modal>
+      <Modal visible={sheetOpen} transparent animationType="slide" onRequestClose={() => setSheetOpen(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' }} onPress={() => setSheetOpen(false)}>
+          <Pressable style={{ backgroundColor: colors.surface, borderTopLeftRadius: scale(24), borderTopRightRadius: scale(24), maxHeight: '85%', paddingBottom: Math.max(insets.bottom, scale(16)) }} onPress={e => e.stopPropagation()}>
+            <View style={{ alignItems: 'center', paddingTop: scale(12), paddingBottom: scale(8) }}>
+              <View style={{ width: scale(40), height: scale(4), borderRadius: scale(2), backgroundColor: colors.border }} />
+            </View>
+            <Text style={{ fontSize: scale(17), fontWeight: '700', color: colors.textPrimary, textAlign: 'center', fontFamily: 'Cairo-Bold', paddingBottom: scale(10) }}>
+              {lb('Choose options', 'Choisir les options', 'اختر الخيارات')}
+            </Text>
+            <ScrollView style={{ paddingHorizontal: scale(20) }} showsVerticalScrollIndicator={false}>
+              {pColors.length > 0 ? (
+                <View>
+                  <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.textPrimary, fontFamily: 'Cairo-Bold', marginBottom: scale(10) }}>
+                    {lb('Color', 'Couleur', 'اللون')}
+                    {pColorInfo ? <Text style={{ fontWeight: '600' }}>{' : '}{pColorInfo.name}</Text> : null}
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: scale(10), paddingBottom: scale(8) }}>
+                    {pColors.map((c, i) => {
+                      const out = comboStock(c.name, undefined) <= 0;
+                      const active = selColor === i;
+                      return (
+                        <Pressable key={i} onPress={() => { impactLight(); setSelColor(i); }} disabled={out}
+                          style={{ width: scale(72), borderRadius: scale(12), borderWidth: 2, borderColor: active ? colors.primary : 'transparent', overflow: 'hidden', alignItems: 'center', opacity: out ? 0.35 : 1 }}>
+                          <Image source={{ uri: c.image }} style={{ width: '100%', height: scale(72) }} contentFit="cover" transition={150} />
+                          {active ? <View style={{ position: 'absolute', top: scale(3), right: scale(3), width: scale(18), height: scale(18), borderRadius: scale(9), backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }}><MaterialIcons name="check" size={scale(12)} color="#FFF" /></View> : null}
+                          {out ? <View style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 2, backgroundColor: colors.error, transform: [{ rotate: '-45deg' }] }} /> : null}
+                          <Text style={{ fontSize: scale(11), fontWeight: '600', marginTop: scale(4), textAlign: 'center', minHeight: scale(28), color: out ? colors.textTertiary : colors.textPrimary }}>{c.name}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              ) : null}
+              {pSizesOn ? (
+                <View style={{ marginTop: scale(10) }}>
+                  <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.textPrimary, fontFamily: 'Cairo-Bold', marginBottom: scale(10) }}>
+                    {sLabelText}
+                    {selSize ? <Text style={{ fontWeight: '600' }}>{' : '}{selSize}</Text> : null}
+                  </Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: scale(10) }}>
+                    {pSizes.map(sz => {
+                      const st = pColorInfo ? comboStock(pColorInfo.name, sz) : 0;
+                      const out = st <= 0;
+                      const active = selSize === sz;
+                      return (
+                        <Pressable key={sz} onPress={() => { if (st > 0) { impactLight(); setSelSize(sz); } }} disabled={out}
+                          style={{ paddingHorizontal: scale(16), paddingVertical: scale(10), borderRadius: scale(10), borderWidth: 1, minWidth: scale(48), alignItems: 'center', backgroundColor: active ? colors.primary : colors.surface, borderColor: active ? colors.primary : colors.border, opacity: out ? 0.35 : 1 }}>
+                          <Text style={{ fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-SemiBold', color: out ? colors.textTertiary : active ? '#FFF' : colors.textPrimary }}>{sz}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : null}
+            </ScrollView>
+            <View style={{ paddingHorizontal: scale(20), paddingTop: scale(12) }}>
+              {pColorInfo && pSizesOn && selSize ? (() => {
+                const st = comboStock(pColorInfo.name, selSize);
+                return (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.success + '18', borderRadius: scale(12), paddingHorizontal: scale(12), paddingVertical: scale(10), gap: scale(8), marginBottom: scale(10) }}>
+                    <MaterialIcons name="inventory-2" size={scale(18)} color={st > 0 ? colors.success : colors.error} />
+                    <Text style={{ fontSize: scale(13), fontWeight: '600', color: st > 0 ? colors.success : colors.error }}>
+                      {st > 0 ? lb('In stock: ' + st + ' pieces', 'En stock : ' + st + ' pièces', 'متوفر: ' + st + ' قطعة') : lb('Out of stock', 'Rupture de stock', 'نفد المخزون')}
+                    </Text>
+                  </View>
+                );
+              })() : null}
+              <Pressable
+                onPress={() => { if (pColors.length > 0 && selColor < 0) return; if (pSizesOn && !selSize) return; impactMedium(); setSheetOpen(false); }}
+                disabled={(pColors.length > 0 && selColor < 0) || (pSizesOn && !selSize)}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: scale(6), height: scale(50), borderRadius: scale(14), backgroundColor: colors.primary, opacity: (pColors.length > 0 && selColor < 0) || (pSizesOn && !selSize) ? 0.5 : 1 }}>
+                <MaterialIcons name="check" size={scale(20)} color="#FFF" />
+                <Text style={{ color: '#FFF', fontSize: scale(15), fontWeight: '700', fontFamily: 'Cairo-Bold' }}>
+                  {lb('Confirm selection', 'Confirmer la sélection', 'تأكيد الاختيار')}
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </SafeAreaView>
   );
