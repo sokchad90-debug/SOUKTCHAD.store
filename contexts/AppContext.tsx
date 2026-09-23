@@ -429,6 +429,7 @@ interface AppContextType {
   updateSellerShipping: (companyIds: number[]) => Promise<void>;
   deliveryCities: string[];
   fetchDeliveryCities: (sellerId: number) => Promise<string[]>;
+  getSellerDeliveryCitiesSync: (sellerId: string) => string[];
   updateDeliveryCities: (cities: string[]) => Promise<void>;
   deliveryMethods: string[];
   fetchDeliveryMethods: (sellerId: number) => Promise<string[]>;
@@ -649,6 +650,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return [];
     } catch { return []; }
   }, []);
+
+  // Sync getter from cache (already warmed by refreshAllDeliveryCities) — used by checkout city field
+  const getSellerDeliveryCitiesSync = useCallback((sellerId: string): string[] =>
+    sellerDeliveryCitiesCache[sellerId] || [], [sellerDeliveryCitiesCache]);
 
   const updateDeliveryCities = useCallback(async (cities: string[]) => {
     setDeliveryCities(cities);
@@ -2438,7 +2443,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       verificationPlans, verificationSubscriptions, addVerificationPlan, removeVerificationPlan, toggleVerificationPlanActive,
       submitVerificationSubscription, approveVerificationSubscription, rejectVerificationSubscription,
       canUserRequestVerification, changeUserNumericId, adminPaymentNumber, updateSellerPaymentMethods,
-      fetchSellerPaymentMethods, fetchSellerShipping, fetchAvailableShippingCompanies, updateSellerShipping, deliveryCities, fetchDeliveryCities, updateDeliveryCities,
+      fetchSellerPaymentMethods, fetchSellerShipping, fetchAvailableShippingCompanies, updateSellerShipping, deliveryCities, fetchDeliveryCities, getSellerDeliveryCitiesSync, updateDeliveryCities,
       deliveryMethods, fetchDeliveryMethods, updateDeliveryMethods,
       selectedCity, setSelectedCity, uploadImage, updateStoreLogo, updateStoreBanner,
       markItemReceived, addReview, getReviewsForProduct, getReviewsForSeller,

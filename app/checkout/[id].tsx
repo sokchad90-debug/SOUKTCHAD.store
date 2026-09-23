@@ -24,7 +24,7 @@ export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
   const {
     colors, t, language, placeOrder, user, paymentMethodsList, shippingCompanies,
-    getProductById, getPaymentMethodsForCountry,
+    getProductById, getPaymentMethodsForCountry, getSellerDeliveryCitiesSync,
   } = useApp();
 
   const product = getProductById(id);
@@ -59,6 +59,15 @@ export default function CheckoutScreen() {
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
   const [timerActive, setTimerActive] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const sellerCities = product ? getSellerDeliveryCitiesSync(product.sellerId) : [];
+  const cityOptions = sellerCities.length > 0 ? sellerCities : COUNTRY_CITIES['TD'];
+  const [cityQuery, setCityQuery] = useState('');
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  // Auto-open the city dropdown until a city is chosen (removes toggle race on small screens)
+  React.useEffect(() => { if (!selectedCity) setShowCityDropdown(true); }, [selectedCity]);
+  const filteredCities = cityQuery.trim()
+    ? cityOptions.filter(c => c.toLowerCase().includes(cityQuery.trim().toLowerCase()))
+    : cityOptions;
   // Variant selection carried from the product page (peek — read-only, cleared after order success)
   const [variantSel] = useState(() => peekPendingVariantSelection(String(id)));
 
@@ -215,7 +224,12 @@ export default function CheckoutScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + scale(8), backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <Pressable onPress={() => router.back()} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textPrimary} /></Pressable>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('checkout')}</Text>
+        <View style={{ alignItems: 'center' }}>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('checkout')}</Text>
+          <Text style={{ fontSize: scale(11), color: colors.textTertiary, marginTop: 2 }}>
+            {step === 'shipping' ? lb('Delivery', 'Livraison', 'التوصيل') : step === 'payment' ? lb('Payment', 'Paiement', 'الدفع') : lb('Confirmation', 'Confirmation', 'التأكيد')}
+          </Text>
+        </View>
         <View style={styles.stepIndicator}>
           {[0, 1, 2].map(i => (
             <View key={i} style={[styles.stepDot, {
@@ -226,7 +240,7 @@ export default function CheckoutScreen() {
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: scale(16), paddingBottom: insets.bottom + scale(120) }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: scale(16), paddingBottom: insets.bottom + scale(240) }} showsVerticalScrollIndicator={false}>
         <DisclaimerBanner />
 
         {/* Product Summary */}
@@ -305,14 +319,56 @@ export default function CheckoutScreen() {
         {/* STEP 1: Shipping */}
         {step === 'shipping' ? (
           <View>
-            <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>{lb('DELIVERY CITY', 'VILLE DE LIVRAISON', 'مدينة التوصيل')}</Text>
-            <View style={styles.cityGrid}>
-              {COUNTRY_CITIES['TD'].map(city => (
-                <Pressable key={city} onPress={() => { selection(); setSelectedCity(city); }}
-                  style={[styles.cityChip, { backgroundColor: selectedCity === city ? colors.primary : colors.surface, borderColor: selectedCity === city ? colors.primary : colors.border }]}>
-                  <Text style={[styles.cityChipText, { color: selectedCity === city ? '#FFF' : colors.textPrimary }]}>{city}</Text>
-                </Pressable>
-              ))}
+            <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>{lb('DELIVERY INFORMATION', 'INFORMATIONS DE LIVRAISON', 'معلومات التوصيل')}</Text>
+            <Text style={{ fontSize: scale(12), color: colors.textSecondary, marginBottom: scale(6) }}>
+              {lb('City *', 'Ville *', 'المدينة *')}
+            </Text>
+            <View style={{ position: 'relative' }}>
+            <Pressable
+              onPress={() => { selection(); setShowCityDropdown(!showCityDropdown); }}
+              style={[styles.cityField, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            >
+              <MaterialIcons name="location-on" size={scale(18)} color={selectedCity ? colors.primary : colors.textTertiary} />
+              <Text style={[styles.cityFieldText, { color: selectedCity ? colors.textPrimary : colors.textTertiary }]}>
+                {selectedCity || lb('Choose your city', 'Choisissez votre ville', 'اختر مدينتك')}
+              </Text>
+              <MaterialIcons name={showCityDropdown ? 'expand-less' : 'expand-more'} size={scale(20)} color={colors.textSecondary} />
+            </Pressable>
+            {showCityDropdown ? (
+              <View style={[styles.cityDropdownCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={[styles.citySearchBox, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
+                  <MaterialIcons name="search" size={scale(18)} color={colors.textTertiary} />
+                  <TextInput
+                    value={cityQuery}
+                    onChangeText={setCityQuery}
+                    placeholder={lb('Search city...', 'Rechercher une ville...', 'ابحث عن مدينة...')}
+                    placeholderTextColor={colors.textTertiary}
+                    style={[styles.citySearchInput, { color: colors.textPrimary }]}
+                  />
+                  {cityQuery ? (
+                    <Pressable onPress={() => setCityQuery('')} hitSlop={8}>
+                      <MaterialIcons name="close" size={scale(16)} color={colors.textSecondary} />
+                    </Pressable>
+                  ) : null}
+                </View>
+                <ScrollView style={{ maxHeight: scale(160) }} nestedScrollEnabled keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                  {filteredCities.length === 0 ? (
+                    <Text style={{ padding: scale(12), fontSize: scale(13), color: colors.textTertiary, textAlign: 'center' }}>
+                      {lb('No city matches', 'Aucune ville trouvée', 'لا توجد مدينة مطابقة')}
+                    </Text>
+                  ) : filteredCities.map(city => (
+                    <Pressable
+                      key={city}
+                      onPress={() => { selection(); setSelectedCity(city); setShowCityDropdown(false); setCityQuery(''); }}
+                      style={[styles.cityOptionRow, { borderBottomColor: colors.borderLight }]}
+                    >
+                      <Text style={[styles.cityOptionText, { color: selectedCity === city ? colors.primary : colors.textPrimary }]}>{city}</Text>
+                      {selectedCity === city ? <MaterialIcons name="check" size={scale(18)} color={colors.primary} /> : null}
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
             </View>
             <Text style={[styles.sectionLabel, { color: colors.textTertiary, marginTop: scale(20) }]}>{lb('SHIPPING COMPANY', 'TRANSPORTEUR', 'شركة الشحن')}</Text>
             {activeShipping.length === 0 ? (
@@ -324,7 +380,7 @@ export default function CheckoutScreen() {
               <Pressable key={ship.id} onPress={() => { selection(); setSelectedShipping(ship.id); }}
                 style={[styles.shippingCard, { backgroundColor: colors.surface, borderColor: selectedShipping === ship.id ? colors.primary : colors.border, borderWidth: selectedShipping === ship.id ? 2 : 1 }]}>
                 {ship.logoUrl || ship.logo_url ? (
-                  <Image source={{ uri: (ship.logoUrl || ship.logo_url) as string }} style={{ width: scale(40), height: scale(40), borderRadius: scale(8) }} contentFit="cover" transition={200} />
+                  <Image source={{ uri: (ship.logoUrl || ship.logo_url) as string }} style={{ width: scale(36), height: scale(36), borderRadius: scale(8) }} contentFit="cover" transition={200} />
                 ) : (
                   <View style={[styles.shippingIcon, { backgroundColor: colors.primary + '12' }]}>
                     <MaterialIcons name="local-shipping" size={scale(24)} color={colors.primary} />
@@ -379,25 +435,37 @@ export default function CheckoutScreen() {
         {/* STEP 3: Transfer */}
         {step === 'transfer' ? (
           <View>
-            <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>{lb('TOTAL AMOUNT', 'MONTANT TOTAL', 'المبلغ الإجمالي')}</Text>
-            <Pressable onPress={() => copyToClipboard(String(totalPrice), lb('Amount', 'Montant', 'المبلغ'))}
-              style={[styles.copyCard, { backgroundColor: colors.primary + '06', borderColor: colors.primary + '25' }]}>
-              <View>
-                <Text style={[styles.copyAmount, { color: colors.primary }]}>{formatPrice(totalPrice)}</Text>
-                {quantity > 1 ? <Text style={{ fontSize: scale(12), color: colors.textTertiary, marginTop: scale(2) }}>{quantity} x {formatPrice(unitPrice)}</Text> : null}
+            <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>{lb('PAYMENT DETAILS', 'DÉTAILS DU PAIEMENT', 'تفاصيل الدفع')}</Text>
+            <View style={[styles.payDetailsCard, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
+              <View style={styles.payDetailsRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: scale(12), color: colors.textSecondary }}>
+                    {lb('Amount to send', 'Montant à envoyer', 'المبلغ المطلوب')}
+                  </Text>
+                  <Text style={[styles.payDetailsAmount, { color: colors.primary }]}>{formatPrice(totalPrice)}</Text>
+                  {quantity > 1 ? (
+                    <Text style={{ fontSize: scale(11), color: colors.textTertiary }}>
+                      {quantity + ' x ' + formatPrice(unitPrice)}
+                    </Text>
+                  ) : null}
+                </View>
+                <Pressable onPress={() => copyToClipboard(String(totalPrice), lb('Amount', 'Montant', 'المبلغ'))} style={[styles.copyBtnSmall, { backgroundColor: colors.primary + '15' }]} hitSlop={6}>
+                  <MaterialIcons name="content-copy" size={scale(16)} color={colors.primary} />
+                </Pressable>
               </View>
-              <View style={[styles.copyBtn, { backgroundColor: colors.primary }]}><MaterialIcons name="content-copy" size={scale(18)} color="#FFF" /></View>
-            </Pressable>
-
-            <Text style={[styles.sectionLabel, { color: colors.textTertiary, marginTop: scale(16) }]}>{lb('SEND TO (SELLER NUMBER)', 'ENVOYER À', 'أرسل إلى')}</Text>
-            <Pressable onPress={() => copyToClipboard(selectedMethod?.receivingNumber || '', lb('Number', 'Numéro', 'الرقم'))}
-              style={[styles.copyCard, { backgroundColor: colors.verified + '06', borderColor: colors.verified + '25' }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.copyMethodName, { color: colors.textSecondary }]}>{selectedMethod?.name}</Text>
-                <Text style={[styles.copyNumber, { color: colors.verified }]}>{selectedMethod?.receivingNumber}</Text>
+              <View style={[styles.payDetailsDivider, { borderColor: colors.borderLight }]} />
+              <View style={styles.payDetailsRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: scale(12), color: colors.textSecondary }}>
+                    {lb('Beneficiary', 'Destinataire', 'المستفيد') + (selectedMethod ? ' (' + selectedMethod.name + ')' : '')}
+                  </Text>
+                  <Text style={[styles.payDetailsNumber, { color: colors.verified }]}>{selectedMethod?.receivingNumber || '—'}</Text>
+                </View>
+                <Pressable onPress={() => copyToClipboard(selectedMethod?.receivingNumber || '', lb('Number', 'Numéro', 'الرقم'))} style={[styles.copyBtnSmall, { backgroundColor: colors.verified + '15' }]} hitSlop={6}>
+                  <MaterialIcons name="content-copy" size={scale(16)} color={colors.verified} />
+                </Pressable>
               </View>
-              <View style={[styles.copyBtn, { backgroundColor: colors.verified }]}><MaterialIcons name="content-copy" size={scale(18)} color="#FFF" /></View>
-            </Pressable>
+            </View>
 
             {selectedMethod?.instructions ? (
               <View style={[styles.instructionsBox, { backgroundColor: colors.warning + '08', borderColor: colors.warning + '25' }]}>
@@ -406,7 +474,7 @@ export default function CheckoutScreen() {
               </View>
             ) : null}
 
-            <Text style={[styles.sectionLabel, { color: colors.textTertiary, marginTop: scale(20) }]}>{lb('PASTE TRANSFER MESSAGE', 'COLLER LE MESSAGE', 'الصق رسالة التحويل')}</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textTertiary, marginTop: scale(20) }]}>{lb('TRANSFER PROOF', 'JUSTIFICATIF DE TRANSFERT', 'إثبات التحويل')}</Text>
             <View style={[styles.messageInputWrap, { backgroundColor: colors.surface, borderColor: transferMessage.trim() ? colors.success : colors.border, borderWidth: transferMessage.trim() ? 1.5 : 1 }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6), marginBottom: scale(6) }}>
                 <MaterialIcons name="message" size={scale(16)} color={colors.primary} />
@@ -431,12 +499,17 @@ export default function CheckoutScreen() {
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View style={[styles.bottomCta, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insets.bottom + scale(12) }, shadows.modal]}>
+      <View pointerEvents="box-none" style={[styles.bottomCta, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insets.bottom + scale(12) }, shadows.modal]}>
         <View style={styles.totalRow}>
-          <View>
-            <Text style={[styles.totalLabel, { color: colors.textSecondary }]}>{t('total')} ({quantity} {lb('item', 'article', 'قطعة')}{quantity > 1 ? 's' : ''})</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.totalLabel, { color: colors.textSecondary }]} numberOfLines={1}>
+              {lb('Products amount', 'Montant produits', 'مبلغ المنتجات') + ' (' + quantity + ')'}
+            </Text>
+            <Text style={{ fontSize: scale(10), color: colors.textTertiary }} numberOfLines={1}>
+              {lb('Total excl. delivery', 'Total hors livraison', 'المجموع بدون التوصيل')}
+            </Text>
           </View>
-          <Text style={[styles.totalAmount, { color: colors.primary }]}>{formatPrice(totalPrice)}</Text>
+          <Text style={[styles.totalAmount, { color: colors.primary }]} numberOfLines={1}>{formatPrice(totalPrice)}</Text>
         </View>
         {step === 'shipping' ? (
           <Pressable onPress={handleConfirmShipping} style={({ pressed }) => [styles.ctaBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }]}>
@@ -451,9 +524,14 @@ export default function CheckoutScreen() {
           </Pressable>
         ) : null}
         {step === 'transfer' ? (
+          <Text style={{ fontSize: scale(11), color: colors.textTertiary, textAlign: 'center', marginBottom: scale(8) }}>
+            {lb('Sending the proof does not confirm the payment. The seller verifies it manually.', 'L\'envoi du justificatif ne confirme pas le paiement. Le vendeur le vérifie manuellement.', 'إرسال الإثبات لا يعني تأكيد الدفع — يتحقق البائع يدويًا.')}
+          </Text>
+        ) : null}
+        {step === 'transfer' ? (
           <Pressable onPress={handleSubmitOrder} style={({ pressed }) => [styles.ctaBtn, { backgroundColor: transferMessage.trim() ? colors.success : colors.textTertiary, opacity: pressed ? 0.9 : 1 }]}>
-            <MaterialIcons name="check-circle" size={scale(20)} color="#FFF" />
-            <Text style={styles.ctaBtnText}>{lb('Submit Order', 'Envoyer', 'إرسال الطلب')}</Text>
+            <MaterialIcons name="send" size={scale(18)} color="#FFF" />
+            <Text style={styles.ctaBtnText}>{lb('Send proof for verification', 'Envoyer pour vérification', 'إرسال الإثبات للمراجعة')}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -462,6 +540,19 @@ export default function CheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
+  cityField: { flexDirection: 'row', alignItems: 'center', gap: scale(8), borderWidth: 1, borderRadius: scale(12), paddingHorizontal: scale(12), height: scale(48) },
+  cityFieldText: { flex: 1, fontSize: scale(14) },
+  cityDropdownCard: { position: 'absolute', left: 0, right: 0, bottom: scale(56), borderWidth: 1, borderRadius: scale(12), overflow: 'hidden', zIndex: 100, elevation: 20 },
+  citySearchBox: { flexDirection: 'row', alignItems: 'center', gap: scale(8), borderWidth: 1, borderRadius: scale(10), paddingHorizontal: scale(10), margin: scale(8) },
+  citySearchInput: { flex: 1, height: scale(40), fontSize: scale(14) },
+  cityOptionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(14), paddingVertical: scale(11), borderBottomWidth: 1 },
+  cityOptionText: { fontSize: scale(14) },
+  payDetailsCard: { borderWidth: 1, borderRadius: scale(14), padding: scale(14), gap: scale(10) },
+  payDetailsRow: { flexDirection: 'row', alignItems: 'center', gap: scale(10) },
+  payDetailsAmount: { fontSize: scale(22), fontWeight: '800', marginTop: scale(2) },
+  payDetailsNumber: { fontSize: scale(18), fontWeight: '800', marginTop: scale(2) },
+  payDetailsDivider: { borderTopWidth: 1 },
+  copyBtnSmall: { width: scale(34), height: scale(34), borderRadius: scale(17), alignItems: 'center', justifyContent: 'center' },
   variantBanner: { flexDirection: 'row', alignItems: 'center', gap: scale(10), padding: scale(12), borderRadius: scale(12), borderWidth: 1, marginTop: scale(12) },
   variantBannerThumb: { width: scale(52), height: scale(52), borderRadius: scale(8), backgroundColor: '#F6F6FB' },
   container: { flex: 1 },
@@ -485,22 +576,22 @@ const styles = StyleSheet.create({
   qtyDisplay: { minWidth: scale(56), height: scale(44), borderRadius: scale(12), borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', paddingHorizontal: scale(12) },
   qtyValue: { fontSize: scale(20), fontWeight: '800' },
   sectionLabel: { fontSize: scale(11), fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: scale(10), marginTop: scale(8) },
-  timerCard: { flexDirection: 'row', alignItems: 'center', padding: scale(14), borderRadius: scale(14), borderWidth: 1.5, gap: scale(12), marginBottom: scale(12) },
+  timerCard: { flexDirection: 'row', alignItems: 'center', padding: scale(10), borderRadius: scale(12), borderWidth: 1, gap: scale(10), marginBottom: scale(12) },
   timerLabel: { fontSize: scale(12), fontWeight: '600' },
-  timerValue: { fontSize: scale(28), fontWeight: '800', letterSpacing: 2 },
+  timerValue: { fontSize: scale(20), fontWeight: '800', letterSpacing: 1 },
   cityGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: scale(8) },
   cityChip: { paddingHorizontal: scale(14), paddingVertical: scale(10), borderRadius: scale(10), borderWidth: 1 },
   cityChipText: { fontSize: scale(13), fontWeight: '600' },
-  shippingCard: { flexDirection: 'row', alignItems: 'center', padding: scale(14), borderRadius: scale(14), marginBottom: scale(10), gap: scale(12) },
-  shippingIcon: { width: scale(48), height: scale(48), borderRadius: scale(24), alignItems: 'center', justifyContent: 'center' },
-  shippingName: { fontSize: scale(16), fontWeight: '700' },
+  shippingCard: { flexDirection: 'row', alignItems: 'center', padding: scale(10), borderRadius: scale(12), marginBottom: scale(8), gap: scale(10) },
+  shippingIcon: { width: scale(38), height: scale(38), borderRadius: scale(19), alignItems: 'center', justifyContent: 'center' },
+  shippingName: { fontSize: scale(14), fontWeight: '700' },
   shippingPhone: { fontSize: scale(13), marginTop: scale(2) },
   shippingDesc: { fontSize: scale(12), marginTop: scale(2), lineHeight: 16 },
   paymentCard: { flexDirection: 'row', alignItems: 'center', padding: scale(14), borderRadius: scale(14), marginBottom: scale(10), gap: scale(12) },
   paymentIconCircle: { width: scale(48), height: scale(48), borderRadius: scale(24), alignItems: 'center', justifyContent: 'center' },
   paymentName: { fontSize: scale(16), fontWeight: '700' },
   paymentInstructions: { fontSize: scale(12), marginTop: scale(2), lineHeight: 16 },
-  radio: { width: scale(24), height: scale(24), borderRadius: scale(12), borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  radio: { width: scale(20), height: scale(20), borderRadius: scale(10), borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   copyCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: scale(16), borderRadius: scale(14), borderWidth: 1.5 },
   copyAmount: { fontSize: scale(28), fontWeight: '800' },
   copyMethodName: { fontSize: scale(12), fontWeight: '600' },
