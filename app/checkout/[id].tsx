@@ -529,7 +529,7 @@ export default function CheckoutScreen() {
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View pointerEvents="box-none" style={[styles.bottomCta, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insets.bottom + scale(12) }, shadows.modal]}>
+      <View style={[styles.bottomCta, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insets.bottom + scale(12) }, shadows.modal]}>
         <View style={styles.totalRow}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.totalLabel, { color: colors.textSecondary }]} numberOfLines={1}>
