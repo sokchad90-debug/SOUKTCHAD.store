@@ -221,15 +221,10 @@ function HomeListHeader({
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={[styles.pinnedScroll, { paddingHorizontal: layout.horizontalPadding, gap: layout.smallGap }]}
             snapToInterval={layout.sponsoredCardWidth + layout.smallGap}
+            disableIntervalMomentum={true}
             decelerationRate="fast"
-            onLayout={() => {
-              // First sponsored product (Samsung) always at the LEFT, visible with NO swipe (both languages)
-              setTimeout(() => {
-                pinnedScrollRef.current?.scrollTo({ x: 0, y: 0, animated: false });
-              }, 50);
-            }}
           >
-            {pinnedProducts.slice(0, 3).map((product: any) => {
+            {(isAr ? [...pinnedProducts].reverse() : pinnedProducts).map((product: any) => {
               const title = product?.title?.[language] || product?.title?.en || '';
               const hasDiscount = (product?.discountPercent ?? 0) > 0 && product?.discountUntil && new Date(product.discountUntil).getTime() > Date.now();
               const discountPercent = hasDiscount ? Math.min(30, product?.discountPercent || 0) : 0;
