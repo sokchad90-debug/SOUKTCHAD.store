@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TextInput, Pressable, ScrollView,
-  KeyboardAvoidingView, Platform, Alert, Modal, ActivityIndicator,
+  KeyboardAvoidingView, Platform, Alert, Modal, ActivityIndicator, Switch,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -118,6 +118,11 @@ export default function SellScreen() {
   const [cropMode, setCropMode] = useState<'full' | 'square'>('full');
 
   const [stock, setStock] = useState('');
+  // ─── Variants editor (optional per product) ───
+  const [variantsOn, setVariantsOn] = useState(false);
+  const [variantSpec1, setVariantSpec1] = useState('');   // spec label 1 (e.g. Couleur / اللون)
+  const [variantSpec2, setVariantSpec2] = useState('');   // spec label 2 optional (e.g. Taille / RAM)
+  const [variantItems, setVariantItems] = useState<{ id: string; image: string; value1: string; value2: string; price: string; stock: string }[]>([]);
   const [maxOrderQty, setMaxOrderQty] = useState('');
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [deliveryCities, setDeliveryCities] = useState<string[]>([]);
@@ -222,6 +227,23 @@ export default function SellScreen() {
   const [deliveryType, setDeliveryType] = useState<'none' | 'free' | 'paid'>('none');
   const [deliveryFee, setDeliveryFee] = useState('');
 
+  const pickVariantImage = useCallback(async (idx: number) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85, aspect: [1, 1] });
+    if (!result.canceled && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      setVariantItems(prev => prev.map((x, i) => i === idx ? { ...x, image: uri } : x));
+    }
+  }, []);
+
+  const addVariantItem = useCallback(() => {
+    setVariantItems(prev => [...prev, { id: 'v' + Date.now(), image: '', value1: '', value2: '', price: '', stock: '' }]);
+  }, []);
+
+  // Wire the add-version button to the helper (defined here to keep deps simple)
+  React.useEffect(() => { /* noop — addVariantItem used in JSX below */ }, []);
+
   const handlePublish = async () => {
     if (isSaving) return;
     if (!title.trim() || !price.trim() || !selectedCat || !location.trim()) {
@@ -234,10 +256,22 @@ export default function SellScreen() {
     }
     setIsSaving(true);
     try {
-      await addProduct({ title: { en: title, fr: title, ar: title }, description: { en: description, fr: description, ar: description }, price: parseInt(price) || 0, images: images.map(img => img.uri), categoryId: selectedCat, sellerId: user?.id || 'user1', condition: hideCondition ? 'new' : condition, location, stock: parseInt(stock) || 0, maxOrderQty: parseInt(maxOrderQty) || undefined, warrantyDays: warrantyEnabled ? (parseInt(warrantyDays) || 7) : undefined, deliveryType: deliveryType !== 'none' ? deliveryType : undefined, deliveryFee: deliveryType === 'paid' ? (parseInt(deliveryFee) || 0) : undefined, sameCityOnly, deliveryCities: sameCityOnly ? [location] : selectedDeliveryCities, deliveryMethods: ['motorcycle', 'taxi'] } as any);
+      await addProduct({ title: { en: title, fr: title, ar: title }, description: { en: description, fr: description, ar: description }, price: parseInt(price) || 0, images: images.map(img => img.uri), categoryId: selectedCat, sellerId: user?.id || 'user1', condition: hideCondition ? 'new' : condition, location, stock: parseInt(stock) || 0, maxOrderQty: parseInt(maxOrderQty) || undefined, warrantyDays: warrantyEnabled ? (parseInt(warrantyDays) || 7) : undefined,
+        ...(variantsOn && variantItems.length > 0 ? {
+          variants: variantItems.filter(v => v.price.trim()).map((v, i) => ({
+            id: 'v' + Date.now() + '_' + i,
+            specs: [
+              ...(variantSpec1.trim() ? [{ label: { en: variantSpec1, fr: variantSpec1, ar: variantSpec1 }, value: v.value1 || '' }] : []),
+              ...(variantSpec2.trim() ? [{ label: { en: variantSpec2, fr: variantSpec2, ar: variantSpec2 }, value: v.value2 || '' }] : []),
+            ],
+            image: v.image || (images[i] ? images[i].uri : ''),
+            price: parseInt(v.price) || 0,
+            stock: parseInt(v.stock) || 0,
+          })),
+        } : {}), deliveryType: deliveryType !== 'none' ? deliveryType : undefined, deliveryFee: deliveryType === 'paid' ? (parseInt(deliveryFee) || 0) : undefined, sameCityOnly, deliveryCities: sameCityOnly ? [location] : selectedDeliveryCities, deliveryMethods: ['motorcycle', 'taxi'] } as any);
       notifySuccess();
       Alert.alert(lb('Published!', 'Publié!', 'تم النشر!'), lb('Your listing is now live.', 'Votre annonce est en ligne.', 'إعلانك متاح الآن.'));
-      setTitle(''); setDescription(''); setPrice(''); setSelectedCat(''); setLocation(''); setDetailedAddress(''); setStock(''); setMaxOrderQty(''); setImages([]); setActivePreview(0);
+      setTitle(''); setDescription(''); setPrice(''); setSelectedCat(''); setLocation(''); setDetailedAddress(''); setStock(''); setMaxOrderQty(''); setImages([]); setActivePreview(0); setVariantsOn(false); setVariantSpec1(''); setVariantSpec2(''); setVariantItems([]);
     } finally {
       setIsSaving(false);
     }
@@ -429,6 +463,64 @@ export default function SellScreen() {
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>{lb('MAX ORDER QUANTITY (per buyer)', 'QTÉ MAX PAR COMMANDE', 'الحد الأقصى للطلب')}</Text>
           <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.border }]} placeholder={lb('e.g. 5 (leave empty = no limit)', 'Ex: 5 (vide = illimité)', 'مثال: 5 (فارغ = بلا حد)')} placeholderTextColor={colors.textTertiary} value={maxOrderQty} onChangeText={setMaxOrderQty} keyboardType="numeric" />
+
+          {/* ─── Variants (optional) ─── */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: scale(16), marginBottom: scale(8) }}>
+            <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 0 }]}>
+              {lb('PRODUCT OPTIONS (versions)', 'OPTIONS DU PRODUIT (versions)', 'خيارات المنتج (النسخ)')}
+            </Text>
+            <Switch value={variantsOn} onValueChange={(v: boolean) => { impactLight(); setVariantsOn(v); }} trackColor={{ true: colors.primary, false: colors.borderLight }} />
+          </View>
+          {variantsOn ? (
+            <View style={{ backgroundColor: colors.surface, borderRadius: scale(12), borderWidth: 1, borderColor: colors.border, padding: scale(12), gap: scale(8) }}>
+              <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', gap: scale(8) }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: scale(11), color: colors.textTertiary, marginBottom: scale(4) }}>
+                    {lb('Spec 1 (e.g. Color)', 'Caractéristique 1 (ex: Couleur)', 'الخاصية 1 (مثال: اللون)')}
+                  </Text>
+                  <TextInput style={[styles.input, { backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]} placeholder={lb('Color', 'Couleur', 'اللون')} placeholderTextColor={colors.textTertiary} value={variantSpec1} onChangeText={setVariantSpec1} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: scale(11), color: colors.textTertiary }}>
+                    {lb('Spec 2 optional (Size/RAM/Storage/Weight)', 'Caractéristique 2 (Taille/RAM/Stockage/Poids)', 'الخاصية 2 (مقاس/ذاكرة/تخزين/وزن)')}
+                  </Text>
+                  <TextInput style={[styles.input, { backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]} placeholder={lb('Size', 'Taille', 'المقاس')} placeholderTextColor={colors.textTertiary} value={variantSpec2} onChangeText={setVariantSpec2} />
+                </View>
+              </View>
+              {variantItems.map((it, idx) => (
+                <View key={it.id} style={{ borderWidth: 1, borderColor: colors.borderLight, borderRadius: scale(10), padding: scale(8), gap: scale(6) }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
+                    {it.image ? (
+                      <Image source={{ uri: it.image }} style={{ width: scale(44), height: scale(44), borderRadius: scale(8), backgroundColor: '#F6F6FB' }} contentFit="contain" />
+                    ) : null}
+                    <Pressable onPress={() => pickVariantImage(idx)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: scale(6), borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border, borderRadius: scale(8), padding: scale(8) }}>
+                      <MaterialIcons name="add-a-photo" size={scale(16)} color={colors.primary} />
+                      <Text style={{ fontSize: scale(11), color: colors.textSecondary }}>
+                        {lb('Variant photo (this version)', 'Photo de cette version', 'صورة هذه النسخة')}
+                      </Text>
+                    </Pressable>
+                    <Pressable onPress={() => setVariantItems(prev => prev.filter(x => x.id !== it.id))} hitSlop={8}>
+                      <MaterialIcons name="delete-outline" size={scale(20)} color={colors.error} />
+                    </Pressable>
+                  </View>
+                  <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', gap: scale(6) }}>
+                    <TextInput style={[styles.input, { flex: 1, backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]} placeholder={variantSpec1 || lb('Value 1', 'Valeur 1', 'القيمة 1')} placeholderTextColor={colors.textTertiary} value={it.value1} onChangeText={(t2) => setVariantItems(prev => prev.map(x => x.id === it.id ? { ...x, value1: t2 } : x))} />
+                    <TextInput style={[styles.input, { flex: 1, backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]} placeholder={variantSpec2 || lb('Value 2 (opt.)', 'Valeur 2 (opt.)', 'القيمة 2')} placeholderTextColor={colors.textTertiary} value={it.value2} onChangeText={(t2) => setVariantItems(prev => prev.map(x => x.id === it.id ? { ...x, value2: t2 } : x))} />
+                  </View>
+                  <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', gap: scale(6) }}>
+                    <TextInput style={[styles.input, { flex: 1, backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]} placeholder={lb('Price FCFA', 'Prix FCFA', 'السعر FCFA')} placeholderTextColor={colors.textTertiary} value={it.price} onChangeText={(t2) => setVariantItems(prev => prev.map(x => x.id === it.id ? { ...x, price: t2 } : x))} keyboardType="numeric" />
+                    <TextInput style={[styles.input, { flex: 1, backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]} placeholder={lb('Stock', 'Stock', 'المخزون')} placeholderTextColor={colors.textTertiary} value={it.stock} onChangeText={(t2) => setVariantItems(prev => prev.map(x => x.id === it.id ? { ...x, stock: t2 } : x))} keyboardType="numeric" />
+                  </View>
+                </View>
+              ))}
+              <Pressable onPress={() => addVariantItem()} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: scale(6), padding: scale(10), borderRadius: scale(10), borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.primary }}>
+                <MaterialIcons name="add" size={scale(18)} color={colors.primary} />
+                <Text style={{ fontSize: scale(13), fontWeight: '700', color: colors.primary }}>
+                  {lb('Add a version', 'Ajouter une version', 'إضافة نسخة')}
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>{t('location')} *</Text>
           <Pressable

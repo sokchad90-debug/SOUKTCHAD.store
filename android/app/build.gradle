@@ -92,8 +92,8 @@ android {
         applicationId 'com.anonymous.sokchadapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 303
-        versionName "8.9.109"
+        versionCode 305
+        versionName "8.9.110"
 
         ndk {
             abiFilters 'arm64-v8a', 'x86_64'

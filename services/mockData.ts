@@ -72,6 +72,27 @@ export interface Product {
   warrantyDays?: number; // return-guarantee window (seller-editable)
   deliveryType?: 'free' | 'paid';
   deliveryFee?: number;
+  // Product variants (optional, seller-enabled per product)
+  variants?: ProductVariant[];
+  wholesale?: WholesaleDeal; // optional bulk pricing
+}
+
+export interface ProductVariant {
+  id: string;
+  specs: { label: { en: string; fr: string; ar: string }; value: string | { en: string; fr: string; ar: string } }[];
+  image: string;       // real photo of THIS variant
+  price: number;       // per-unit price for this variant
+  stock: number;       // independent stock
+}
+
+// helper: localized spec value
+export const specValue = (v: ProductVariant['specs'][number]['value'], lang: 'en' | 'fr' | 'ar'): string =>
+  typeof v === 'string' ? v : (v[lang] || v.en);
+
+export interface WholesaleDeal {
+  minQty: number;      // wholesale threshold
+  unitPrice: number;   // wholesale per-unit price
+  unitLabel?: { en: string; fr: string; ar: string }; // selling unit e.g. "pièce/قطعة"
 }
 
 export interface Review {
@@ -138,9 +159,19 @@ export interface Order {
   product_title_ar?: string;
   product_image?: string;
   seller_name?: string;
+  variantColor?: string;
+  variantSpecs?: string;
 }
 
 import { CATEGORY_TREE, CATEGORY_IMAGE_BY_ID } from '@/services/categoryTree';
+
+// ─── Pending variant selection (product -> checkout -> order) ───
+// PEEK (read-only) for display; CLEAR only after order success (consume-on-mount loses selection on remount).
+let pendingVariantSelection: { productId: string; variantId: string; specs: { label: string; value: string }[]; image: string; unitPrice: number; stock: number } | null = null;
+export const setPendingVariantSelection = (sel: NonNullable<typeof pendingVariantSelection>) => { pendingVariantSelection = sel; };
+export const peekPendingVariantSelection = (productId: string) =>
+  pendingVariantSelection && pendingVariantSelection.productId === productId ? pendingVariantSelection : null;
+export const clearPendingVariantSelection = () => { pendingVariantSelection = null; };
 
 /** Flattened category list derived from the fixed-ID tree (sokchad-v1).
  *  'all' kept for existing logic; hasChildren computed from the tree. */
@@ -251,6 +282,13 @@ export const products: Product[] = [
     categoryId: 'shoes_men', sellerId: 'seller2', condition: 'new', location: 'Moundou',
     postedDate: '2024-12-13', isPinned: true, pinnedUntil: '2025-01-13', isFeatured: false, views: 176,
     discountPercent: 25, discountUntil: '2026-08-10', stock: 15, maxOrderQty: 5,
+    variants: [
+      { id: 'p6v1', specs: [{ label: { en: 'Color', fr: 'Couleur', ar: 'اللون' }, value: { en: 'Rouge', fr: 'Rouge', ar: 'أحمر' } }, { label: { en: 'Size', fr: 'Taille', ar: 'المقاس' }, value: '41' }], image: 'https://souktchad.shop/dl/products/photo-1542291026-7eec264c27ff.jpg', price: 45000, stock: 5 },
+      { id: 'p6v2', specs: [{ label: { en: 'Color', fr: 'Couleur', ar: 'اللون' }, value: { en: 'Noir', fr: 'Noir', ar: 'أسود' } }, { label: { en: 'Size', fr: 'Taille', ar: 'المقاس' }, value: '41' }], image: 'https://souktchad.shop/dl/products/photo-1595950653106-6c9ebd614d3a.jpg', price: 47000, stock: 8 },
+      { id: 'p6v3', specs: [{ label: { en: 'Color', fr: 'Couleur', ar: 'اللون' }, value: { en: 'Blanc', fr: 'Blanc', ar: 'أبيض' } }, { label: { en: 'Size', fr: 'Taille', ar: 'المقاس' }, value: '41' }], image: 'https://souktchad.shop/dl/products/photo-1549298916-b41d501d3772.jpg', price: 46000, stock: 3 },
+      { id: 'p6v4', specs: [{ label: { en: 'Color', fr: 'Couleur', ar: 'اللون' }, value: { en: 'Bleu', fr: 'Bleu', ar: 'أزرق' } }, { label: { en: 'Size', fr: 'Taille', ar: 'المقاس' }, value: '41' }], image: 'https://souktchad.shop/dl/products/photo-1560769629-975ec94e6a86.jpg', price: 48000, stock: 6 },
+    ],
+    wholesale: { minQty: 5, unitPrice: 40000, unitLabel: { en: 'piece', fr: 'pièce', ar: 'قطعة' } },
   },
   {
     id: 'p7', title: { en: '3-Bedroom House', fr: 'Maison 3 Chambres', ar: 'منزل 3 غرف نوم' },

@@ -11,8 +11,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatPrice } from '@/constants/config';
 import { borderRadius, shadows } from '@/constants/theme';
 import DisclaimerBanner from '@/components/DisclaimerBanner';
+import { setPendingVariantSelection, peekPendingVariantSelection, specValue } from '@/services/mockData';
+import type { ProductVariant } from '@/services/mockData';
 import LoginModal from '@/components/LoginModal';
-import { impactLight, impactMedium, notifySuccess } from '@/services/haptics';
+import { impactLight, impactMedium, notifySuccess, selection } from '@/services/haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { scale, usePhoneLayout } from '@/constants/responsive';
 
@@ -101,6 +103,22 @@ export default function ProductDetailScreen() {
   const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
 
   const product = getProductById(id);
+
+  // ─── Product variants (seller-optional) ───
+  const variants: ProductVariant[] = (product?.variants as ProductVariant[]) || [];
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [variantQty, setVariantQty] = useState(1);
+  // Auto-select first in-stock variant when the product changes
+  React.useEffect(() => {
+    const vs = (getProductById(String(id))?.variants as ProductVariant[]) || [];
+    const first = vs.find(v => v.stock > 0) || null;
+    setSelectedVariantId(first ? first.id : null);
+    setVariantQty(1);
+  }, [id, getProductById]);
+  const selectedVariant = variants.find(v => v.id === selectedVariantId) || null;
+  const heroUri = selectedVariant ? selectedVariant.image : product?.images?.[0] || '';
+  const variantStock = selectedVariant ? selectedVariant.stock : (product?.stock ?? 0);
+  const wholesale: { minQty: number; unitPrice: number; unitLabel?: { en: string; fr: string; ar: string } } | null = (product as any)?.wholesale || null;
   const productReviews = useMemo(() => product ? getReviewsForProduct(id) : [], [id, product, getReviewsForProduct]);
   const [savedSellerProfile, setSavedSellerProfile] = React.useState<any>(null);
 
@@ -204,6 +222,13 @@ export default function ProductDetailScreen() {
   const discountPercent = hasDiscount ? Math.min(30, product.discountPercent || 0) : 0;
   const discountedPrice = hasDiscount ? Math.round(product.price * (1 - discountPercent / 100)) : product.price;
 
+  // ─── Variant price/qty (AFTER hasDiscount/discountedPrice are defined) ───
+  const qtyLimit = Math.max(1, Math.min(variantStock || 999, (product.maxOrderQty ?? 0) > 0 ? product.maxOrderQty! : 999));
+  const effectiveUnit = selectedVariant
+    ? (wholesale && variantQty >= wholesale.minQty ? wholesale.unitPrice : selectedVariant.price)
+    : discountedPrice;
+  const variantTotal = effectiveUnit * Math.max(1, Math.min(variantQty, qtyLimit));
+
   const isSeller = user?.role === 'seller';
 
   const handleShare = async () => {
@@ -237,7 +262,7 @@ export default function ProductDetailScreen() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 50 + 12 + 16 + 16 }} showsVerticalScrollIndicator={false}>
         {/* Hero Image */}
         <View style={[styles.imageContainer, { width: heroW, height: heroW }]}>
-          <Image source={{ uri: product.images[0] }} style={styles.heroImage} contentFit="cover" transition={200} />
+          <Image source={{ uri: heroUri }} style={styles.heroImage} contentFit="contain" transition={200} />
           <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: scale(8) }, isAr && { left: 'auto', right: scale(16) }]}>
             <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color="#FFF" />
           </Pressable>
@@ -263,7 +288,7 @@ export default function ProductDetailScreen() {
         </View>
 
         <View style={styles.content}>
-          {hasDiscount ? (
+          {hasDiscount && !selectedVariant ? (
             <View style={styles.discountPriceRow}>
               <Text style={[styles.price, { color: colors.primary }]}>{formatPrice(discountedPrice)}</Text>
               <View style={[styles.discountBadgeLarge, { backgroundColor: '#EF4444' }]}>
@@ -273,11 +298,11 @@ export default function ProductDetailScreen() {
             </View>
           ) : (
             <View style={styles.discountPriceRow}>
-              <Text style={[styles.price, { color: colors.primary }]}>{formatPrice(product.price)}</Text>
+              <Text style={[styles.price, { color: colors.primary }]}>{formatPrice(effectiveUnit)}</Text>
               <TopBadge earned={topEarned} />
             </View>
           )}
-          {hasDiscount ? (
+          {hasDiscount && !selectedVariant ? (
             <Text style={[styles.oldPriceDetail, { color: colors.textTertiary }]}>{formatPrice(product.price)}</Text>
           ) : null}
           <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>{title}</Text>
@@ -365,6 +390,123 @@ export default function ProductDetailScreen() {
                 {lb(`Seller warranty: ${product.warrantyDays} days`, `Garantie vendeur: ${product.warrantyDays}j`, `ضمان البائع: ${product.warrantyDays} أيام`)}
               </Text>
             </View>
+          ) : null}
+
+
+          {/* ─── Options disponibles (seller-enabled variants) — crash-safe: every string a single <Text> expression ─── */}
+          {variants.length > 0 ? (
+            <>
+              <Text style={[styles.sectionLabel, { color: colors.textPrimary, textTransform: 'none', fontSize: scale(15), letterSpacing: 0 }]}>
+                {lb('Available options', 'Options disponibles', 'الخيارات المتاحة')}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={scale(132) + scale(10)}
+                decelerationRate="fast"
+                disableIntervalMomentum={true}
+                contentContainerStyle={{ gap: scale(10), paddingRight: scale(16), paddingBottom: scale(2) }}
+              >
+                {(isAr ? [...variants].reverse() : variants).map(v => {
+                  const active = v.id === selectedVariantId;
+                  const out = v.stock <= 0;
+                  const specLine = v.specs.map(sp => (sp.label[language] || sp.label.en) + ' ' + specValue(sp.value, language)).join(' · ');
+                  return (
+                    <Pressable
+                      key={v.id}
+                      onPress={() => { if (!out) { selection(); setSelectedVariantId(v.id); setVariantQty(1); } }}
+                      disabled={out}
+                      style={({ pressed }) => [styles.variantCard, {
+                        backgroundColor: colors.surface,
+                        borderColor: active ? colors.primary : colors.border,
+                        borderWidth: active ? 2 : 1,
+                        opacity: out ? 0.4 : 1,
+                      }]}
+                    >
+                      {active ? (
+                        <View style={[styles.variantCheck, { backgroundColor: colors.primary }]}>
+                          <MaterialIcons name="check" size={scale(12)} color="#FFF" />
+                        </View>
+                      ) : null}
+                      <Image source={{ uri: v.image }} style={styles.variantImage} contentFit="contain" transition={150} />
+                      <View style={styles.variantInfo}>
+                        {v.specs.map((sp, idx) => (
+                          <Text key={'s' + idx} style={[styles.variantSpecText, { color: idx === 0 ? colors.textPrimary : colors.textSecondary }]} numberOfLines={1}>
+                            {(sp.label[language] || sp.label.en) + ' ' + specValue(sp.value, language)}
+                          </Text>
+                        ))}
+                        <Text style={[styles.variantPrice, { color: colors.primary }]}>{formatPrice(v.price)}</Text>
+                        <View style={[styles.variantStockChip, { backgroundColor: out ? colors.error + '18' : colors.success + '18' }]}>
+                          <Text style={[styles.variantStockText, { color: out ? colors.error : colors.success }]}>
+                            {lb('Stock', 'Stock', 'المتاح') + ' : ' + v.stock}
+                          </Text>
+                        </View>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+
+              {/* Selected variant summary + quantity + total */}
+              <View style={[styles.variantSelCard, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
+                {selectedVariant ? (
+                  <View style={styles.variantSelRow}>
+                    <Image source={{ uri: selectedVariant.image }} style={styles.variantSelThumb} contentFit="contain" />
+                    <View style={{ flex: 1 }}>
+                      {selectedVariant.specs.map((sp, idx) => (
+                        <Text key={'ss' + idx} style={[styles.variantSelSpec, { color: colors.textSecondary }]} numberOfLines={1}>
+                          {(sp.label[language] || sp.label.en) + ' : ' + specValue(sp.value, language)}
+                        </Text>
+                      ))}
+                      <Text style={[styles.variantSelPrice, { color: colors.primary }]}>{formatPrice(effectiveUnit)}</Text>
+                      <Text style={{ fontSize: scale(12), color: colors.textTertiary }}>
+                        {lb('Available stock', 'Stock disponible', 'المخزون المتاح') + ' : ' + variantStock}
+                      </Text>
+                    </View>
+                    <View style={{ alignItems: isAr ? 'flex-start' : 'flex-end', gap: scale(6) }}>
+                      <View style={styles.variantQtyRow}>
+                        <Pressable onPress={() => { if (variantQty > 1) { impactLight(); setVariantQty(variantQty - 1); } }} disabled={variantQty <= 1} style={[styles.variantQtyBtn, { backgroundColor: variantQty <= 1 ? colors.borderLight : colors.primary + '15' }]}>
+                          <MaterialIcons name="remove" size={scale(16)} color={variantQty <= 1 ? colors.textTertiary : colors.primary} />
+                        </Pressable>
+                        <View style={[styles.variantQtyVal, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                          <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.textPrimary }}>{variantQty}</Text>
+                        </View>
+                        <Pressable onPress={() => { if (variantQty < qtyLimit) { impactLight(); setVariantQty(variantQty + 1); } }} disabled={variantQty >= qtyLimit} style={[styles.variantQtyBtn, { backgroundColor: variantQty >= qtyLimit ? colors.borderLight : colors.primary + '15' }]}>
+                          <MaterialIcons name="add" size={scale(16)} color={variantQty >= qtyLimit ? colors.textTertiary : colors.primary} />
+                        </Pressable>
+                      </View>
+                      <View>
+                        <Text style={{ fontSize: scale(11), color: colors.textTertiary }}>{lb('Total', 'Total', 'المجموع')}</Text>
+                        <Text style={{ fontSize: scale(16), fontWeight: '800', color: colors.primary }}>{formatPrice(variantTotal)}</Text>
+                      </View>
+                    </View>
+                  </View>
+                ) : (
+                  <Text style={{ fontSize: scale(13), color: colors.textTertiary }}>
+                    {lb('Choose an available option', 'Choisissez une option disponible', 'اختر خيارًا متاحًا')}
+                  </Text>
+                )}
+              </View>
+
+              {/* Wholesale deal (seller-optional) */}
+              {wholesale ? (
+                <View style={[styles.wholesaleBanner, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }]}>
+                  <MaterialIcons name="sell" size={scale(18)} color={colors.primary} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: scale(13), fontWeight: '700', color: colors.primary }}>
+                      {lb(
+                        'Bulk price from ' + wholesale.minQty + ' ' + (wholesale.unitLabel?.[language] || wholesale.unitLabel?.en || 'pcs'),
+                        'Tarif de gros dès ' + wholesale.minQty + ' ' + (wholesale.unitLabel?.fr || 'pièces'),
+                        'سعر الجملة من ' + wholesale.minQty + ' ' + (wholesale.unitLabel?.ar || 'قطعة')
+                      )}
+                    </Text>
+                    <Text style={{ fontSize: scale(13), color: colors.primary }}>
+                      {formatPrice(wholesale.unitPrice) + ' / ' + (wholesale.unitLabel?.[language] || wholesale.unitLabel?.en || '')}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
+            </>
           ) : null}
 
           <DisclaimerBanner compact />
@@ -592,6 +734,19 @@ export default function ProductDetailScreen() {
         {!isSeller ? (
           <Pressable onPress={() => {
             if (!isLoggedIn) { setShowLogin(true); return; }
+            if (variants.length > 0) {
+              if (!selectedVariant) { Alert.alert(lb('Option required', 'Option requise', 'اختيار الخيار مطلوب'), lb('Please choose an available option.', 'Veuillez choisir une option disponible.', 'يرجى اختيار خيار متاح.')); return; }
+              if (selectedVariant.stock <= 0) { Alert.alert(lb('Out of stock', 'Rupture de stock', 'نفد المخزون')); return; }
+              if (variantQty > selectedVariant.stock) { Alert.alert(lb('Quantity exceeds stock', 'La quantité dépasse le stock', 'الكمية تتجاوز المخزون')); return; }
+              setPendingVariantSelection({
+                productId: product.id,
+                variantId: selectedVariant.id,
+                specs: selectedVariant.specs.map(sp => ({ label: sp.label[language] || sp.label.en, value: specValue(sp.value, language) })),
+                image: selectedVariant.image,
+                unitPrice: effectiveUnit,
+                stock: selectedVariant.stock,
+              });
+            }
             impactMedium();
             router.push(`/checkout/${product.id}`);
           }} style={({ pressed }) => [styles.ctaPrimary, { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }]}>
@@ -693,7 +848,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   imageContainer: { position: 'relative' },
-  heroImage: { width: '100%', height: '100%' },
+  heroImage: { width: '100%', height: '100%', backgroundColor: '#FFFFFF' },
   backBtn: { position: 'absolute', left: scale(16), width: scale(40), height: scale(40), borderRadius: scale(20), backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
   topRightBtns: { position: 'absolute', right: scale(16), flexDirection: 'row', gap: scale(8) },
   topRightBtn: { width: scale(40), height: scale(40), borderRadius: scale(20), backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
@@ -748,6 +903,24 @@ const styles = StyleSheet.create({
   similarInfo: { padding: scale(8) },
   similarPrice: { fontSize: scale(14), fontWeight: '700' },
   similarTitle: { fontSize: scale(12), marginTop: scale(2) },
+  // Variants
+  variantCard: { width: scale(150), borderRadius: scale(12), borderWidth: 1, overflow: 'hidden' },
+  variantCheck: { position: 'absolute', top: scale(6), right: scale(6), width: scale(20), height: scale(20), borderRadius: scale(10), alignItems: 'center', justifyContent: 'center', zIndex: 2 },
+  variantImage: { width: '100%', height: scale(92), backgroundColor: '#F6F6FB' },
+  variantInfo: { padding: scale(8), gap: scale(2) },
+  variantSpecText: { fontSize: scale(12) },
+  variantPrice: { fontSize: scale(13), fontWeight: '800', marginTop: scale(2) },
+  variantStockChip: { alignSelf: 'flex-start', paddingHorizontal: scale(8), paddingVertical: scale(3), borderRadius: scale(6), marginTop: scale(3) },
+  variantStockText: { fontSize: scale(11), fontWeight: '700' },
+  variantSelCard: { borderRadius: scale(12), borderWidth: 1, padding: scale(12), marginTop: scale(12) },
+  variantSelRow: { flexDirection: 'row', alignItems: 'center', gap: scale(10) },
+  variantSelThumb: { width: scale(56), height: scale(56), borderRadius: scale(8), backgroundColor: '#F6F6FB' },
+  variantSelSpec: { fontSize: scale(12) },
+  variantSelPrice: { fontSize: scale(15), fontWeight: '800', marginTop: scale(2) },
+  variantQtyRow: { flexDirection: 'row', alignItems: 'center', gap: scale(8) },
+  variantQtyBtn: { width: scale(30), height: scale(30), borderRadius: scale(8), alignItems: 'center', justifyContent: 'center' },
+  variantQtyVal: { minWidth: scale(36), height: scale(30), borderRadius: scale(8), borderWidth: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: scale(6) },
+  wholesaleBanner: { flexDirection: 'row', alignItems: 'center', gap: scale(10), padding: scale(12), borderRadius: scale(12), borderWidth: 1, marginTop: scale(10) },
   // Bottom bar
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingHorizontal: scale(16), paddingTop: scale(12), borderTopWidth: 1, gap: scale(10) },
   ctaFavBtn: { width: scale(50), height: scale(50), borderRadius: borderRadius.md, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },

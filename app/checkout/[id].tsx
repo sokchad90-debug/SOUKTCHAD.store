@@ -7,7 +7,7 @@ import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
-import { getSellerById } from '@/services/mockData';
+import { getSellerById, peekPendingVariantSelection, clearPendingVariantSelection } from '@/services/mockData';
 import { formatPrice } from '@/constants/config';
 import { COUNTRY_CITIES } from '@/constants/countries';
 import { borderRadius, shadows } from '@/constants/theme';
@@ -59,6 +59,8 @@ export default function CheckoutScreen() {
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
   const [timerActive, setTimerActive] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  // Variant selection carried from the product page (peek — read-only, cleared after order success)
+  const [variantSel] = useState(() => peekPendingVariantSelection(String(id)));
 
   const isFr = language === 'fr';
   const isAr = language === 'ar';
@@ -88,13 +90,14 @@ export default function CheckoutScreen() {
 
   const hasDiscount = (product?.discountPercent ?? 0) > 0 && product?.discountUntil && new Date(product.discountUntil).getTime() > Date.now();
   const discountPercent = hasDiscount ? Math.min(30, product?.discountPercent || 0) : 0;
-  const unitPrice = hasDiscount ? Math.round((product?.price || 0) * (1 - discountPercent / 100)) : (product?.price || 0);
+  const baseUnit = hasDiscount ? Math.round((product?.price || 0) * (1 - discountPercent / 100)) : (product?.price || 0);
+  const unitPrice = variantSel ? variantSel.unitPrice : baseUnit;
   const totalPrice = unitPrice * quantity;
 
   // Max order quantity
   const maxQty = useMemo(() => {
     if (!product) return 1;
-    const stockLimit = (product.stock ?? 0) > 0 ? product.stock! : 999;
+    const stockLimit = variantSel ? (variantSel.stock || 999) : ((product.stock ?? 0) > 0 ? product.stock! : 999);
     const sellerLimit = (product.maxOrderQty ?? 0) > 0 ? product.maxOrderQty! : 999;
     return Math.min(stockLimit, sellerLimit, 999);
   }, [product]);
@@ -196,8 +199,13 @@ export default function CheckoutScreen() {
 
   const handleSubmitOrder = () => {
     if (!transferMessage.trim()) { Alert.alert(lb('Transfer message required', 'Message de transfert requis', 'رسالة التحويل مطلوبة')); return; }
-    const result = placeOrder(product.id, selectedPayment, transferMessage, selectedCity, selectedShipping, quantity);
+    const variantPayload = variantSel ? {
+      color: variantSel.specs.map(sp => sp.value).join(' / '),
+      size: variantSel.specs.map(sp => (sp.label + ' ' + sp.value)).join(' | '),
+    } : undefined;
+    const result = placeOrder(product.id, selectedPayment, transferMessage, selectedCity, selectedShipping, quantity, variantPayload);
     if (!result.success) { notifyError(); Alert.alert('Error', result.error || 'Unknown error'); return; }
+    clearPendingVariantSelection();
     notifySuccess(); setTimerActive(false); setOrderPlaced(true);
   };
 
@@ -223,7 +231,7 @@ export default function CheckoutScreen() {
 
         {/* Product Summary */}
         <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.card]}>
-          <Image source={{ uri: product.images[0] }} style={styles.summaryImage} contentFit="cover" transition={200} />
+          <Image source={{ uri: variantSel ? variantSel.image : product.images[0] }} style={styles.summaryImage} contentFit="cover" transition={200} />
           <View style={{ flex: 1 }}>
             <Text style={[styles.summaryTitle, { color: colors.textPrimary }]} numberOfLines={2}>{productTitle}</Text>
             <Text style={[styles.summaryLocation, { color: colors.textSecondary }]}>{product.location}</Text>
@@ -238,6 +246,27 @@ export default function CheckoutScreen() {
             )}
           </View>
         </View>
+
+        {/* Variant banner — chosen version from the product page */}
+        {variantSel ? (
+          <View style={[styles.variantBanner, { backgroundColor: colors.primary + '08', borderColor: colors.primary + '30' }]}>
+            <Image source={{ uri: variantSel.image }} style={styles.variantBannerThumb} contentFit="contain" />
+            <View style={{ flex: 1 }}>
+              {variantSel.specs.map((sp, i) => (
+                <Text key={'vb' + i} style={{ fontSize: scale(13), color: colors.textPrimary, fontWeight: i === 0 ? '700' : '500' }}>
+                  {sp.label + ' : ' + sp.value}
+                </Text>
+              ))}
+              <Text style={{ fontSize: scale(13), color: colors.primary, fontWeight: '800', marginTop: scale(2) }}>
+                {formatPrice(variantSel.unitPrice)}
+              </Text>
+              <Text style={{ fontSize: scale(11), color: colors.textTertiary }}>
+                {lb('Available stock', 'Stock disponible', 'المخزون المتاح') + ' : ' + variantSel.stock}
+              </Text>
+            </View>
+            <MaterialIcons name="check-circle" size={scale(22)} color={colors.success} />
+          </View>
+        ) : null}
 
         {/* Quantity Selector */}
         <View style={[styles.qtyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -433,6 +462,8 @@ export default function CheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
+  variantBanner: { flexDirection: 'row', alignItems: 'center', gap: scale(10), padding: scale(12), borderRadius: scale(12), borderWidth: 1, marginTop: scale(12) },
+  variantBannerThumb: { width: scale(52), height: scale(52), borderRadius: scale(8), backgroundColor: '#F6F6FB' },
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(16), paddingBottom: scale(14), borderBottomWidth: 1 },
   headerTitle: { fontSize: scale(18), fontWeight: '700' },
