@@ -35,7 +35,7 @@ async function authHeaders(): Promise<HeadersInit> {
  * Default avatar used when a profile has no avatar_url.
  */
 const DEFAULT_AVATAR =
-  'https://images.unsplash.com/photo-1599566150163-29194dcabd9c?w=200&h=200&fit=crop';
+  'https://souktchad.shop/dl/products/photo-1599566150163-29194dcabd9c.jpg';
 
 /**
  * Map a raw API user profile to the Seller shape expected by the admin UI.

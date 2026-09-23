@@ -477,8 +477,8 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1599566150163-29194dcabd9c?w=200&h=200&fit=crop';
-const DEFAULT_COVER = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=800&h=300&fit=crop';
+const DEFAULT_AVATAR = 'https://souktchad.shop/dl/products/photo-1599566150163-29194dcabd9c.jpg';
+const DEFAULT_COVER = 'https://souktchad.shop/dl/products/photo-1557683316-973673baf926.jpg';
 
 // Strictly numeric Secret ID: 10 digits, guaranteed unique via timestamp + random
 const usedSecretIds = new Set<string>();

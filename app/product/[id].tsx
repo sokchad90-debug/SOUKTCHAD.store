@@ -18,7 +18,7 @@ import { scale, usePhoneLayout } from '@/constants/responsive';
 
 // Placeholder image shown when a similar product's image fails to load,
 // so we never render a blank white card. Uses a soft brand-tinted box.
-const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1560248989-489534d70e6f?w=400&q=60';
+const FALLBACK_IMAGE = 'https://souktchad.shop/dl/products/photo-1560248989-489534d70e6f.jpg';
 
 interface SimilarCardProps {
   product: any;
@@ -176,7 +176,7 @@ export default function ProductDetailScreen() {
   const seller = ctxGetSellerById(product.sellerId) || getSellerById(product.sellerId) || {
     id: product.sellerId,
     name: product.sellerName || lb('Seller', 'Vendeur', 'البائع'),
-    avatar: (product as any).sellerAvatar || 'https://images.unsplash.com/photo-1599566150163-29194dcabd9c?w=200',
+    avatar: (product as any).sellerAvatar || 'https://souktchad.shop/dl/products/photo-1599566150163-29194dcabd9c.jpg',
     sellerId: product.sellerId,
     isVerified: product.sellerVerified || false,
     location: product.location || '',
