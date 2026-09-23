@@ -59,6 +59,8 @@ export default function CheckoutScreen() {
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
   const [timerActive, setTimerActive] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  // Inline submit error (replaces blocking Alert modal — hooks must stay above early returns)
+  const [submitError, setSubmitError] = useState('');
   const sellerCities = product ? getSellerDeliveryCitiesSync(product.sellerId) : [];
   const cityOptions = sellerCities.length > 0 ? sellerCities : COUNTRY_CITIES['TD'];
   const [cityQuery, setCityQuery] = useState('');
@@ -207,7 +209,12 @@ export default function CheckoutScreen() {
   };
 
   const handleSubmitOrder = () => {
-    if (!transferMessage.trim()) { Alert.alert(lb('Transfer message required', 'Message de transfert requis', 'رسالة التحويل مطلوبة')); return; }
+    if (!transferMessage.trim()) {
+      setSubmitError(lb('Please paste the transfer confirmation message first.', 'Veuillez d\'abord coller le message de confirmation.', 'الرجاء لصق رسالة تأكيد التحويل أولًا.'));
+      notifyError();
+      return;
+    }
+    setSubmitError('');
     const variantPayload = variantSel ? {
       color: variantSel.specs.map(sp => sp.value).join(' / '),
       size: variantSel.specs.map(sp => (sp.label + ' ' + sp.value)).join(' | '),
@@ -304,17 +311,6 @@ export default function CheckoutScreen() {
             </Pressable>
           </View>
         </View>
-
-        {/* Timer */}
-        {step === 'transfer' ? (
-          <View style={[styles.timerCard, { backgroundColor: timerColor + '08', borderColor: timerColor + '30' }]}>
-            <MaterialIcons name="timer" size={scale(22)} color={timerColor} />
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.timerLabel, { color: timerColor }]}>{lb('Complete transfer within:', 'Complétez le transfert :', 'أكمل التحويل خلال:')}</Text>
-              <Text style={[styles.timerValue, { color: timerColor }]}>{formatTime(timeLeft)}</Text>
-            </View>
-          </View>
-        ) : null}
 
         {/* STEP 1: Shipping */}
         {step === 'shipping' ? (
@@ -432,10 +428,35 @@ export default function CheckoutScreen() {
           </View>
         ) : null}
 
-        {/* STEP 3: Transfer */}
+        {/* STEP 3: Transfer / Justificatif */}
         {step === 'transfer' ? (
           <View>
-            <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>{lb('PAYMENT DETAILS', 'DÉTAILS DU PAIEMENT', 'تفاصيل الدفع')}</Text>
+            <Text style={{ fontSize: scale(22), fontWeight: '800', color: colors.textPrimary, marginBottom: scale(6), textAlign: isAr ? 'right' : 'left' }}>
+              {lb('Transfer instructions', 'Instructions de transfert', 'تعليمات التحويل')}
+            </Text>
+            <Text style={{ fontSize: scale(13), lineHeight: scale(19), color: colors.textSecondary, marginBottom: scale(14), textAlign: isAr ? 'right' : 'left' }}>
+              {lb(
+                'Make the payment from your ' + (selectedMethod?.name || 'mobile money') + ' app, then send us the proof below.',
+                'Effectuez le paiement depuis votre application ' + (selectedMethod?.name || '') + ', puis envoyez-nous le justificatif ci-dessous.',
+                'قم بالتحويل عبر تطبيق ' + (selectedMethod?.name || 'الدفع') + ' ثم أرسل لنا إثبات التحويل أدناه.'
+              )}
+            </Text>
+            <View style={[styles.timerGreen, { backgroundColor: colors.success + '10', borderColor: colors.success + '25' }]}>
+              <MaterialIcons name="schedule" size={scale(20)} color={colors.success} />
+              <Text style={{ flex: 1, fontSize: scale(14), fontWeight: '700', color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }}>
+                {lb('Time remaining', 'Temps restant', 'الوقت المتبقي') + ' : ' + formatTime(timeLeft)}
+              </Text>
+              <Text style={{ fontSize: scale(11), color: colors.textSecondary, textAlign: isAr ? 'left' : 'right', flex: 1 }}>
+                {lb('Finalize the transfer then share the proof.', 'Finalisez le transfert puis partagez le justificatif.', 'أكمل التحويل ثم شارك الإثبات.')}
+              </Text>
+            </View>
+            <View style={[styles.orangeBanner, { backgroundColor: colors.warning + '12', borderColor: colors.warning + '35' }]}>
+              <MaterialIcons name="info" size={scale(18)} color={colors.warning} />
+              <Text style={{ flex: 1, fontSize: scale(12), lineHeight: scale(17), color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }}>
+                {lb('Delivery will be confirmed separately after manual verification of your payment.', 'La livraison sera confirmée séparément après vérification manuelle de votre paiement.', 'سيتم تأكيد التوصيل بشكل منفصل بعد التحقق اليدوي من الدفع.')}
+              </Text>
+            </View>
+            <Text style={[styles.sectionLabel, { color: colors.textTertiary, marginTop: scale(16) }]}>{lb('PAYMENT DETAILS', 'DÉTAILS DU PAIEMENT', 'تفاصيل الدفع')}</Text>
             <View style={[styles.payDetailsCard, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
               <View style={styles.payDetailsRow}>
                 <View style={{ flex: 1 }}>
@@ -460,6 +481,11 @@ export default function CheckoutScreen() {
                     {lb('Beneficiary', 'Destinataire', 'المستفيد') + (selectedMethod ? ' (' + selectedMethod.name + ')' : '')}
                   </Text>
                   <Text style={[styles.payDetailsNumber, { color: colors.verified }]}>{selectedMethod?.receivingNumber || '—'}</Text>
+                  {selectedMethod?.name ? (
+                    <Text style={{ fontSize: scale(11), color: colors.textTertiary, marginTop: scale(2) }}>
+                      {lb('Account: ' + selectedMethod.name, 'Compte : ' + selectedMethod.name, 'الحساب: ' + selectedMethod.name)}
+                    </Text>
+                  ) : null}
                 </View>
                 <Pressable onPress={() => copyToClipboard(selectedMethod?.receivingNumber || '', lb('Number', 'Numéro', 'الرقم'))} style={[styles.copyBtnSmall, { backgroundColor: colors.verified + '15' }]} hitSlop={6}>
                   <MaterialIcons name="content-copy" size={scale(16)} color={colors.verified} />
@@ -482,17 +508,21 @@ export default function CheckoutScreen() {
               </View>
               <TextInput
                 value={transferMessage}
-                onChangeText={setTransferMessage}
-                placeholder={lb('e.g. Transfert de 450000 FCFA depuis +235 66 12 34 56, ref: TRX12345678', 'ex: Transfert de 450000 FCFA depuis +235 66 12 34 56, ref: TRX12345678', 'مثال: تحويل 450000 فرنك من +235 66 12 34 56، مرجع: TRX12345678')}
+                onChangeText={(t) => { setTransferMessage(t.slice(0, 500)); if (submitError) setSubmitError(''); }}
+                placeholder={lb('Paste the message or the reference.', 'Collez le message ou la référence.', 'الصق الرسالة أو مرجع العملية...')}
                 placeholderTextColor={colors.textTertiary}
                 multiline
-                style={[styles.messageInput, { color: colors.textPrimary }]}
-                numberOfLines={3}
+                style={[styles.messageInput, { color: colors.textPrimary, minHeight: scale(90) }]}
+                numberOfLines={4}
+                maxLength={500}
               />
+              <Text style={{ alignSelf: 'flex-end', fontSize: scale(11), color: colors.textTertiary, marginTop: scale(4) }}>
+                {transferMessage.length + '/500'}
+              </Text>
             </View>
-            <Pressable onPress={() => { setTimerActive(false); setStep('payment'); }} style={styles.backLink}>
-              <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(16)} color={colors.textSecondary} />
-              <Text style={[styles.backLinkText, { color: colors.textSecondary }]}>{lb('Change payment', 'Changer de paiement', 'تغيير الدفع')}</Text>
+            <Pressable onPress={() => { setTimerActive(false); setStep('payment'); }} style={[styles.backLink, { alignSelf: isAr ? 'flex-start' : 'flex-start', marginTop: scale(14) }]}>
+              <MaterialIcons name="swap-horiz" size={scale(18)} color={colors.primary} />
+              <Text style={[styles.backLinkText, { color: colors.primary, fontWeight: '700' }]}>{lb('Change payment method', 'Changer de méthode de paiement', 'تغيير طريقة الدفع')}</Text>
             </Pressable>
           </View>
         ) : null}
@@ -524,8 +554,13 @@ export default function CheckoutScreen() {
           </Pressable>
         ) : null}
         {step === 'transfer' ? (
-          <Text style={{ fontSize: scale(11), color: colors.textTertiary, textAlign: 'center', marginBottom: scale(8) }}>
+          <Text style={{ fontSize: scale(11), color: colors.textTertiary, textAlign: 'center', marginBottom: scale(4) }}>
             {lb('Sending the proof does not confirm the payment. The seller verifies it manually.', 'L\'envoi du justificatif ne confirme pas le paiement. Le vendeur le vérifie manuellement.', 'إرسال الإثبات لا يعني تأكيد الدفع — يتحقق البائع يدويًا.')}
+          </Text>
+        ) : null}
+        {step === 'transfer' && submitError ? (
+          <Text style={{ fontSize: scale(12), color: colors.error, textAlign: 'center', marginBottom: scale(6), fontWeight: '700' }}>
+            {submitError}
           </Text>
         ) : null}
         {step === 'transfer' ? (
@@ -540,6 +575,8 @@ export default function CheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
+  timerGreen: { flexDirection: 'row', alignItems: 'center', gap: scale(10), padding: scale(12), borderRadius: scale(12), borderWidth: 1, marginBottom: scale(12) },
+  orangeBanner: { flexDirection: 'row', alignItems: 'center', gap: scale(10), padding: scale(12), borderRadius: scale(12), borderWidth: 1, marginTop: scale(12) },
   cityField: { flexDirection: 'row', alignItems: 'center', gap: scale(8), borderWidth: 1, borderRadius: scale(12), paddingHorizontal: scale(12), height: scale(48) },
   cityFieldText: { flex: 1, fontSize: scale(14) },
   cityDropdownCard: { position: 'absolute', left: 0, right: 0, bottom: scale(56), borderWidth: 1, borderRadius: scale(12), overflow: 'hidden', zIndex: 100, elevation: 20 },
