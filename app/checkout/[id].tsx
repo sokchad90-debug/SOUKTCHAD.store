@@ -68,8 +68,7 @@ export default function CheckoutScreen() {
   const cityOptions = sellerCities.length > 0 ? sellerCities : COUNTRY_CITIES['TD'];
   const [cityQuery, setCityQuery] = useState('');
   const [showCityDropdown, setShowCityDropdown] = useState(false);
-  // Auto-open the city dropdown until a city is chosen (removes toggle race on small screens)
-  React.useEffect(() => { if (!selectedCity) setShowCityDropdown(true); }, [selectedCity]);
+  // City dropdown stays CLOSED by default — opens only on tap, closes after selection (owner law)
   const filteredCities = cityQuery.trim()
     ? cityOptions.filter(c => c.toLowerCase().includes(cityQuery.trim().toLowerCase()))
     : cityOptions;
@@ -92,7 +91,26 @@ export default function CheckoutScreen() {
     return txt;
   }, [isFr, isAr]);
 
+  const translateCarrier = useCallback((txt: string): string => {
+    const map: Record<string, { fr: string; ar: string }> = {
+      'Fast delivery across all major cities': { fr: 'Livraison rapide dans toutes les grandes villes', ar: 'توصيل سريع لجميع المدن الكبرى' },
+      'Affordable shipping for all of Chad': { fr: 'Expédition abordable dans tout le Tchad', ar: 'شحن اقتصادي في جميع أنحاء تشاد' },
+    };
+    const hit = map[txt];
+    if (hit) return isFr ? hit.fr : isAr ? hit.ar : txt;
+    return txt;
+  }, [isFr, isAr]);
+
   const activeShipping = useMemo(() => shippingCompanies.filter(s => s.isActive), [shippingCompanies]);
+  // Carriers filtered by the selected city: a carrier serves the city when it has no city
+  // list (serves everywhere) or explicitly lists it. City must be chosen first (owner law).
+  const cityCarriers = useMemo(() => {
+    if (!selectedCity) return activeShipping;
+    return activeShipping.filter(s => {
+      const cities = (s as any).cities as string[] | undefined;
+      return !cities || cities.length === 0 || cities.includes(selectedCity);
+    });
+  }, [activeShipping, selectedCity]);
 
   // Fallback payment methods when seller is not in mock DB or has none configured.
   // Uses Chad's default methods so buyers can always pay.
@@ -245,14 +263,14 @@ export default function CheckoutScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + scale(8), backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textPrimary} /></Pressable>
-        <View style={{ alignItems: 'center' }}>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('checkout')}</Text>
-          <Text style={{ fontSize: scale(12), color: colors.textTertiary, marginTop: 2 }}>
-            {step === 'shipping' ? lb('Delivery', 'Livraison', 'التوصيل') : step === 'payment' ? lb('Payment', 'Paiement', 'الدفع') : lb('Confirmation', 'Confirmation', 'التأكيد')}
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ flex: 1 }} />
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{lb('Complete your order', 'Finaliser la commande', 'إتمام الطلب')}</Text>
+          <View style={{ flex: 1, alignItems: 'flex-end' }}>
+            <Pressable onPress={() => router.back()} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textPrimary} /></Pressable>
+          </View>
         </View>
-        <View style={[styles.stepIndicator, isAr && { flexDirection: 'row-reverse' }]}>
+        <View style={[styles.stepIndicator, isAr && { flexDirection: 'row-reverse' }, { alignSelf: 'stretch', marginTop: scale(12) }]}>
           {[0, 1, 2].map(i => {
             const idx = isAr ? 2 - i : i;
             const stepNames = [lb('Delivery', 'Livraison', 'التوصيل'), lb('Payment', 'Paiement', 'الدفع'), lb('Proof', 'Justificatif', 'الإثبات')];
@@ -262,7 +280,7 @@ export default function CheckoutScreen() {
             return (
               <React.Fragment key={i}>
                 {i > 0 ? (
-                  <View style={{ width: scale(24), height: scale(2), backgroundColor: (done || current) && idx <= activeIdx ? colors.primary : colors.border, borderRadius: scale(1) }} />
+                  <View style={{ flex: 1, maxWidth: scale(52), height: scale(2), backgroundColor: (done || current) && idx <= activeIdx ? colors.primary : colors.border, borderRadius: scale(1) }} />
                 ) : null}
                 <View style={{ alignItems: 'center', gap: scale(3) }}>
                   <View style={{
@@ -285,9 +303,29 @@ export default function CheckoutScreen() {
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: scale(16), paddingBottom: insets.bottom + scale(320) }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: scale(16), paddingBottom: insets.bottom + scale(320) }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <DisclaimerBanner />
 
+        {/* Delivery summary with Edit (step 2 — mockup) */}
+        {step === 'payment' ? (
+          <View style={[styles.deliverySummaryCard, { backgroundColor: colors.surface, borderColor: colors.border, marginBottom: scale(10) }]}>
+            <View style={[styles.deliveryPin, { backgroundColor: colors.primary + '12' }]}>
+              <MaterialIcons name="location-on" size={scale(20)} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.textPrimary }} numberOfLines={1}>
+                {selectedCity + (selectedShipping ? '  ·  ' + (cityCarriers.find(sc => sc.id === selectedShipping)?.name || '') : '')}
+              </Text>
+              <Text style={{ fontSize: scale(12), color: colors.textTertiary, marginTop: scale(2) }} numberOfLines={1}>
+                {(cityCarriers.find(sc => sc.id === selectedShipping)?.description ? translateCarrier(cityCarriers.find(sc => sc.id === selectedShipping)!.description) : lb('Delivery to be confirmed', 'Livraison à confirmer', 'التوصيل يُؤكَّد لاحقًا'))}
+              </Text>
+            </View>
+            <Pressable onPress={() => setStep('shipping')} style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center' }}>
+              <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.primary }}>{lb('Edit', 'Modifier', 'تعديل')}</Text>
+              <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(18)} color={colors.primary} />
+            </Pressable>
+          </View>
+        ) : null}
         {/* Collapsible summary (steps 2 & 3) */}
         {(step === 'payment' || step === 'transfer') ? (
           <Pressable onPress={() => setSummaryOpen(!summaryOpen)} style={[styles.collapseHeader, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -309,7 +347,7 @@ export default function CheckoutScreen() {
                 {variantSel.specs.map(sp => sp.value).join(' / ')}
               </Text>
             ) : (
-              <Text style={[styles.summaryLocation, { color: colors.textSecondary }]}>{product.location}</Text>
+              <Text style={[styles.summaryLocation, { color: colors.textSecondary }]} numberOfLines={1}>{product.description?.[language] || product.description?.en || product.location}</Text>
             )}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6), marginTop: scale(4), flexWrap: 'wrap' }}>
               <Text style={[styles.summaryPrice, { color: colors.primary }]}>{formatPrice(unitPrice)}</Text>
@@ -344,8 +382,11 @@ export default function CheckoutScreen() {
         {/* STEP 1: Shipping */}
         {step === 'shipping' ? (
           <View>
-            <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>{lb('DELIVERY INFORMATION', 'INFORMATIONS DE LIVRAISON', 'معلومات التوصيل')}</Text>
-            <Text style={{ fontSize: scale(12), color: colors.textSecondary, marginBottom: scale(6) }}>
+            <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center', gap: scale(6), marginBottom: scale(10) }}>
+              <MaterialIcons name="location-on" size={scale(20)} color={colors.primary} />
+              <Text style={{ fontSize: scale(17), fontWeight: '800', color: colors.textPrimary }}>{lb('Delivery', 'Livraison', 'التوصيل')}</Text>
+            </View>
+            <Text style={{ fontSize: scale(13), fontWeight: '700', color: colors.textSecondary, marginBottom: scale(6) }}>
               {lb('City *', 'Ville *', 'المدينة *')}
             </Text>
             <View style={{ position: 'relative' }}>
@@ -384,7 +425,14 @@ export default function CheckoutScreen() {
                   ) : filteredCities.map(city => (
                     <Pressable
                       key={city}
-                      onPress={() => { selection(); setSelectedCity(city); setShowCityDropdown(false); setCityQuery(''); }}
+                      onPress={() => {
+                        selection(); setSelectedCity(city); setShowCityDropdown(false); setCityQuery('');
+                        const svc = activeShipping.find(sh => sh.id === selectedShipping);
+                        if (svc) {
+                          const cities = (svc as any).cities as string[] | undefined;
+                          if (cities && cities.length > 0 && !cities.includes(city)) setSelectedShipping('');
+                        }
+                      }}
                       style={[styles.cityOptionRow, { borderBottomColor: colors.borderLight }]}
                     >
                       <Text style={[styles.cityOptionText, { color: selectedCity === city ? colors.primary : colors.textPrimary }]}>{city}</Text>
@@ -395,6 +443,11 @@ export default function CheckoutScreen() {
               </View>
             ) : null}
             </View>
+            {!selectedCity ? (
+              <Text style={{ fontSize: scale(12), color: colors.textTertiary, marginTop: scale(6) }}>
+                {lb('Tap to choose a city', 'Touchez pour choisir une ville', 'اضغط لاختيار مدينة')}
+              </Text>
+            ) : null}
 
             <Text style={{ fontSize: scale(13), color: colors.textSecondary, marginBottom: scale(6), marginTop: scale(12) }}>
               {lb('Neighborhood (optional)', 'Quartier (optionnel)', 'الحي (اختياري)')}
@@ -417,13 +470,24 @@ export default function CheckoutScreen() {
               style={[styles.cityField, { backgroundColor: colors.surface, borderColor: colors.border }]}
             />
 
-            <Text style={[styles.sectionLabel, { color: colors.textTertiary, marginTop: scale(20) }]}>{lb('SHIPPING COMPANY', 'TRANSPORTEUR', 'شركة الشحن')}</Text>
-            {activeShipping.length === 0 ? (
+            <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center', gap: scale(6), marginTop: scale(20), marginBottom: scale(10) }}>
+              <MaterialIcons name="local-shipping" size={scale(20)} color={colors.primary} />
+              <Text style={{ fontSize: scale(17), fontWeight: '800', color: colors.textPrimary }}>{lb('Carrier', 'Transporteur', 'الناقل')}</Text>
+            </View>
+            {!selectedCity ? (
+              <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center', gap: scale(8), backgroundColor: colors.primary + '08', borderRadius: scale(10), padding: scale(10), marginBottom: scale(10) }}>
+                <MaterialIcons name="info" size={scale(16)} color={colors.primary} />
+                <Text style={{ flex: 1, fontSize: scale(12), color: colors.textSecondary }}>
+                  {lb('Choose a city to see available carriers.', 'Choisissez une ville pour voir les transporteurs disponibles.', 'اختر مدينة لعرض الناقلين المتاحين.')}
+                </Text>
+              </View>
+            ) : null}
+            {cityCarriers.length === 0 ? (
               <View style={[styles.emptyBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <MaterialIcons name="local-shipping" size={scale(36)} color={colors.textTertiary} />
-                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{lb('No shipping available', 'Aucun transporteur', 'لا يوجد شحن')}</Text>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{lb('No carrier serves this city yet', 'Aucun transporteur ne dessert cette ville', 'لا يوجد ناقل يخدم هذه المدينة حاليًا')}</Text>
               </View>
-            ) : activeShipping.map(ship => (
+            ) : cityCarriers.map(ship => (
               <Pressable key={ship.id} onPress={() => { selection(); setSelectedShipping(ship.id); }}
                 style={[styles.shippingCard, { backgroundColor: colors.surface, borderColor: selectedShipping === ship.id ? colors.primary : colors.border, borderWidth: selectedShipping === ship.id ? 2 : 1 }]}>
                 {ship.logoUrl || ship.logo_url ? (
@@ -435,8 +499,8 @@ export default function CheckoutScreen() {
                 )}
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.shippingName, { color: colors.textPrimary }]}>{ship.name}</Text>
-                  <Text style={[styles.shippingPhone, { color: colors.textSecondary }]}>{ship.phone}</Text>
-                  {ship.description ? <Text style={[styles.shippingDesc, { color: colors.textTertiary }]}>{ship.description}</Text> : null}
+                  <Text style={[styles.shippingPhone, { color: colors.textTertiary }]}>{lb('Availability depends on the city', 'Disponibilité selon la ville', 'التوفر حسب المدينة')}</Text>
+                  {ship.description ? <Text style={[styles.shippingDesc, { color: colors.textTertiary }]}>{translateCarrier(ship.description)}</Text> : null}
                 </View>
                 <View style={[styles.radio, { borderColor: selectedShipping === ship.id ? colors.primary : colors.border, backgroundColor: selectedShipping === ship.id ? colors.primary : 'transparent' }]}>
                   {selectedShipping === ship.id ? <MaterialIcons name="check" size={scale(14)} color="#FFF" /> : null}
@@ -472,6 +536,24 @@ export default function CheckoutScreen() {
                 </View>
               </Pressable>
             ))}
+            <View style={{ backgroundColor: colors.primary + '08', borderRadius: scale(12), padding: scale(12), marginTop: scale(12), gap: scale(8) }}>
+              <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center', gap: scale(6) }}>
+                <MaterialIcons name="info" size={scale(16)} color={colors.primary} />
+                <Text style={{ fontSize: scale(13), fontWeight: '700', color: colors.textPrimary }}>{lb('How to pay?', 'Comment payer ?', 'كيف أدفع؟')}</Text>
+              </View>
+              {[
+                lb('Choose a method', 'Choisir une méthode', 'اختر طريقة الدفع'),
+                lb('Transfer to the seller', 'Transférer au vendeur', 'حوّل المبلغ للبائع'),
+                lb('Send the proof', 'Envoyer le justificatif', 'أرسل الإثبات'),
+              ].map((txt, idx) => (
+                <View key={idx} style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center', gap: scale(8), paddingHorizontal: scale(8) }}>
+                  <View style={{ width: scale(20), height: scale(20), borderRadius: scale(10), backgroundColor: colors.primary + '20', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: scale(11), fontWeight: '800', color: colors.primary }}>{idx + 1}</Text>
+                  </View>
+                  <Text style={{ flex: 1, fontSize: scale(12.5), color: colors.textSecondary }}>{txt}</Text>
+                </View>
+              ))}
+            </View>
             <Pressable onPress={() => setStep('shipping')} style={styles.backLink}>
               <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(16)} color={colors.textSecondary} />
               <Text style={[styles.backLinkText, { color: colors.textSecondary }]}>{lb('Back to shipping', 'Retour', 'العودة')}</Text>
@@ -487,18 +569,15 @@ export default function CheckoutScreen() {
             </Text>
             <Text style={{ fontSize: scale(13), lineHeight: scale(19), color: colors.textSecondary, marginBottom: scale(14), textAlign: isAr ? 'right' : 'left' }}>
               {lb(
-                'Make the payment from your ' + (selectedMethod?.name || 'mobile money') + ' app, then send us the proof below.',
-                'Effectuez le paiement depuis votre application ' + (selectedMethod?.name || '') + ', puis envoyez-nous le justificatif ci-dessous.',
-                'قم بالتحويل عبر تطبيق ' + (selectedMethod?.name || 'الدفع') + ' ثم أرسل لنا إثبات التحويل أدناه.'
+                'Transfer to the seller, then send the proof.',
+                'Transférez au vendeur, puis envoyez le justificatif.',
+                'حوّل للبائع ثم أرسل إثبات التحويل.'
               )}
             </Text>
-            <View style={[styles.timerGreen, { backgroundColor: colors.success + '10', borderColor: colors.success + '25' }]}>
-              <MaterialIcons name="schedule" size={scale(20)} color={colors.success} />
-              <Text style={{ flex: 1, fontSize: scale(14), fontWeight: '700', color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }}>
+            <View style={[styles.timerGreen, { backgroundColor: colors.primary + '0A', borderColor: colors.primary + '22', alignSelf: 'center', borderRadius: scale(20), paddingVertical: scale(8), paddingHorizontal: scale(18), flexDirection: 'row', gap: scale(8), marginTop: scale(4) }]}>
+              <MaterialIcons name="schedule" size={scale(18)} color={colors.primary} />
+              <Text style={{ fontSize: scale(14), fontWeight: '800', color: colors.textPrimary }}>
                 {lb('Time remaining', 'Temps restant', 'الوقت المتبقي') + ' : ' + formatTime(timeLeft)}
-              </Text>
-              <Text style={{ fontSize: scale(12), color: colors.textSecondary, textAlign: isAr ? 'left' : 'right', flex: 1 }}>
-                {lb('Finalize the transfer then share the proof.', 'Finalisez le transfert puis partagez le justificatif.', 'أكمل التحويل ثم شارك الإثبات.')}
               </Text>
             </View>
             <View style={[styles.orangeBanner, { backgroundColor: colors.warning + '12', borderColor: colors.warning + '35' }]}>
@@ -547,16 +626,14 @@ export default function CheckoutScreen() {
             {selectedMethod?.instructions ? (
               <View style={[styles.instructionsBox, { backgroundColor: colors.warning + '08', borderColor: colors.warning + '25' }]}>
                 <MaterialIcons name="info" size={scale(16)} color={colors.warning} />
-                <Text style={[styles.instructionsText, { color: colors.textSecondary }]}>{selectedMethod.instructions}</Text>
+                <Text style={[styles.instructionsText, { color: colors.textSecondary }]}>{translateInstructions(selectedMethod.instructions)}</Text>
               </View>
             ) : null}
 
-            <Text style={[styles.sectionLabel, { color: colors.textTertiary, marginTop: scale(20) }]}>{lb('TRANSFER PROOF', 'JUSTIFICATIF DE TRANSFERT', 'إثبات التحويل')}</Text>
+            <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.textPrimary, marginTop: scale(18), marginBottom: scale(8), textAlign: isAr ? 'right' : 'left' }}>
+              {lb('Transfer message or reference *', 'Message ou référence du transfert *', 'رسالة أو مرجع التحويل *')}
+            </Text>
             <View style={[styles.messageInputWrap, { backgroundColor: colors.surface, borderColor: transferMessage.trim() ? colors.success : colors.border, borderWidth: transferMessage.trim() ? 1.5 : 1 }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6), marginBottom: scale(6) }}>
-                <MaterialIcons name="message" size={scale(16)} color={colors.primary} />
-                <Text style={{ fontSize: scale(12), fontWeight: '700', color: colors.textSecondary }}>{lb('Transfer confirmation message', 'Message de confirmation', 'رسالة تأكيد التحويل')}</Text>
-              </View>
               <TextInput
                 value={transferMessage}
                 onChangeText={(t) => { setTransferMessage(t.slice(0, 500)); if (submitError) setSubmitError(''); }}
@@ -567,10 +644,13 @@ export default function CheckoutScreen() {
                 numberOfLines={4}
                 maxLength={500}
               />
-              <Text style={{ alignSelf: 'flex-end', fontSize: scale(12), color: colors.textTertiary, marginTop: scale(4) }}>
+              <Text style={{ alignSelf: 'flex-end', fontSize: scale(12), color: colors.textTertiary }}>
                 {transferMessage.length + '/500'}
               </Text>
             </View>
+            <Text style={{ fontSize: scale(12), color: colors.textTertiary, marginTop: scale(8), textAlign: isAr ? 'right' : 'left' }}>
+              {lb('The seller verifies the payment manually.', 'Le vendeur vérifie le paiement manuellement.', 'يتحقق البائع من الدفع يدويًا.')}
+            </Text>
             <Pressable onPress={() => { setTimerActive(false); setStep('payment'); }} style={[styles.backLink, { alignSelf: isAr ? 'flex-start' : 'flex-start', marginTop: scale(14) }]}>
               <MaterialIcons name="swap-horiz" size={scale(18)} color={colors.primary} />
               <Text style={[styles.backLinkText, { color: colors.primary, fontWeight: '700' }]}>{lb('Change payment method', 'Changer de méthode de paiement', 'تغيير طريقة الدفع')}</Text>
@@ -580,16 +660,16 @@ export default function CheckoutScreen() {
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View style={[styles.bottomCta, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insets.bottom + scale(12) }, shadows.modal]}>
-        <View style={styles.totalRow}>
-          <Text style={[styles.totalLabel, { color: colors.textSecondary, flex: 1 }]} numberOfLines={1}>
-            {lb('Products amount', 'Montant produits', 'مبلغ المنتجات') + ' (' + quantity + ')'}
-          </Text>
-          <Text style={[styles.totalAmount, { color: colors.primary }]} numberOfLines={1}>{formatPrice(totalPrice)}</Text>
-        </View>
-        <Text style={{ fontSize: scale(12), color: colors.textTertiary, marginBottom: scale(8) }}>
-          {lb('Excluding delivery fees — confirmed with the carrier.', 'Hors frais de livraison — confirmés avec le transporteur.', 'بدون رسوم التوصيل — تُؤكَّد مع الناقل.')}
-        </Text>
+      <View style={[styles.bottomCta, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insets.bottom + scale(10) }, shadows.modal]}>
+        <View style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems: 'center', gap: scale(12) }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.textPrimary }} numberOfLines={1}>
+              {lb('Products', 'Produits', 'المنتجات') + '  ' + formatPrice(totalPrice)}
+            </Text>
+            <Text style={{ fontSize: scale(12), color: colors.textTertiary, marginTop: scale(1) }} numberOfLines={1}>
+              {lb('Delivery : to be confirmed', 'Livraison : à confirmer', 'التوصيل : يُؤكَّد لاحقًا')}
+            </Text>
+          </View>
         {step === 'shipping' ? (
           <Pressable onPress={handleConfirmShipping} style={({ pressed }) => [styles.ctaBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }]}>
             <Text style={[styles.ctaBtnText]}>{lb('Continue to Payment', 'Continuer', 'المتابعة إلى الدفع')}</Text>
@@ -618,6 +698,7 @@ export default function CheckoutScreen() {
             <Text style={styles.ctaBtnText}>{lb('Send proof for verification', 'Envoyer pour vérification', 'إرسال الإثبات للمراجعة')}</Text>
           </Pressable>
         ) : null}
+        </View>
       </View>
     </View>
   );
@@ -645,7 +726,9 @@ const styles = StyleSheet.create({
   variantBanner: { flexDirection: 'row', alignItems: 'center', gap: scale(10), padding: scale(12), borderRadius: scale(12), borderWidth: 1, marginTop: scale(12) },
   variantBannerThumb: { width: scale(52), height: scale(52), borderRadius: scale(8), backgroundColor: '#F6F6FB' },
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(16), paddingBottom: scale(14), borderBottomWidth: 1 },
+  header: { flexDirection: 'column', alignItems: 'center', paddingHorizontal: scale(16), paddingBottom: scale(12), borderBottomWidth: 1 },
+  deliverySummaryCard: { flexDirection: 'row', alignItems: 'center', gap: scale(10), padding: scale(12), borderRadius: scale(14), borderWidth: 1 },
+  deliveryPin: { width: scale(38), height: scale(38), borderRadius: scale(19), alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: scale(18), fontWeight: '700' },
   stepIndicator: { flexDirection: 'row', gap: scale(4), alignItems: 'center' },
   stepDot: { height: scale(8), borderRadius: scale(4) },
@@ -694,11 +777,11 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: scale(14), textAlign: 'center' },
   backLink: { flexDirection: 'row', alignItems: 'center', gap: scale(4), marginTop: scale(16), alignSelf: 'center' },
   backLinkText: { fontSize: scale(14), fontWeight: '500' },
-  bottomCta: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: scale(16), paddingTop: scale(12), borderTopWidth: 1 },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: scale(10) },
+  bottomCta: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: scale(16), paddingTop: scale(8), borderTopWidth: 1 },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: scale(4) },
   totalLabel: { fontSize: scale(14), fontWeight: '600' },
   totalAmount: { fontSize: scale(24), fontWeight: '800' },
-  ctaBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: scale(54), borderRadius: scale(14), gap: scale(8) },
+  ctaBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: scale(48), borderRadius: scale(14), gap: scale(8) },
   ctaBtnText: { color: '#FFF', fontSize: scale(17), fontWeight: '700' },
   blockContainer: { flex: 1, alignItems: 'center', paddingHorizontal: scale(24) },
   blockIcon: { width: scale(100), height: scale(100), borderRadius: scale(50), alignItems: 'center', justifyContent: 'center', marginBottom: scale(20) },
