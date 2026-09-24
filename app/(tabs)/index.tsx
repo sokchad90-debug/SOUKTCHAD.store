@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: -scale(4), right: -scale(4), width: scale(18), height: scale(18), borderRadius: scale(9),
     backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center',
   },
-  filterBadgeText: { color: '#FFF', fontSize: scale(10), fontWeight: '800', fontFamily: 'Cairo-Bold' },
+  filterBadgeText: { color: '#FFF', fontSize: scale(11), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   activeFiltersScroll: { paddingHorizontal: scale(16), gap: scale(6), paddingBottom: scale(6) },
   activeFilterPill: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(10), paddingVertical: scale(5),
@@ -892,7 +892,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     overflow: 'hidden',
   },
-  categoryCircleLabel: { fontSize: scale(10), marginTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4), textAlign: 'center', fontFamily: 'Cairo-Regular' },
+  categoryCircleLabel: { fontSize: scale(11), marginTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4), textAlign: 'center', fontFamily: 'Cairo-Regular' },
   // Verified Stores section
   verifiedStoresRow: { flexDirection: 'row', paddingHorizontal: scale(16), paddingBottom: scale(2), paddingTop: 0 },
   verifiedStoreItemFlex: { alignItems: 'center', flex: 1 },
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
   verifiedStoreItem: { alignItems: 'center', width: VERIFIED_STORE_ITEM_W },
   verifiedStoreAvatarWrap: { position: 'relative' },
   verifiedStoreAvatar: {
-    width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_RADIUS, borderWidth: AVATAR_BORDER,
+    width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_RADIUS, borderWidth: 1, borderColor: '#E2DEFA',
   },
   verifiedStorePlaceholder: {
     alignItems: 'center', justifyContent: 'center',
@@ -914,20 +914,20 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 2,
   },
-  verifiedStoreName: { fontSize: scale(9), fontWeight: '600', marginTop: scale(4), textAlign: 'center', width: VERIFIED_STORE_ITEM_W, overflow: 'hidden', lineHeight: 12, fontFamily: 'Cairo-SemiBold' },
+  verifiedStoreName: { fontSize: scale(11), fontWeight: '600', marginTop: scale(4), textAlign: 'center', width: VERIFIED_STORE_ITEM_W, overflow: 'hidden', lineHeight: 14, fontFamily: 'Cairo-SemiBold' },
 
   sectionHeader: { paddingHorizontal: scale(16), paddingTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(3), paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', width: '100%', paddingHorizontal: scale(16), paddingTop: 0, paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
   seeAllRow: { flexDirection: 'row', alignItems: 'center', gap: scale(2) },
   seeAllText: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
-  sectionTitle: { fontSize: scale(15), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
+  sectionTitle: { fontSize: scale(17), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   pinnedScroll: { paddingHorizontal: scale(16), gap: scale(6), paddingBottom: 0 },
   pinnedCard: { width: PINNED_CARD_W, borderRadius: scale(8), overflow: 'hidden', borderWidth: 1 },
   pinnedImage: { width: PINNED_CARD_W, height: PINNED_CARD_W },
   pinnedInfo: { padding: scale(5) },
-  pinnedPrice: { fontSize: scale(10), fontWeight: '700', fontFamily: 'Cairo-Bold' },
-  pinnedOldPrice: { fontSize: scale(9), textDecorationLine: 'line-through' as const, marginTop: -1, fontFamily: 'Cairo-Regular' },
-  pinnedTitle: { fontSize: scale(10), fontWeight: '500', marginTop: scale(1), fontFamily: 'Cairo-Regular' },
+  pinnedPrice: { fontSize: scale(12), fontWeight: '800', fontFamily: 'Cairo-Bold' },
+  pinnedOldPrice: { fontSize: scale(11), textDecorationLine: 'line-through' as const, marginTop: -1, fontFamily: 'Cairo-Regular' },
+  pinnedTitle: { fontSize: scale(11), fontWeight: '500', marginTop: scale(1), fontFamily: 'Cairo-Regular' },
   pinnedDiscountBadge: { position: 'absolute', top: scale(4), right: scale(4), backgroundColor: '#EF4444', paddingHorizontal: scale(5), paddingVertical: scale(2), borderRadius: scale(4) },
   pinnedDiscountText: { color: '#FFF', fontSize: scale(9), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   grid: {
