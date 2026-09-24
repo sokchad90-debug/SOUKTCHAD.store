@@ -59,6 +59,9 @@ export default function CheckoutScreen() {
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
   const [timerActive, setTimerActive] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [quartier, setQuartier] = useState('');
+  const [addressDetail, setAddressDetail] = useState('');
   // Inline submit error (replaces blocking Alert modal — hooks must stay above early returns)
   const [submitError, setSubmitError] = useState('');
   const sellerCities = product ? getSellerDeliveryCitiesSync(product.sellerId) : [];
@@ -76,6 +79,18 @@ export default function CheckoutScreen() {
   const isFr = language === 'fr';
   const isAr = language === 'ar';
   const lb = useCallback((en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en, [isFr, isAr]);
+  const translateInstructions = useCallback((txt: string): string => {
+    const map: Record<string, { fr: string; ar: string }> = {
+      'Send via Airtel Money app or USSD *436#': { fr: 'Envoyez via l\'application Airtel Money ou *436#', ar: 'أرسل عبر تطبيق Airtel Money أو *436#' },
+      'Send via Moov Money app': { fr: 'Envoyez via l\'application Moov Money', ar: 'أرسل عبر تطبيق Moov Money' },
+      'Dial *222# > Send Money > Enter number > Enter amount > Confirm with PIN': { fr: 'Composez *222# > Envoyer > Numéro > Montant > Confirmez', ar: 'اطلب *222# > تحويل > أدخل الرقم > أدخل المبلغ > أكد برمز PIN' },
+      'Dial *155# > Transfer > Enter number > Enter amount > Confirm with PIN': { fr: 'Composez *155# > Transfert > Numéro > Montant > Confirmez', ar: 'اطلب *155# > تحويل > أدخل الرقم > أدخل المبلغ > أكد برمز PIN' },
+      'Pay cash directly to the seller upon receiving the item at the agreed location.': { fr: 'Payez en espèces au vendeur à la réception au lieu convenu.', ar: 'ادفع نقدًا للبائع عند الاستلام في المكان المتفق عليه.' },
+    };
+    const hit = map[txt];
+    if (hit) return isFr ? hit.fr : isAr ? hit.ar : txt;
+    return txt;
+  }, [isFr, isAr]);
 
   const activeShipping = useMemo(() => shippingCompanies.filter(s => s.isActive), [shippingCompanies]);
 
@@ -233,84 +248,98 @@ export default function CheckoutScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textPrimary} /></Pressable>
         <View style={{ alignItems: 'center' }}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('checkout')}</Text>
-          <Text style={{ fontSize: scale(11), color: colors.textTertiary, marginTop: 2 }}>
+          <Text style={{ fontSize: scale(12), color: colors.textTertiary, marginTop: 2 }}>
             {step === 'shipping' ? lb('Delivery', 'Livraison', 'التوصيل') : step === 'payment' ? lb('Payment', 'Paiement', 'الدفع') : lb('Confirmation', 'Confirmation', 'التأكيد')}
           </Text>
         </View>
-        <View style={styles.stepIndicator}>
-          {[0, 1, 2].map(i => (
-            <View key={i} style={[styles.stepDot, {
-              backgroundColor: (i === 0) ? colors.primary : (i === 1 && (step === 'payment' || step === 'transfer')) ? colors.primary : (i === 2 && step === 'transfer') ? colors.primary : colors.border,
-              width: (i === 0 && step === 'shipping') || (i === 1 && step === 'payment') || (i === 2 && step === 'transfer') ? 20 : 8,
-            }]} />
-          ))}
+        <View style={[styles.stepIndicator, isAr && { flexDirection: 'row-reverse' }]}>
+          {[0, 1, 2].map(i => {
+            const idx = isAr ? 2 - i : i;
+            const stepNames = [lb('Delivery', 'Livraison', 'التوصيل'), lb('Payment', 'Paiement', 'الدفع'), lb('Proof', 'Justificatif', 'الإثبات')];
+            const activeIdx = step === 'shipping' ? 0 : step === 'payment' ? 1 : 2;
+            const done = idx < activeIdx;
+            const current = idx === activeIdx;
+            return (
+              <React.Fragment key={i}>
+                {i > 0 ? (
+                  <View style={{ width: scale(24), height: scale(2), backgroundColor: (done || current) && idx <= activeIdx ? colors.primary : colors.border, borderRadius: scale(1) }} />
+                ) : null}
+                <View style={{ alignItems: 'center', gap: scale(3) }}>
+                  <View style={{
+                    width: scale(24), height: scale(24), borderRadius: scale(12),
+                    backgroundColor: (done || current) ? colors.primary : colors.surface,
+                    borderWidth: current ? 2 : 0, borderColor: colors.primary,
+                    alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {done ? <MaterialIcons name="check" size={scale(14)} color="#FFF" /> : (
+                      <Text style={{ fontSize: scale(12), fontWeight: '700', color: (done || current) ? '#FFF' : colors.textTertiary }}>{idx + 1}</Text>
+                    )}
+                  </View>
+                  <Text style={{ fontSize: scale(11), fontWeight: current ? '700' : '500', color: current ? colors.primary : colors.textTertiary }}>
+                    {stepNames[idx]}
+                  </Text>
+                </View>
+              </React.Fragment>
+            );
+          })}
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: scale(16), paddingBottom: insets.bottom + scale(240) }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: scale(16), paddingBottom: insets.bottom + scale(320) }} showsVerticalScrollIndicator={false}>
         <DisclaimerBanner />
 
-        {/* Product Summary */}
+        {/* Collapsible summary (steps 2 & 3) */}
+        {(step === 'payment' || step === 'transfer') ? (
+          <Pressable onPress={() => setSummaryOpen(!summaryOpen)} style={[styles.collapseHeader, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Image source={{ uri: variantSel ? variantSel.image : product.images[0] }} style={styles.collapseThumb} contentFit="cover" />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: scale(13), fontWeight: '600', color: colors.textPrimary }} numberOfLines={1}>{productTitle}</Text>
+              <Text style={{ fontSize: scale(12), color: colors.secondary, fontWeight: '600' }}>{formatPrice(unitPrice) + ' × ' + quantity}</Text>
+            </View>
+            <MaterialIcons name={summaryOpen ? 'expand-less' : 'expand-more'} size={scale(20)} color={colors.textSecondary} />
+          </Pressable>
+        ) : null}
+        {(!(step === 'payment' || step === 'transfer') || summaryOpen) ? (
         <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.card]}>
           <Image source={{ uri: variantSel ? variantSel.image : product.images[0] }} style={styles.summaryImage} contentFit="cover" transition={200} />
           <View style={{ flex: 1 }}>
             <Text style={[styles.summaryTitle, { color: colors.textPrimary }]} numberOfLines={2}>{productTitle}</Text>
-            <Text style={[styles.summaryLocation, { color: colors.textSecondary }]}>{product.location}</Text>
-            {hasDiscount ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6), marginTop: scale(4) }}>
-                <Text style={[styles.summaryPrice, { color: colors.primary }]}>{formatPrice(unitPrice)}</Text>
-                <Text style={{ fontSize: scale(12), color: colors.textTertiary, textDecorationLine: 'line-through' }}>{formatPrice(product.price)}</Text>
-                <View style={[styles.discountTag, { backgroundColor: '#EF4444' }]}><Text style={styles.discountTagText}>-{discountPercent}%</Text></View>
-              </View>
+            {variantSel && variantSel.specs.length > 0 ? (
+              <Text style={{ fontSize: scale(13), color: colors.textSecondary, marginTop: scale(2) }} numberOfLines={2}>
+                {variantSel.specs.map(sp => sp.value).join(' / ')}
+              </Text>
             ) : (
-              <Text style={[styles.summaryPrice, { color: colors.primary, marginTop: scale(4) }]}>{formatPrice(product.price)}</Text>
+              <Text style={[styles.summaryLocation, { color: colors.textSecondary }]}>{product.location}</Text>
             )}
-          </View>
-        </View>
-
-        {/* Variant banner — chosen version from the product page */}
-        {variantSel ? (
-          <View style={[styles.variantBanner, { backgroundColor: colors.primary + '08', borderColor: colors.primary + '30' }]}>
-            <Image source={{ uri: variantSel.image }} style={styles.variantBannerThumb} contentFit="contain" />
-            <View style={{ flex: 1 }}>
-              {variantSel.specs.map((sp, i) => (
-                <Text key={'vb' + i} style={{ fontSize: scale(13), color: colors.textPrimary, fontWeight: i === 0 ? '700' : '500' }}>
-                  {sp.label + ' : ' + sp.value}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6), marginTop: scale(4), flexWrap: 'wrap' }}>
+              <Text style={[styles.summaryPrice, { color: colors.primary }]}>{formatPrice(unitPrice)}</Text>
+              {hasDiscount ? (
+                <>
+                  <Text style={{ fontSize: scale(12), color: colors.textTertiary, textDecorationLine: 'line-through' }}>{formatPrice(product.price)}</Text>
+                  <View style={[styles.discountTag, { backgroundColor: '#EF4444' }]}><Text style={styles.discountTagText}>-{discountPercent}%</Text></View>
+                </>
+              ) : null}
+            </View>
+            {/* qty stepper inline */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8), marginTop: scale(8) }}>
+              <Text style={{ fontSize: scale(13), color: colors.textSecondary }}>{lb('Qty', 'Qté', 'الكمية')}</Text>
+              <Pressable onPress={decrementQty} style={[styles.qtyBtnSm, { backgroundColor: quantity <= 1 ? colors.borderLight : colors.primary + '15' }]} disabled={quantity <= 1}>
+                <MaterialIcons name="remove" size={scale(16)} color={quantity <= 1 ? colors.textTertiary : colors.primary} />
+              </Pressable>
+              <Text style={{ fontSize: scale(15), fontWeight: '800', color: colors.textPrimary, minWidth: scale(24), textAlign: 'center' }}>{quantity}</Text>
+              <Pressable onPress={incrementQty} style={[styles.qtyBtnSm, { backgroundColor: quantity >= maxQty ? colors.borderLight : colors.primary + '15' }]} disabled={quantity >= maxQty}>
+                <MaterialIcons name="add" size={scale(16)} color={quantity >= maxQty ? colors.textTertiary : colors.primary} />
+              </Pressable>
+              {maxQty < 999 ? (
+                <Text style={{ fontSize: scale(12), color: colors.textTertiary }}>
+                  {lb(`max ${maxQty}`, `max ${maxQty}`, `حد ${maxQty}`)}
                 </Text>
-              ))}
-              <Text style={{ fontSize: scale(13), color: colors.primary, fontWeight: '800', marginTop: scale(2) }}>
-                {formatPrice(variantSel.unitPrice)}
-              </Text>
-              <Text style={{ fontSize: scale(11), color: colors.textTertiary }}>
-                {lb('Available stock', 'Stock disponible', 'المخزون المتاح') + ' : ' + variantSel.stock}
-              </Text>
+              ) : null}
             </View>
-            <MaterialIcons name="check-circle" size={scale(22)} color={colors.success} />
-          </View>
-        ) : null}
-
-        {/* Quantity Selector */}
-        <View style={[styles.qtyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.qtyLabel, { color: colors.textPrimary }]}>{lb('Quantity', 'Quantité', 'الكمية')}</Text>
-            {maxQty < 999 ? (
-              <Text style={[styles.qtyLimit, { color: colors.textTertiary }]}>
-                {lb(`Max ${maxQty} per order`, `Max ${maxQty} par commande`, `الحد الأقصى ${maxQty} لكل طلب`)}
-              </Text>
-            ) : null}
-          </View>
-          <View style={styles.qtyControls}>
-            <Pressable onPress={decrementQty} style={({ pressed }) => [styles.qtyBtn, { backgroundColor: quantity <= 1 ? colors.borderLight : colors.primary + '15', opacity: pressed ? 0.7 : 1 }]} disabled={quantity <= 1}>
-              <MaterialIcons name="remove" size={scale(22)} color={quantity <= 1 ? colors.textTertiary : colors.primary} />
-            </Pressable>
-            <View style={[styles.qtyDisplay, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
-              <Text style={[styles.qtyValue, { color: colors.textPrimary }]}>{quantity}</Text>
-            </View>
-            <Pressable onPress={incrementQty} style={({ pressed }) => [styles.qtyBtn, { backgroundColor: quantity >= maxQty ? colors.borderLight : colors.primary + '15', opacity: pressed ? 0.7 : 1 }]} disabled={quantity >= maxQty}>
-              <MaterialIcons name="add" size={scale(22)} color={quantity >= maxQty ? colors.textTertiary : colors.primary} />
-            </Pressable>
           </View>
         </View>
+
+        ) : null}
 
         {/* STEP 1: Shipping */}
         {step === 'shipping' ? (
@@ -366,6 +395,28 @@ export default function CheckoutScreen() {
               </View>
             ) : null}
             </View>
+
+            <Text style={{ fontSize: scale(13), color: colors.textSecondary, marginBottom: scale(6), marginTop: scale(12) }}>
+              {lb('Neighborhood (optional)', 'Quartier (optionnel)', 'الحي (اختياري)')}
+            </Text>
+            <TextInput
+              value={quartier}
+              onChangeText={setQuartier}
+              placeholder={lb('e.g. Chagoua, Klemat...', 'ex : Chagoua, Klemat...', 'مثال: شاغوا، كلمات...')}
+              placeholderTextColor={colors.textTertiary}
+              style={[styles.cityField, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            />
+            <Text style={{ fontSize: scale(13), color: colors.textSecondary, marginBottom: scale(6), marginTop: scale(12) }}>
+              {lb('Detailed address (optional)', 'Adresse détaillée (optionnel)', 'العنوان التفصيلي (اختياري)')}
+            </Text>
+            <TextInput
+              value={addressDetail}
+              onChangeText={setAddressDetail}
+              placeholder={lb('e.g. near the big market', 'ex : près du grand marché', 'مثال: قرب السوق الكبير')}
+              placeholderTextColor={colors.textTertiary}
+              style={[styles.cityField, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            />
+
             <Text style={[styles.sectionLabel, { color: colors.textTertiary, marginTop: scale(20) }]}>{lb('SHIPPING COMPANY', 'TRANSPORTEUR', 'شركة الشحن')}</Text>
             {activeShipping.length === 0 ? (
               <View style={[styles.emptyBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -414,7 +465,7 @@ export default function CheckoutScreen() {
                 )}
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.paymentName, { color: colors.textPrimary }]}>{method.name}</Text>
-                  {method.instructions ? <Text style={[styles.paymentInstructions, { color: colors.textTertiary }]} numberOfLines={2}>{method.instructions}</Text> : null}
+                  {method.instructions ? <Text style={[styles.paymentInstructions, { color: colors.textTertiary }]} numberOfLines={2}>{translateInstructions(method.instructions)}</Text> : null}
                 </View>
                 <View style={[styles.radio, { borderColor: selectedPayment === method.id ? colors.primary : colors.border, backgroundColor: selectedPayment === method.id ? colors.primary : 'transparent' }]}>
                   {selectedPayment === method.id ? <MaterialIcons name="check" size={scale(14)} color="#FFF" /> : null}
@@ -446,7 +497,7 @@ export default function CheckoutScreen() {
               <Text style={{ flex: 1, fontSize: scale(14), fontWeight: '700', color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }}>
                 {lb('Time remaining', 'Temps restant', 'الوقت المتبقي') + ' : ' + formatTime(timeLeft)}
               </Text>
-              <Text style={{ fontSize: scale(11), color: colors.textSecondary, textAlign: isAr ? 'left' : 'right', flex: 1 }}>
+              <Text style={{ fontSize: scale(12), color: colors.textSecondary, textAlign: isAr ? 'left' : 'right', flex: 1 }}>
                 {lb('Finalize the transfer then share the proof.', 'Finalisez le transfert puis partagez le justificatif.', 'أكمل التحويل ثم شارك الإثبات.')}
               </Text>
             </View>
@@ -465,7 +516,7 @@ export default function CheckoutScreen() {
                   </Text>
                   <Text style={[styles.payDetailsAmount, { color: colors.primary }]}>{formatPrice(totalPrice)}</Text>
                   {quantity > 1 ? (
-                    <Text style={{ fontSize: scale(11), color: colors.textTertiary }}>
+                    <Text style={{ fontSize: scale(12), color: colors.textTertiary }}>
                       {quantity + ' x ' + formatPrice(unitPrice)}
                     </Text>
                   ) : null}
@@ -482,7 +533,7 @@ export default function CheckoutScreen() {
                   </Text>
                   <Text style={[styles.payDetailsNumber, { color: colors.verified }]}>{selectedMethod?.receivingNumber || '—'}</Text>
                   {selectedMethod?.name ? (
-                    <Text style={{ fontSize: scale(11), color: colors.textTertiary, marginTop: scale(2) }}>
+                    <Text style={{ fontSize: scale(12), color: colors.textTertiary, marginTop: scale(2) }}>
                       {lb('Account: ' + selectedMethod.name, 'Compte : ' + selectedMethod.name, 'الحساب: ' + selectedMethod.name)}
                     </Text>
                   ) : null}
@@ -516,7 +567,7 @@ export default function CheckoutScreen() {
                 numberOfLines={4}
                 maxLength={500}
               />
-              <Text style={{ alignSelf: 'flex-end', fontSize: scale(11), color: colors.textTertiary, marginTop: scale(4) }}>
+              <Text style={{ alignSelf: 'flex-end', fontSize: scale(12), color: colors.textTertiary, marginTop: scale(4) }}>
                 {transferMessage.length + '/500'}
               </Text>
             </View>
@@ -531,16 +582,14 @@ export default function CheckoutScreen() {
       {/* Bottom CTA */}
       <View style={[styles.bottomCta, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insets.bottom + scale(12) }, shadows.modal]}>
         <View style={styles.totalRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.totalLabel, { color: colors.textSecondary }]} numberOfLines={1}>
-              {lb('Products amount', 'Montant produits', 'مبلغ المنتجات') + ' (' + quantity + ')'}
-            </Text>
-            <Text style={{ fontSize: scale(10), color: colors.textTertiary }} numberOfLines={1}>
-              {lb('Total excl. delivery', 'Total hors livraison', 'المجموع بدون التوصيل')}
-            </Text>
-          </View>
+          <Text style={[styles.totalLabel, { color: colors.textSecondary, flex: 1 }]} numberOfLines={1}>
+            {lb('Products amount', 'Montant produits', 'مبلغ المنتجات') + ' (' + quantity + ')'}
+          </Text>
           <Text style={[styles.totalAmount, { color: colors.primary }]} numberOfLines={1}>{formatPrice(totalPrice)}</Text>
         </View>
+        <Text style={{ fontSize: scale(12), color: colors.textTertiary, marginBottom: scale(8) }}>
+          {lb('Excluding delivery fees — confirmed with the carrier.', 'Hors frais de livraison — confirmés avec le transporteur.', 'بدون رسوم التوصيل — تُؤكَّد مع الناقل.')}
+        </Text>
         {step === 'shipping' ? (
           <Pressable onPress={handleConfirmShipping} style={({ pressed }) => [styles.ctaBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }]}>
             <Text style={[styles.ctaBtnText]}>{lb('Continue to Payment', 'Continuer', 'المتابعة إلى الدفع')}</Text>
@@ -554,7 +603,7 @@ export default function CheckoutScreen() {
           </Pressable>
         ) : null}
         {step === 'transfer' ? (
-          <Text style={{ fontSize: scale(11), color: colors.textTertiary, textAlign: 'center', marginBottom: scale(4) }}>
+          <Text style={{ fontSize: scale(12), color: colors.textTertiary, textAlign: 'center', marginBottom: scale(4) }}>
             {lb('Sending the proof does not confirm the payment. The seller verifies it manually.', 'L\'envoi du justificatif ne confirme pas le paiement. Le vendeur le vérifie manuellement.', 'إرسال الإثبات لا يعني تأكيد الدفع — يتحقق البائع يدويًا.')}
           </Text>
         ) : null}
@@ -575,6 +624,9 @@ export default function CheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
+  collapseHeader: { flexDirection: 'row', alignItems: 'center', gap: scale(10), padding: scale(10), borderRadius: scale(12), borderWidth: 1, marginBottom: scale(8) },
+  collapseThumb: { width: scale(40), height: scale(40), borderRadius: scale(8), backgroundColor: '#F6F6FB' },
+  qtyBtnSm: { width: scale(28), height: scale(28), borderRadius: scale(14), alignItems: 'center', justifyContent: 'center' },
   timerGreen: { flexDirection: 'row', alignItems: 'center', gap: scale(10), padding: scale(12), borderRadius: scale(12), borderWidth: 1, marginBottom: scale(12) },
   orangeBanner: { flexDirection: 'row', alignItems: 'center', gap: scale(10), padding: scale(12), borderRadius: scale(12), borderWidth: 1, marginTop: scale(12) },
   cityField: { flexDirection: 'row', alignItems: 'center', gap: scale(8), borderWidth: 1, borderRadius: scale(12), paddingHorizontal: scale(12), height: scale(48) },
@@ -603,7 +655,7 @@ const styles = StyleSheet.create({
   summaryLocation: { fontSize: scale(12), marginTop: scale(2) },
   summaryPrice: { fontSize: scale(18), fontWeight: '800' },
   discountTag: { paddingHorizontal: scale(5), paddingVertical: scale(2), borderRadius: scale(4) },
-  discountTagText: { color: '#FFF', fontSize: scale(10), fontWeight: '800' },
+  discountTagText: { color: '#FFF', fontSize: scale(11), fontWeight: '800' },
   // Quantity
   qtyCard: { flexDirection: 'row', alignItems: 'center', padding: scale(16), borderRadius: scale(14), borderWidth: 1, marginBottom: scale(12) },
   qtyLabel: { fontSize: scale(16), fontWeight: '700' },
@@ -612,7 +664,7 @@ const styles = StyleSheet.create({
   qtyBtn: { width: scale(44), height: scale(44), borderRadius: scale(22), alignItems: 'center', justifyContent: 'center' },
   qtyDisplay: { minWidth: scale(56), height: scale(44), borderRadius: scale(12), borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', paddingHorizontal: scale(12) },
   qtyValue: { fontSize: scale(20), fontWeight: '800' },
-  sectionLabel: { fontSize: scale(11), fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: scale(10), marginTop: scale(8) },
+  sectionLabel: { fontSize: scale(12), fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: scale(10), marginTop: scale(8) },
   timerCard: { flexDirection: 'row', alignItems: 'center', padding: scale(10), borderRadius: scale(12), borderWidth: 1, gap: scale(10), marginBottom: scale(12) },
   timerLabel: { fontSize: scale(12), fontWeight: '600' },
   timerValue: { fontSize: scale(20), fontWeight: '800', letterSpacing: 1 },
@@ -657,7 +709,7 @@ const styles = StyleSheet.create({
   receiptLabel: { fontSize: scale(13) },
   receiptValue: { fontSize: scale(13), fontWeight: '600' },
   statusBadge: { paddingHorizontal: scale(10), paddingVertical: scale(4), borderRadius: scale(6) },
-  statusText: { fontSize: scale(11), fontWeight: '700', textTransform: 'uppercase' },
+  statusText: { fontSize: scale(12), fontWeight: '700', textTransform: 'uppercase' },
   doneBtn: { width: '100%', height: scale(54), borderRadius: scale(14), alignItems: 'center', justifyContent: 'center', marginTop: scale(24) },
   doneBtnText: { color: '#FFF', fontSize: scale(17), fontWeight: '700' },
 });
