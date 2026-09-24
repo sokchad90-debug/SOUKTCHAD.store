@@ -284,9 +284,9 @@ export const products: Product[] = [
     discountPercent: 25, discountUntil: '2026-08-10', stock: 15, maxOrderQty: 5,
     variants: [
       { id: 'p6v1', specs: [{ label: { en: 'Color', fr: 'Couleur', ar: 'اللون' }, value: { en: 'Rouge', fr: 'Rouge', ar: 'أحمر' } }, { label: { en: 'Size', fr: 'Taille', ar: 'المقاس' }, value: '41' }], image: 'https://souktchad.shop/dl/products/photo-1542291026-7eec264c27ff.jpg', price: 45000, stock: 5 },
-      { id: 'p6v2', specs: [{ label: { en: 'Color', fr: 'Couleur', ar: 'اللون' }, value: { en: 'Noir', fr: 'Noir', ar: 'أسود' } }, { label: { en: 'Size', fr: 'Taille', ar: 'المقاس' }, value: '41' }], image: 'https://souktchad.shop/dl/products/photo-1595950653106-6c9ebd614d3a.jpg', price: 47000, stock: 8 },
-      { id: 'p6v3', specs: [{ label: { en: 'Color', fr: 'Couleur', ar: 'اللون' }, value: { en: 'Blanc', fr: 'Blanc', ar: 'أبيض' } }, { label: { en: 'Size', fr: 'Taille', ar: 'المقاس' }, value: '41' }], image: 'https://souktchad.shop/dl/products/photo-1549298916-b41d501d3772.jpg', price: 46000, stock: 3 },
-      { id: 'p6v4', specs: [{ label: { en: 'Color', fr: 'Couleur', ar: 'اللون' }, value: { en: 'Bleu', fr: 'Bleu', ar: 'أزرق' } }, { label: { en: 'Size', fr: 'Taille', ar: 'المقاس' }, value: '41' }], image: 'https://souktchad.shop/dl/products/photo-1560769629-975ec94e6a86.jpg', price: 48000, stock: 6 },
+      { id: 'p6v2', specs: [{ label: { en: 'Color', fr: 'Couleur', ar: 'اللون' }, value: { en: 'Pastel', fr: 'Pastel', ar: 'باستيل' } }, { label: { en: 'Size', fr: 'Taille', ar: 'المقاس' }, value: '41' }], image: 'https://souktchad.shop/dl/products/photo-1595950653106-6c9ebd614d3a.jpg', price: 47000, stock: 8 },
+      { id: 'p6v3', specs: [{ label: { en: 'Color', fr: 'Couleur', ar: 'اللون' }, value: { en: 'Brown', fr: 'Marron', ar: 'بني' } }, { label: { en: 'Size', fr: 'Taille', ar: 'المقاس' }, value: '41' }], image: 'https://souktchad.shop/dl/products/photo-1549298916-b41d501d3772.jpg', price: 46000, stock: 3 },
+      { id: 'p6v4', specs: [{ label: { en: 'Color', fr: 'Couleur', ar: 'اللون' }, value: { en: 'Multicolor', fr: 'Multicolore', ar: 'متعدد الألوان' } }, { label: { en: 'Size', fr: 'Taille', ar: 'المقاس' }, value: '41' }], image: 'https://souktchad.shop/dl/products/photo-1560769629-975ec94e6a86.jpg', price: 48000, stock: 6 },
     ],
     wholesale: { minQty: 5, unitPrice: 40000, unitLabel: { en: 'piece', fr: 'pièce', ar: 'قطعة' } },
   },

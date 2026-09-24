@@ -119,9 +119,10 @@ export default function ProductDetailScreen() {
   const heroUri = selectedVariant ? selectedVariant.image : product?.images?.[0] || '';
   // Full-screen zoomable viewer (tap hero to open)
   const [viewerUri, setViewerUri] = useState<string | null>(null);
-  // Responsive hero height: measure real image aspect on load, clamp so the product is
-  // clearly visible without huge letterbox gaps pushing the price down
-  const [heroAspect, setHeroAspect] = useState(1.4);
+  // Balanced responsive hero height: aspect measured on load, then CLAMPED into a fixed
+  // window so portrait images (trousers/fridge) never double the card height.
+  // Card width = heroW - 2*margin; height = clamp(width/aspect, min, width*1.25)
+  const [heroAspect, setHeroAspect] = useState(1.35);
   const variantStock = selectedVariant ? selectedVariant.stock : (product?.stock ?? 0);
   const wholesale: { minQty: number; unitPrice: number; unitLabel?: { en: string; fr: string; ar: string } } | null = (product as any)?.wholesale || null;
   const productReviews = useMemo(() => product ? getReviewsForProduct(id) : [], [id, product, getReviewsForProduct]);
@@ -285,7 +286,10 @@ export default function ProductDetailScreen() {
             onPress={() => heroUri ? setViewerUri(heroUri) : null}
             style={[styles.imageContainer, {
               width: '100%',
-              height: Math.max(scale(220), Math.min(scale(480), (heroW - scale(32)) / heroAspect)),
+              height: Math.min(
+                Math.max((heroW - scale(32)) / heroAspect, scale(220)),
+                Math.min(scale(460), (heroW - scale(32)) * 1.25),
+              ),
               borderRadius: scale(16),
               overflow: 'hidden',
             }]}
@@ -299,7 +303,7 @@ export default function ProductDetailScreen() {
                 const src: any = (e as any)?.source;
                 if (src && src.width > 0 && src.height > 0) {
                   const a = src.width / src.height;
-                  if (a > 0.3 && a < 4) setHeroAspect(a);
+                  if (a > 0.2 && a < 6) setHeroAspect(a);
                 }
               }}
             />
@@ -310,9 +314,6 @@ export default function ProductDetailScreen() {
                   <Text style={styles.badgeText}>{lb('PROMOTED', 'SPONSORISÉ', 'مميز')}</Text>
                 </View>
               ) : null}
-              <View style={[styles.badge, { backgroundColor: product.condition === 'new' ? '#10B981' : '#F59E0B' }]}>
-                <Text style={styles.badgeText}>{conditionLabel.toUpperCase()}</Text>
-              </View>
             </View>
           </Pressable>
         </View>
@@ -366,6 +367,8 @@ export default function ProductDetailScreen() {
               <MaterialIcons name="location-on" size={scale(16)} color={colors.textTertiary} />
               <Text style={[styles.metaText, { color: colors.textSecondary }]} numberOfLines={1}>{product.location}</Text>
             </View>
+          </View>
+          <View style={styles.metaRow2}>
             {category ? (
               <View style={[styles.catBadge, { backgroundColor: category.color + '15' }]}>
                 <MaterialIcons name={category.icon as any} size={scale(14)} color={category.color} />
@@ -544,7 +547,7 @@ export default function ProductDetailScreen() {
           {description && description.trim() ? (
             <>
               <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>{t('description')}</Text>
-              <Text style={[styles.description, { color: colors.textPrimary }]} numberOfLines={6}>{description}</Text>
+              <Text style={[styles.description, { color: colors.textPrimary }]} numberOfLines={8}>{description}</Text>
             </>
           ) : (
             <Text style={{ fontSize: scale(13), color: colors.textTertiary, fontStyle: 'italic', marginTop: scale(12), marginBottom: scale(4), textAlign: isAr ? 'right' : 'left' }}>
@@ -901,19 +904,20 @@ const styles = StyleSheet.create({
   badges: { position: 'absolute', left: scale(12), flexDirection: 'row', gap: scale(6) },
   badge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(8), paddingVertical: scale(4), borderRadius: scale(6), gap: scale(4) },
   badgeText: { color: '#FFF', fontSize: scale(10), fontWeight: '700', letterSpacing: 0.5 },
-  content: { padding: scale(16) },
-  discountPriceRow: { flexDirection: 'row', alignItems: 'center', gap: scale(10), marginBottom: scale(4) },
+  content: { padding: scale(16), paddingTop: scale(12) },
+  discountPriceRow: { flexDirection: 'row', alignItems: 'center', gap: scale(10), marginBottom: scale(2) },
   discountBadgeLarge: { paddingHorizontal: scale(8), paddingVertical: scale(4), borderRadius: scale(6) },
   discountBadgeLargeText: { color: '#FFF', fontSize: scale(14), fontWeight: '800' },
   oldPriceDetail: { fontSize: scale(18), textDecorationLine: 'line-through', marginBottom: scale(4) },
-  price: { fontSize: scale(32), fontWeight: '800', marginBottom: scale(4) },
-  title: { fontSize: scale(20), fontWeight: '600', lineHeight: 26, marginBottom: scale(10) },
-  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: scale(12), marginBottom: scale(16) },
+  price: { fontSize: scale(30), fontWeight: '800', marginBottom: scale(2) },
+  title: { fontSize: scale(20), fontWeight: '600', lineHeight: 26, marginBottom: scale(8) },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: scale(12), marginBottom: scale(6) },
+  metaRow2: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: scale(8), marginBottom: scale(14) },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: scale(4) },
   metaText: { fontSize: scale(13) },
   catBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(8), paddingVertical: scale(4), borderRadius: scale(6), gap: scale(4) },
   catBadgeText: { fontSize: scale(12), fontWeight: '600' },
-  sectionLabel: { fontSize: scale(12), fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: scale(8), marginTop: scale(16) },
+  sectionLabel: { fontSize: scale(12), fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: scale(6), marginTop: scale(12) },
   description: { fontSize: scale(15), lineHeight: 23 },
   sellerCard: { flexDirection: 'row', padding: scale(9), borderRadius: borderRadius.md, borderWidth: 1, gap: scale(10), alignItems: 'center' } as any,
   sellerAvatar: { width: scale(45), height: scale(45), borderRadius: scale(23) },
