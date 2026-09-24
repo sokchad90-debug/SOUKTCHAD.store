@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Alert, Platform, TextInput,
+  View, Text, StyleSheet, ScrollView, Pressable, Alert, Platform, TextInput, KeyboardAvoidingView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -261,7 +261,7 @@ export default function CheckoutScreen() {
   const productTitle = product.title[language] || product.title.en;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + scale(8), backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ flex: 1 }} />
@@ -401,32 +401,13 @@ export default function CheckoutScreen() {
               <MaterialIcons name={showCityDropdown ? 'expand-less' : 'expand-more'} size={scale(20)} color={colors.textSecondary} />
             </Pressable>
             {showCityDropdown ? (
-              <View style={[styles.cityDropdownCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={[styles.citySearchBox, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
-                  <MaterialIcons name="search" size={scale(18)} color={colors.textTertiary} />
-                  <TextInput
-                    value={cityQuery}
-                    onChangeText={setCityQuery}
-                    placeholder={lb('Search city...', 'Rechercher une ville...', 'ابحث عن مدينة...')}
-                    placeholderTextColor={colors.textTertiary}
-                    style={[styles.citySearchInput, { color: colors.textPrimary }]}
-                  />
-                  {cityQuery ? (
-                    <Pressable onPress={() => setCityQuery('')} hitSlop={8}>
-                      <MaterialIcons name="close" size={scale(16)} color={colors.textSecondary} />
-                    </Pressable>
-                  ) : null}
-                </View>
-                <ScrollView style={{ maxHeight: scale(160) }} nestedScrollEnabled keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-                  {filteredCities.length === 0 ? (
-                    <Text style={{ padding: scale(12), fontSize: scale(13), color: colors.textTertiary, textAlign: 'center' }}>
-                      {lb('No city matches', 'Aucune ville trouvée', 'لا توجد مدينة مطابقة')}
-                    </Text>
-                  ) : filteredCities.map(city => (
+              <View style={[styles.cityDropdownCardInline, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <ScrollView style={{ maxHeight: scale(180) }} nestedScrollEnabled keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                  {cityOptions.map(city => (
                     <Pressable
                       key={city}
                       onPress={() => {
-                        selection(); setSelectedCity(city); setShowCityDropdown(false); setCityQuery('');
+                        selection(); setSelectedCity(city); setShowCityDropdown(false);
                         const svc = activeShipping.find(sh => sh.id === selectedShipping);
                         if (svc) {
                           const cities = (svc as any).cities as string[] | undefined;
@@ -700,7 +681,7 @@ export default function CheckoutScreen() {
         ) : null}
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -712,9 +693,7 @@ const styles = StyleSheet.create({
   orangeBanner: { flexDirection: 'row', alignItems: 'center', gap: scale(10), padding: scale(12), borderRadius: scale(12), borderWidth: 1, marginTop: scale(12) },
   cityField: { flexDirection: 'row', alignItems: 'center', gap: scale(8), borderWidth: 1, borderRadius: scale(12), paddingHorizontal: scale(12), height: scale(48) },
   cityFieldText: { flex: 1, fontSize: scale(14) },
-  cityDropdownCard: { position: 'absolute', left: 0, right: 0, bottom: scale(56), borderWidth: 1, borderRadius: scale(12), overflow: 'hidden', zIndex: 100, elevation: 20 },
-  citySearchBox: { flexDirection: 'row', alignItems: 'center', gap: scale(8), borderWidth: 1, borderRadius: scale(10), paddingHorizontal: scale(10), margin: scale(8) },
-  citySearchInput: { flex: 1, height: scale(40), fontSize: scale(14) },
+  cityDropdownCardInline: { marginTop: scale(6), borderWidth: 1, borderRadius: scale(12), overflow: 'hidden' },
   cityOptionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(14), paddingVertical: scale(11), borderBottomWidth: 1 },
   cityOptionText: { fontSize: scale(14) },
   payDetailsCard: { borderWidth: 1, borderRadius: scale(14), padding: scale(14), gap: scale(10) },
