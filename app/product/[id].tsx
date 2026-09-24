@@ -117,6 +117,11 @@ export default function ProductDetailScreen() {
   }, [id, getProductById]);
   const selectedVariant = variants.find(v => v.id === selectedVariantId) || null;
   const heroUri = selectedVariant ? selectedVariant.image : product?.images?.[0] || '';
+  // Full-screen zoomable viewer (tap hero to open)
+  const [viewerUri, setViewerUri] = useState<string | null>(null);
+  // Responsive hero height: measure real image aspect on load, clamp so the product is
+  // clearly visible without huge letterbox gaps pushing the price down
+  const [heroAspect, setHeroAspect] = useState(1.4);
   const variantStock = selectedVariant ? selectedVariant.stock : (product?.stock ?? 0);
   const wholesale: { minQty: number; unitPrice: number; unitLabel?: { en: string; fr: string; ar: string } } | null = (product as any)?.wholesale || null;
   const productReviews = useMemo(() => product ? getReviewsForProduct(id) : [], [id, product, getReviewsForProduct]);
@@ -260,31 +265,56 @@ export default function ProductDetailScreen() {
   return (
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 50 + 12 + 16 + 16 }} showsVerticalScrollIndicator={false}>
-        {/* Hero Image */}
-        <View style={[styles.imageContainer, { width: heroW, height: heroW }]}>
-          <Image source={{ uri: heroUri }} style={styles.heroImage} contentFit="contain" transition={200} />
-          <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: scale(8) }, isAr && { left: 'auto', right: scale(16) }]}>
-            <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color="#FFF" />
+        {/* Top action row — above the image so buttons never cover the product */}
+        <View style={[styles.heroTopRow, { paddingTop: scale(6) }, isAr && { flexDirection: 'row-reverse' }]}>
+          <Pressable onPress={() => router.back()} style={styles.heroTopBtn}>
+            <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
           </Pressable>
-          <View style={[styles.topRightBtns, { top: scale(8) }, isAr && { right: 'auto', left: scale(16) }]}>
-            <Pressable onPress={handleShare} style={styles.topRightBtn}>
-              <MaterialIcons name="share" size={scale(22)} color="#FFF" />
+          <View style={{ flexDirection: 'row', gap: scale(10) }}>
+            <Pressable onPress={handleShare} style={styles.heroTopBtn}>
+              <MaterialIcons name="share" size={scale(22)} color={colors.textPrimary} />
             </Pressable>
-            <Pressable onPress={() => { impactLight(); toggleFavorite(product.id); }} style={styles.topRightBtn}>
-              <MaterialIcons name={isFavorite(product.id) ? 'favorite' : 'favorite-border'} size={scale(24)} color={isFavorite(product.id) ? '#EF4444' : '#FFF'} />
+            <Pressable onPress={() => { impactLight(); toggleFavorite(product.id); }} style={styles.heroTopBtn}>
+              <MaterialIcons name={isFavorite(product.id) ? 'favorite' : 'favorite-border'} size={scale(24)} color={isFavorite(product.id) ? '#EF4444' : colors.textPrimary} />
             </Pressable>
           </View>
-          <View style={[styles.badges, { bottom: scale(12) }]}>
-            {product.isPinned ? (
-              <View style={[styles.badge, { backgroundColor: '#8B5CF6' }]}>
-                <MaterialIcons name="push-pin" size={scale(12)} color="#FFF" />
-                <Text style={styles.badgeText}>{lb('PROMOTED', 'SPONSORISÉ', 'مميز')}</Text>
+        </View>
+        {/* Hero Image — full original photo, contain, centered in a light rounded card with side margins */}
+        <View style={{ paddingHorizontal: scale(16) }}>
+          <Pressable
+            onPress={() => heroUri ? setViewerUri(heroUri) : null}
+            style={[styles.imageContainer, {
+              width: '100%',
+              height: Math.max(scale(220), Math.min(scale(480), (heroW - scale(32)) / heroAspect)),
+              borderRadius: scale(16),
+              overflow: 'hidden',
+            }]}
+          >
+            <Image
+              source={{ uri: heroUri }}
+              style={styles.heroImage}
+              contentFit="contain"
+              transition={200}
+              onLoad={(e) => {
+                const src: any = (e as any)?.source;
+                if (src && src.width > 0 && src.height > 0) {
+                  const a = src.width / src.height;
+                  if (a > 0.3 && a < 4) setHeroAspect(a);
+                }
+              }}
+            />
+            <View style={[styles.badges, { bottom: scale(12) }]}>
+              {product.isPinned ? (
+                <View style={[styles.badge, { backgroundColor: '#8B5CF6' }]}>
+                  <MaterialIcons name="push-pin" size={scale(12)} color="#FFF" />
+                  <Text style={styles.badgeText}>{lb('PROMOTED', 'SPONSORISÉ', 'مميز')}</Text>
+                </View>
+              ) : null}
+              <View style={[styles.badge, { backgroundColor: product.condition === 'new' ? '#10B981' : '#F59E0B' }]}>
+                <Text style={styles.badgeText}>{conditionLabel.toUpperCase()}</Text>
               </View>
-            ) : null}
-            <View style={[styles.badge, { backgroundColor: product.condition === 'new' ? '#10B981' : '#F59E0B' }]}>
-              <Text style={styles.badgeText}>{conditionLabel.toUpperCase()}</Text>
             </View>
-          </View>
+          </Pressable>
         </View>
 
         <View style={styles.content}>
@@ -756,6 +786,20 @@ export default function ProductDetailScreen() {
         ) : null}
       </View>
 
+      {/* Full-screen zoomable image viewer */}
+      <Modal visible={viewerUri !== null} transparent animationType="fade" onRequestClose={() => setViewerUri(null)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15,12,40,0.96)' }}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }} maximumZoomScale={5} minimumZoomScale={1} bouncesZoom centerContent>
+            <Image source={{ uri: viewerUri || '' }} style={{ width: '100%', aspectRatio: 1 }} contentFit="contain" />
+          </ScrollView>
+          <Pressable onPress={() => setViewerUri(null)} style={{ position: 'absolute', top: scale(48), right: scale(20), width: scale(42), height: scale(42), borderRadius: scale(21), backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+            <MaterialIcons name="close" size={scale(26)} color="#FFF" />
+          </Pressable>
+          <Text style={{ position: 'absolute', bottom: scale(36), alignSelf: 'center', fontSize: scale(12), color: 'rgba(255,255,255,0.7)' }}>
+            {lb('Pinch to zoom · tap ✕ to close', 'Pincez pour zoomer · ✕ pour fermer', 'اضغط بإصبعين للتكبير · ✕ للإغلاق')}
+          </Text>
+        </View>
+      </Modal>
       <LoginModal visible={showLogin} onClose={() => setShowLogin(false)} onSuccess={handleLoginSuccess} />
 
       {/* Review Modal */}
@@ -847,11 +891,13 @@ export default function ProductDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  imageContainer: { position: 'relative' },
-  heroImage: { width: '100%', height: '100%', backgroundColor: '#FFFFFF' },
-  backBtn: { position: 'absolute', left: scale(16), width: scale(40), height: scale(40), borderRadius: scale(20), backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
+  imageContainer: { position: 'relative', backgroundColor: '#F1F0FB', borderWidth: 1, borderColor: 'rgba(91,72,217,0.08)' },
+  heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(16), paddingBottom: scale(10) },
+  heroTopBtn: { width: scale(42), height: scale(42), borderRadius: scale(21), backgroundColor: '#EFEDFA', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E2DEFA' },
+  heroImage: { width: '100%', height: '100%', backgroundColor: '#F1F0FB' },
+  backBtn: { position: 'absolute', left: scale(16), width: scale(40), height: scale(40), borderRadius: scale(20), backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' },
   topRightBtns: { position: 'absolute', right: scale(16), flexDirection: 'row', gap: scale(8) },
-  topRightBtn: { width: scale(40), height: scale(40), borderRadius: scale(20), backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
+  topRightBtn: { width: scale(40), height: scale(40), borderRadius: scale(20), backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' },
   badges: { position: 'absolute', left: scale(12), flexDirection: 'row', gap: scale(6) },
   badge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(8), paddingVertical: scale(4), borderRadius: scale(6), gap: scale(4) },
   badgeText: { color: '#FFF', fontSize: scale(10), fontWeight: '700', letterSpacing: 0.5 },
