@@ -309,7 +309,7 @@ export default function ProductDetailScreen() {
             />
             <View style={[styles.badges, { bottom: scale(12) }]}>
               {product.isPinned ? (
-                <View style={[styles.badge, { backgroundColor: '#8B5CF6' }]}>
+                <View style={[styles.badge, { backgroundColor: colors.pinned }]}>
                   <MaterialIcons name="push-pin" size={scale(12)} color="#FFF" />
                   <Text style={styles.badgeText}>{lb('PROMOTED', 'SPONSORISÉ', 'مميز')}</Text>
                 </View>
@@ -322,7 +322,7 @@ export default function ProductDetailScreen() {
           {hasDiscount && !selectedVariant ? (
             <View style={styles.discountPriceRow}>
               <Text style={[styles.price, { color: colors.primary }]}>{formatPrice(discountedPrice)}</Text>
-              <View style={[styles.discountBadgeLarge, { backgroundColor: '#EF4444' }]}>
+              <View style={[styles.discountBadgeLarge, { backgroundColor: colors.error }]}>
                 <Text style={styles.discountBadgeLargeText}>-{discountPercent}%</Text>
               </View>
               <TopBadge earned={topEarned} />
@@ -381,14 +381,14 @@ export default function ProductDetailScreen() {
               </View>
             ) : null}
             {(product.freeShipping || product.deliveryType === 'free') ? (
-              <View style={[styles.catBadge, { backgroundColor: '#10B98115' }]}>
+              <View style={[styles.catBadge, { backgroundColor: colors.success + '15' }]}>
                 <MaterialIcons name="local-shipping" size={scale(14)} color="#10B981" />
-                <Text style={[styles.catBadgeText, { color: '#10B981' }]}>{lb('Free delivery', 'Livraison offerte', 'توصيل مجاني')}</Text>
+                <Text style={[styles.catBadgeText, { color: colors.success }]}>{lb('Free delivery', 'Livraison offerte', 'توصيل مجاني')}</Text>
               </View>
             ) : product.deliveryType === 'paid' && (product.deliveryFee ?? 0) > 0 ? (
-              <View style={[styles.catBadge, { backgroundColor: '#F59E0B15' }]}>
+              <View style={[styles.catBadge, { backgroundColor: colors.warning + '15' }]}>
                 <MaterialIcons name="local-shipping" size={scale(14)} color="#F59E0B" />
-                <Text style={[styles.catBadgeText, { color: '#F59E0B' }]}>{lb('Delivery', 'Livraison', 'توصيل')}: {formatPrice(product.deliveryFee ?? 0)}</Text>
+                <Text style={[styles.catBadgeText, { color: colors.warning }]}>{lb('Delivery', 'Livraison', 'توصيل')}: {formatPrice(product.deliveryFee ?? 0)}</Text>
               </View>
             ) : null}
           </View>
@@ -560,7 +560,7 @@ export default function ProductDetailScreen() {
               <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>{t('sellerInfo')}</Text>
               <Pressable
                 onPress={() => router.push(`/seller/${effectiveSeller.id}`)}
-                style={({ pressed }) => [styles.sellerCard, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.92 : 1 }, shadows.card]}
+                style={({ pressed }) => [styles.sellerCard, isAr && { flexDirection: 'row-reverse' }, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.92 : 1 }, shadows.card]}
               >
                 <Image source={{ uri: effectiveSeller.avatar }} style={styles.sellerAvatar} contentFit="cover" />
                 <View style={{ flex: 1 }}>
@@ -578,7 +578,7 @@ export default function ProductDetailScreen() {
                     <Text style={[styles.sellerMetaText, { color: colors.textSecondary }]}>{effectiveSeller.location}</Text>
                     <Pressable onPress={() => router.push(`/seller/${effectiveSeller.id}?tab=reviews`)} style={styles.ratingTouchable} hitSlop={8}>
                       <MaterialIcons name="star" size={scale(13)} color="#F59E0B" />
-                      <Text style={[styles.sellerMetaText, { color: '#F59E0B', fontWeight: '700' }]}>{effectiveSeller.rating}</Text>
+                      <Text style={[styles.sellerMetaText, { color: colors.warning, fontWeight: '700' }]}>{effectiveSeller.rating}</Text>
                       <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(14)} color="#F59E0B" />
                     </Pressable>
                   </View>
@@ -630,7 +630,7 @@ export default function ProductDetailScreen() {
                             <View key={star} style={{ flexDirection: 'row', alignItems: 'center', gap: scale(8) }}>
                               <Text style={{ fontSize: scale(12), color: colors.textSecondary, width: scale(20) }}>{star}★</Text>
                               <View style={{ flex: 1, height: scale(6), borderRadius: scale(3), backgroundColor: colors.border + '40' }}>
-                                <View style={{ width: `${pct}%`, height: '100%', borderRadius: scale(3), backgroundColor: '#F59E0B' }} />
+                                <View style={{ width: `${pct}%`, height: '100%', borderRadius: scale(3), backgroundColor: colors.warning }} />
                               </View>
                               <Text style={{ fontSize: scale(12), color: colors.textTertiary, width: scale(24), textAlign: 'right' }}>{count}</Text>
                             </View>

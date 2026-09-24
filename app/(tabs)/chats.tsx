@@ -149,7 +149,7 @@ export default function ChatsScreen() {
                             {otherName}
                           </Text>
                           {seller?.isOnline ? (
-                            <Text style={[styles.onlineLabel, { color: '#22C55E' }]}>
+                            <Text style={[styles.onlineLabel, { color: colors.success }]}>
                               {language === 'fr' ? 'En ligne' : language === 'ar' ? 'متصل' : 'Online'}
                             </Text>
                           ) : null}

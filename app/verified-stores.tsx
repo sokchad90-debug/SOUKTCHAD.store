@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   storePlaceholderText: {
     color: '#FFF', fontSize: scale(28), fontWeight: '800', textAlign: 'center',
-    lineHeight: 72,
+    lineHeight: scale(72),
   },
   storeBadge: {
     position: 'absolute', bottom: 0, right: 0,

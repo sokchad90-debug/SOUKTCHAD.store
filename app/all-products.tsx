@@ -4,7 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
-import { usePhoneLayout } from '@/constants/responsive';
+import { usePhoneLayout, scale } from '@/constants/responsive';
 import ProductCard from '@/components/ProductCard';
 
 const PAGE_SIZE = 10;
@@ -129,17 +129,17 @@ export default function AllProductsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, alignItems: 'center', backgroundColor: '#F8FAFC' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 48, paddingHorizontal: 12 },
-  headerTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', fontFamily: 'Cairo-Bold' },
-  searchWrap: { paddingHorizontal: 12, paddingBottom: 8 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FFFFFF', height: 44, borderRadius: 999, paddingHorizontal: 14 },
-  searchInput: { flex: 1, fontSize: 14, color: '#0F172A', fontFamily: 'Cairo-Regular' },
-  countText: { fontSize: 13, fontWeight: '700', paddingHorizontal: 16, marginBottom: 6, fontFamily: 'Cairo-Bold' },
-  gridRow: { paddingHorizontal: 16, justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 },
-  gridContent: { paddingHorizontal: 0, paddingTop: 4 },
-  moreBtn: { marginHorizontal: 16, marginVertical: 10, paddingVertical: 10, borderRadius: 12, borderWidth: 1, alignItems: 'center' },
-  moreText: { fontSize: 13, fontWeight: '700', fontFamily: 'Cairo-Bold' },
-  endText: { textAlign: 'center', paddingVertical: 12, fontSize: 12, fontFamily: 'Cairo-Regular' },
-  empty: { alignItems: 'center', gap: 10, paddingTop: 80 },
-  emptyText: { fontSize: 14, fontFamily: 'Cairo-Regular' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: scale(48), paddingHorizontal: scale(12) },
+  headerTitle: { color: '#FFFFFF', fontSize: scale(16), fontWeight: '800', fontFamily: 'Cairo-Bold' },
+  searchWrap: { paddingHorizontal: scale(12), paddingBottom: 8 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', gap: scale(8), backgroundColor: '#FFFFFF', height: scale(44), borderRadius: 999, paddingHorizontal: scale(14) },
+  searchInput: { flex: 1, fontSize: scale(14), color: '#0F172A', fontFamily: 'Cairo-Regular' },
+  countText: { fontSize: scale(13), fontWeight: '700', paddingHorizontal: scale(16), marginBottom: scale(6), fontFamily: 'Cairo-Bold' },
+  gridRow: { paddingHorizontal: scale(16), justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: scale(2) },
+  gridContent: { paddingHorizontal: scale(0), paddingTop: 4 },
+  moreBtn: { marginHorizontal: 16, marginVertical: 10, paddingVertical: scale(10), borderRadius: scale(12), borderWidth: 1, alignItems: 'center' },
+  moreText: { fontSize: scale(13), fontWeight: '700', fontFamily: 'Cairo-Bold' },
+  endText: { textAlign: 'center', paddingVertical: scale(12), fontSize: scale(12), fontFamily: 'Cairo-Regular' },
+  empty: { alignItems: 'center', gap: scale(10), paddingTop: 80 },
+  emptyText: { fontSize: scale(14), fontFamily: 'Cairo-Regular' },
 });
