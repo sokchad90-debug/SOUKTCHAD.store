@@ -1,64 +1,31 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, FlatList, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
+import { CATEGORY_IMAGE_BY_ID } from '@/services/categoryTree';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
 import { selection } from '@/services/haptics';
 import { shadows } from '@/constants/theme';
-import { scale, usePhoneLayout } from '@/constants/responsive';
-import { AppText } from '@/components/AppText';
-import { DS } from '@/ui/designSystem';
-import { CATEGORY_TREE, descendantsOf } from '@/services/categoryTree';
-
-// Static per-category images (managed data source) — mapped by category id family.
-const CATEGORY_IMAGES: Record<string, any> = {
-  electronics: require('@/assets/images/categories/electronics.png'),
-  electronics_phones: require('@/assets/images/categories/electronics.png'),
-  electronics_laptops: require('@/assets/images/categories/electronics.png'),
-  electronics_audio: require('@/assets/images/categories/electronics.png'),
-  electronics_tv: require('@/assets/images/categories/electronics.png'),
-  fashion: require('@/assets/images/categories/fashion.png'),
-  fashion_men: require('@/assets/images/categories/fashion.png'),
-  fashion_women: require('@/assets/images/categories/fashion.png'),
-  fashion_kids: require('@/assets/images/categories/fashion.png'),
-  shoes: require('@/assets/images/categories/shoes.png'),
-  shoes_sneakers: require('@/assets/images/categories/shoes.png'),
-  shoes_formal: require('@/assets/images/categories/shoes.png'),
-  home: require('@/assets/images/categories/home_garden.png'),
-  home_garden: require('@/assets/images/categories/home_garden.png'),
-  vehicles: require('@/assets/images/categories/vehicles.png'),
-  vehicles_sedans: require('@/assets/images/categories/vehicles.png'),
-  vehicles_suvs: require('@/assets/images/categories/vehicles.png'),
-  agriculture: require('@/assets/images/categories/agriculture.png'),
-  services: require('@/assets/images/categories/services.png'),
-  real_estate: require('@/assets/images/categories/real_estate.png'),
-  immobilier: require('@/assets/images/categories/real_estate.png'),
-};
-
-// Pastel frame background per category color (light tint of the brand color)
-const pastel = (color?: string) => `${color || '#E2E8F0'}1A`;
+import { scale } from '@/constants/responsive';
 
 export default function CategoriesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const layout = usePhoneLayout();
   const { width: winW } = useWindowDimensions();
-  const { colors, language, products, setSelectedCategory, categories, navigateToCategory, subCategories, currentCategoryPath, goBackCategory, resetCategoryNavigation } = useApp();
+  const { colors, language, products, setSelectedCategory, categories, navigateToCategory, subCategories, currentCategoryPath, goBackCategory } = useApp();
 
   const isFr = language === 'fr';
   const isAr = language === 'ar';
   const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
 
-  // Container-measured card width: (container - side margins 32 - 2 column gaps 24) / 3
-  const [gridW, setGridW] = useState(() => Math.min(winW, 480));
-  const COLS = 3;
-  const SIDE = scale(16);
-  const GAP = scale(12);
-  const ROW_GAP = scale(16);
+  // Container-measured card width keeps four equal columns on normal phones.
+  const [gridW, setGridW] = useState(winW);
+  const COLS = 4;
+  const SIDE = scale(12);
+  const GAP = scale(8);
   const CARD_W = Math.floor((gridW - SIDE * 2 - GAP * (COLS - 1)) / COLS);
-  const IMG_H = Math.round(CARD_W * 0.86); // square-ish pastel frame per reference
 
   // Show subcategories when navigating into one, otherwise root categories.
   // Buyer-side: hide categories with no products AND no children (empty branches);
@@ -104,20 +71,12 @@ export default function CategoriesScreen() {
     }
   };
 
-  // Real count from loaded products. null = not loaded yet (no fake zeros)
-  const getCategoryCount = (catId: string): number | null => {
-    if (!products || products.length === 0) return null;
-    // Direct + ALL descendants counting (no duplicates: each ad has one leaf)
-    const scope = [catId, ...descendantsOf(CATEGORY_TREE, catId)];
-    return products.filter(p => p?.categoryId && scope.includes(p.categoryId)).length;
-  };
-
   const renderCategory = ({ item: cat }: { item: any }) => {
-    const count = getCategoryCount(cat.id);
     const name = (cat.name as Record<string, string>)?.[language] || (cat.name as Record<string, string>)?.en || cat.id;
     const icon = (cat.icon || 'category') as any;
-    const color = cat.color || '#FF7A00';
-    const image = CATEGORY_IMAGES[cat.id];
+    const color = cat.color || colors.primary;
+    // Photo per category: local asset by id (roots + known leaves), fallback icon
+    const photo = (cat as any).image || CATEGORY_IMAGE_BY_ID[cat.id];
     return (
       <Pressable
         onPress={() => handleCategoryPress(cat)}
@@ -128,10 +87,10 @@ export default function CategoriesScreen() {
           shadows.card,
         ]}
       >
-        <View style={[styles.categoryIconWrap, { height: IMG_H, backgroundColor: pastel(color) }]}>
-          {image ? (
+        <View style={[styles.categoryImageWrap, { backgroundColor: colors.backgroundSecondary || '#F6F6FB' }]}>
+          {photo ? (
             <Image
-              source={image}
+              source={photo}
               style={styles.categoryImage}
               contentFit="contain"
               contentPosition="center"
@@ -144,39 +103,26 @@ export default function CategoriesScreen() {
         <Text style={[styles.categoryName, { color: colors.textPrimary }]} numberOfLines={2}>
           {name}
         </Text>
-        <View style={styles.categoryCountWrap}>
-          {count != null && count > 0 ? (
-            <View style={[styles.categoryCount, { backgroundColor: pastel(color) }]}>
-              <Text style={[styles.categoryCountText, { color }]}>{count}</Text>
-            </View>
-          ) : count == null ? (
-            // products not loaded yet — show nothing rather than a fake 0
-            <View style={{ height: 16 }} />
-          ) : null}
-        </View>
       </Pressable>
     );
   };
-
-  const categoryNameOf = (c: { id: string; name: any }) => (c.name as Record<string, string>)?.[language] || c.name?.en || c.id;
-  const inSubMode = subCategories.length > 0;
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Breadcrumb path + back — restores level and scroll state (path kept in context) */}
       {currentCategoryPath.length > 0 && (
         <View style={[styles.crumbRow, isAr && { flexDirection: 'row-reverse' }]}>
-          <Pressable onPress={() => { selection(); goBackCategory(); }} hitSlop={10}
+          <Pressable onPress={() => { selection(); goBackCategory(); }} hitSlop={scale(10)}
             accessibilityRole="button" accessibilityLabel={lb('Back', 'Retour', 'رجوع')}>
             <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(22)} color={colors.textPrimary} />
           </Pressable>
           <Text style={[styles.crumbText, { color: colors.textTertiary }]} numberOfLines={1}>
             {currentCategoryPath.map((p, i) => (
-              <Text key={p.id}>{i > 0 ? (isAr ? ' ← ' : ' → ') : ''}{p.name}</Text>
+              <Text key={p.id}>{`${i > 0 ? (isAr ? ' ← ' : ' → ') : ''}${p.name}`}</Text>
             ))}
           </Text>
           {/* عرض الكل for the current level scope */}
-          <Pressable onPress={showAllForCurrent} hitSlop={8}
+          <Pressable onPress={showAllForCurrent} hitSlop={scale(8)}
             style={[styles.seeAllBtn, { borderColor: colors.primary }]}
             accessibilityRole="button" accessibilityLabel={lb('View all', 'Tout voir', 'عرض الكل')}>
             <Text style={[styles.seeAllText, { color: colors.primary }]}>
@@ -189,9 +135,9 @@ export default function CategoriesScreen() {
         data={displayCategories}
         renderItem={renderCategory}
         keyExtractor={(item) => item.id}
-        numColumns={3}
+        numColumns={4}
         columnWrapperStyle={[styles.row, isAr && { flexDirection: 'row-reverse' }]}
-        contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(16), paddingBottom: scale(16) }}
+        contentContainerStyle={{ paddingHorizontal: SIDE, paddingTop: scale(8), paddingBottom: insets.bottom + scale(90) }}
         onLayout={(e) => setGridW(e.nativeEvent.layout.width)}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
@@ -209,16 +155,13 @@ export default function CategoriesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  row: { gap: scale(12), marginBottom: scale(16) },
-  categoryCard: { borderRadius: scale(16), borderWidth: 1, borderColor: '#EEF2F7', padding: scale(8), alignItems: 'center', gap: scale(6) },
-  categoryIconWrap: { width: '100%', borderRadius: scale(14), alignItems: 'center', justifyContent: 'center' },
+  row: { gap: scale(8), marginBottom: scale(10) },
+  categoryCard: { minHeight: scale(90), borderRadius: scale(14), borderWidth: scale(1), padding: scale(6), alignItems: 'center', gap: scale(5) },
+  categoryImageWrap: { width: '100%', aspectRatio: 1, borderRadius: scale(12), overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   categoryImage: { width: '100%', height: '100%' },
-  categoryName: { fontSize: scale(13), fontWeight: '600', textAlign: 'center', minHeight: scale(32), lineHeight: scale(16) },
+  categoryName: { width: '100%', minHeight: scale(32), fontSize: scale(12), lineHeight: scale(16), fontWeight: '600', textAlign: 'center' },
   crumbRow: { flexDirection: 'row', alignItems: 'center', gap: scale(8), paddingHorizontal: scale(16), paddingTop: scale(12), paddingBottom: scale(4) },
   crumbText: { fontSize: scale(13), fontWeight: '600', flex: 1 },
-  seeAllBtn: { borderWidth: 1, borderRadius: scale(14), paddingHorizontal: scale(12), paddingVertical: scale(6) },
+  seeAllBtn: { borderWidth: scale(1), borderRadius: scale(14), paddingHorizontal: scale(12), paddingVertical: scale(6) },
   seeAllText: { fontSize: scale(12), fontWeight: '700' },
-  categoryCountWrap: { height: 20, justifyContent: 'center' },
-  categoryCount: { paddingHorizontal: scale(10), paddingVertical: scale(2), borderRadius: scale(10) },
-  categoryCountText: { fontSize: scale(11), fontWeight: '700' },
 });

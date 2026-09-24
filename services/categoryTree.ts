@@ -181,15 +181,29 @@ export const CATEGORY_TREE: CatNode[] = [
 
 /** Map of category id -> image asset (reused from existing category images). */
 export const CATEGORY_IMAGE_BY_ID: Record<string, any> = {
-  electronics: require('@/assets/images/categories/electronics.png'),
-  fashion: require('@/assets/images/categories/fashion.png'),
-  shoes: require('@/assets/images/categories/shoes.png'),
-  home_garden: require('@/assets/images/categories/home_garden.png'),
-  home_kitchen: require('@/assets/images/categories/home_garden.png'),
-  vehicles: require('@/assets/images/categories/vehicles.png'),
-  agriculture: require('@/assets/images/categories/agriculture.png'),
-  services: require('@/assets/images/categories/services.png'),
-  real_estate: require('@/assets/images/categories/real_estate.png'),
+  electronics: require('@/assets/images/categories/electronics_photo.jpg'),
+  fashion: require('@/assets/images/categories/fashion_photo.jpg'),
+  shoes: require('@/assets/images/categories/shoes_photo.jpg'),
+  bags_accessories: require('@/assets/images/categories/bags_accessories_photo.jpg'),
+  beauty: require('@/assets/images/categories/beauty_photo.jpg'),
+  baby: require('@/assets/images/categories/baby_photo.jpg'),
+  home_kitchen: require('@/assets/images/categories/home_kitchen_photo.jpg'),
+  furniture: require('@/assets/images/categories/furniture_photo.jpg'),
+  electromenager: require('@/assets/images/categories/electromenager_photo.jpg'),
+  energy: require('@/assets/images/categories/energy_photo.jpg'),
+  construction: require('@/assets/images/categories/construction_photo.jpg'),
+  vehicles: require('@/assets/images/categories/vehicles_photo.jpg'),
+  agriculture: require('@/assets/images/categories/agriculture_photo.jpg'),
+  grocery: require('@/assets/images/categories/grocery_photo.jpg'),
+  office_school: require('@/assets/images/categories/office_school_photo.jpg'),
+  sports: require('@/assets/images/categories/sports_photo.jpg'),
+  toys: require('@/assets/images/categories/toys_photo.jpg'),
+  books_music: require('@/assets/images/categories/books_music_photo.jpg'),
+  pets: require('@/assets/images/categories/pets_photo.jpg'),
+  trade_equipment: require('@/assets/images/categories/trade_equipment_photo.jpg'),
+  real_estate: require('@/assets/images/categories/real_estate_photo.jpg'),
+  services: require('@/assets/images/categories/services_photo.jpg'),
+  home_garden: require('@/assets/images/categories/home_garden_photo.jpg'),
 };
 
 /**
