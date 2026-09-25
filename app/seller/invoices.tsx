@@ -202,7 +202,7 @@ export default function SellerInvoicesScreen() {
     .summary .card .label { font-size: 11px; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
     .summary .card .value { font-size: 20px; font-weight: 800; margin-top: 6px; }
     .summary .card .value.revenue { color: #6366F1; }
-    table { width: 100%; border-collapse: collapse; }
+    table { width: scale(100)%; border-collapse: collapse; }
     thead th { background: #F8FAFC; color: #64748B; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; text-align: ${align}; padding: 10px 12px; border-bottom: 1px solid #E2E8F0; }
     .footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #E2E8F0; text-align: center; color: #94A3B8; font-size: 11px; }
   </style>
@@ -293,7 +293,7 @@ export default function SellerInvoicesScreen() {
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
       <View style={[iStyles.header, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={() => router.back()} hitSlop={scale(12)}>
           <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(24)} color={colors.textPrimary} />
         </Pressable>
         <Text style={[iStyles.headerTitle, { color: colors.textPrimary }]}>
@@ -331,11 +331,11 @@ export default function SellerInvoicesScreen() {
                 {lb('From', 'Du', 'من')}
               </Text>
               <View style={iStyles.dateStepper}>
-                <Pressable onPress={() => { selection(); setCustomStart(shiftDate(customStart, -1)); }} hitSlop={8} style={[iStyles.stepBtn, { backgroundColor: colors.backgroundSecondary }]}>
+                <Pressable onPress={() => { selection(); setCustomStart(shiftDate(customStart, -1)); }} hitSlop={scale(8)} style={[iStyles.stepBtn, { backgroundColor: colors.backgroundSecondary }]}>
                   <MaterialIcons name="remove" size={scale(18)} color={colors.textPrimary} />
                 </Pressable>
                 <Text style={[iStyles.dateValue, { color: colors.textPrimary }]}>{formatDateInput(customStart)}</Text>
-                <Pressable onPress={() => { selection(); setCustomStart(shiftDate(customStart, 1)); }} hitSlop={8} style={[iStyles.stepBtn, { backgroundColor: colors.backgroundSecondary }]}>
+                <Pressable onPress={() => { selection(); setCustomStart(shiftDate(customStart, 1)); }} hitSlop={scale(8)} style={[iStyles.stepBtn, { backgroundColor: colors.backgroundSecondary }]}>
                   <MaterialIcons name="add" size={scale(18)} color={colors.textPrimary} />
                 </Pressable>
               </View>
@@ -345,11 +345,11 @@ export default function SellerInvoicesScreen() {
                 {lb('To', 'Au', 'إلى')}
               </Text>
               <View style={iStyles.dateStepper}>
-                <Pressable onPress={() => { selection(); setCustomEnd(shiftDate(customEnd, -1)); }} hitSlop={8} style={[iStyles.stepBtn, { backgroundColor: colors.backgroundSecondary }]}>
+                <Pressable onPress={() => { selection(); setCustomEnd(shiftDate(customEnd, -1)); }} hitSlop={scale(8)} style={[iStyles.stepBtn, { backgroundColor: colors.backgroundSecondary }]}>
                   <MaterialIcons name="remove" size={scale(18)} color={colors.textPrimary} />
                 </Pressable>
                 <Text style={[iStyles.dateValue, { color: colors.textPrimary }]}>{formatDateInput(customEnd)}</Text>
-                <Pressable onPress={() => { selection(); setCustomEnd(shiftDate(customEnd, 1)); }} hitSlop={8} style={[iStyles.stepBtn, { backgroundColor: colors.backgroundSecondary }]}>
+                <Pressable onPress={() => { selection(); setCustomEnd(shiftDate(customEnd, 1)); }} hitSlop={scale(8)} style={[iStyles.stepBtn, { backgroundColor: colors.backgroundSecondary }]}>
                   <MaterialIcons name="add" size={scale(18)} color={colors.textPrimary} />
                 </Pressable>
               </View>

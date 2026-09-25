@@ -1,3 +1,4 @@
+import { scale } from '@/ui/responsive';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -19,10 +20,10 @@ function TopBadgeInner({ earned, label = 'Top' }: Props) {
   if (!earned) return null;
   return (
     <View style={[styles.badge, {
-      gap: 3 * s,
-      borderRadius: 999,
-      paddingHorizontal: 7 * s,
-      paddingVertical: 3 * s,
+      gap: scale(3) * s,
+      borderRadius: scale(999),
+      paddingHorizontal: scale(7) * s,
+      paddingVertical: scale(3) * s,
     }]} testID="top-badge">
       <MaterialIcons name="workspace-premium" size={Math.round(13 * s)} color="#B8860B" />
       <Text style={[styles.text, { fontSize: Math.round(11 * s) }]}>{label}</Text>
@@ -33,14 +34,14 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: scale(3),
     backgroundColor: '#FDE68A',
-    borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
+    borderRadius: scale(999),
+    paddingHorizontal: scale(7),
+    paddingVertical: scale(3),
     alignSelf: 'flex-start',
   },
-  text: { fontSize: 11, fontWeight: '800', color: '#B8860B', includeFontPadding: false },
+  text: { fontSize: scale(11), fontWeight: '800', color: '#B8860B', includeFontPadding: false },
 });
 const TopBadge = React.memo(TopBadgeInner);
 export default TopBadge;

@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: scale(56), height: scale(56), borderRadius: scale(28),
     alignItems: 'center', justifyContent: 'center', marginTop: -scale(20),
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 8,
+    shadowColor: '#000', shadowOffset: { width: 0, height: scale(4) }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 8,
   },
 });
 
@@ -161,7 +161,7 @@ export default function TabLayout() {
           borderTopWidth: 0,
           borderTopColor: 'transparent',
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
+          shadowOffset: { width: 0, height: scale(-2) },
           shadowOpacity: 0.08,
           shadowRadius: 4,
           elevation: 0,
@@ -169,8 +169,8 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.tabBarInactive,
         tabBarIconStyle: { width: scale(28), height: scale(28), marginBottom: 0 },
-        tabBarLabelStyle: { fontSize: scale(9), fontWeight: '700' as const, marginTop: -2, maxWidth: '100%' },
-        tabBarBadgeStyle: { backgroundColor: '#EF4444', color: '#FFF', fontSize: scale(9), minWidth: scale(16), height: scale(16), borderRadius: scale(8), top: -2 },
+        tabBarLabelStyle: { fontSize: scale(9), fontWeight: '700' as const, marginTop: scale(-2), maxWidth: '100%' },
+        tabBarBadgeStyle: { backgroundColor: '#EF4444', color: '#FFF', fontSize: scale(9), minWidth: scale(16), height: scale(16), borderRadius: scale(8), top: scale(-2) },
       }}
     >
       {/* SELLER TABS */}

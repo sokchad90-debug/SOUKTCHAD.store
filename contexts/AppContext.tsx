@@ -457,6 +457,7 @@ interface AppContextType {
   getCategoryById: (id: string) => Category | undefined;
   getPinnedProducts: () => Product[];
   productsLoading: boolean;
+  productsError: boolean;
   realUsers: any[];
   usersLoading: boolean;
   refreshUsers: () => Promise<void>;
@@ -524,6 +525,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [authLoading]);
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [productsLoading, setProductsLoading] = useState(false);
+  const [productsError, setProductsError] = useState(false);
   const [dbProductsLoaded, setDbProductsLoaded] = useState(false);
   // Synchronous cache of locally-persisted products, used as a fallback in
   // getProductById before the async merge into `products` state completes.
@@ -828,6 +830,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // ─── Fetch products from database ───
   const loadProductsFromDB = useCallback(async () => {
     setProductsLoading(true);
+    setProductsError(false);
     try {
       const { data, error } = await fetchProducts({ sort: 'newest' });
       if (!error && data.length > 0) {
@@ -845,10 +848,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } else if (data.length === 0 && !error) {
         // DB is empty, keep mock data + local products as demo
         setDbProductsLoaded(true);
+      } else if (error) {
+        setProductsError(true);
       }
       // If error: keep current products (mock + local) unchanged
     } catch (e) {
       console.log('loadProductsFromDB error:', e);
+      setProductsError(true);
     } finally {
       setProductsLoading(false);
     }
@@ -1705,7 +1711,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // persists for the session even if the API call fails.
       setFollowNotifState(prev => ({ ...prev, [sellerId]: enabled }));
       const token = await AsyncStorage.getItem('sokchad_auth_token');
-      
+
       // Try API first
       if (token) {
         try {
@@ -1720,7 +1726,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           console.log('toggleFollowNotifications API error, using local:', apiErr);
         }
       }
-      
+
       // Fallback: always succeed locally (state already updated above)
       return true;
     } catch (e) { console.log('toggleFollowNotifications error:', e); }
@@ -2455,7 +2461,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       enabledCountries, getEnabledCountryList, getCitiesForCountry, toggleCountryEnabled, setEnabledCountries,
       refreshUserProfile, loadDemoUser, refreshProducts,
       getProductById, getProductsByCategory, getProductsBySeller, getSellerById, getCategoryById, getPinnedProducts,
-      productsLoading,
+      productsLoading, productsError,
       realUsers, usersLoading, refreshUsers,
       buyerOrders, buyerCompletedOrders, sellerOrders,
     }}>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert, Modal, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert, Modal, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -309,9 +309,10 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[st.safeArea, { backgroundColor: pageBg }]}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       {/* No header at all: settings content starts at the very top (owner request).
           Back arrow floats over the content, status bar icons dark on light bg. */}
-      <Pressable onPress={() => router.back()} hitSlop={14} style={st.backBtn}
+      <Pressable onPress={() => router.back()} hitSlop={scale(14)} style={st.backBtn}
         accessibilityRole="button" accessibilityLabel={lb('Back', 'Retour', 'رجوع')}>
         <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(24)} color={isDark ? colors.textPrimary : '#1F2937'} />
       </Pressable>
@@ -379,7 +380,7 @@ export default function SettingsScreen() {
 
               {/* Account info: value shown UNDER the title (no truncation), no fake chevrons */}
               <View style={[st.card, { backgroundColor: cardBg }]}>
-                <View style={st.infoHead}>
+                <View style={[st.infoHead, isAr && { flexDirection: 'row-reverse' }]}>
                   <View style={[st.iconCircle, { backgroundColor: isDark ? colors.primary + '22' : '#E7E2FD' }]}>
                     <MaterialIcons name="info" size={scale(21)} color={iconTint} />
                   </View>
@@ -496,7 +497,7 @@ export default function SettingsScreen() {
               <Text style={[st.modalTitle, { color: colors.primary }]}>
                 {lb('Change Password', 'Changer le mot de passe', 'تغيير كلمة المرور')}
               </Text>
-              <Pressable onPress={() => setShowPasswordModal(false)} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
+              <Pressable onPress={() => setShowPasswordModal(false)} hitSlop={scale(12)}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
             </View>
             <Text style={[st.modalDesc, { color: colors.textSecondary }]}>
               {lb('Enter your current password and a new one.', 'Entrez votre mot de passe actuel et un nouveau.', 'أدخل كلمة المرور الحالية وكلمة جديدة.')}
@@ -557,7 +558,7 @@ export default function SettingsScreen() {
                 <Text style={[st.modalTitle, { color: colors.primary }]}>
                   {lb('Edit Profile', 'Modifier le profil', 'تعديل الملف الشخصي')}
                 </Text>
-                <Pressable onPress={() => setShowEditProfileModal(false)} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
+                <Pressable onPress={() => setShowEditProfileModal(false)} hitSlop={scale(12)}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
               </View>
 
               <Text style={[st.inputLabel, { color: colors.textSecondary }]}>{lb('AVATAR', 'AVATAR', 'الصورة الشخصية')}</Text>
@@ -634,7 +635,7 @@ export default function SettingsScreen() {
               <Text style={[st.modalTitle, { color: colors.error }]}>
                 {lb('Blocked Sellers', 'Vendeurs bloqués', 'البائعون المحظورون')}
               </Text>
-              <Pressable onPress={() => setShowBlockedModal(false)} hitSlop={12}>
+              <Pressable onPress={() => setShowBlockedModal(false)} hitSlop={scale(12)}>
                 <MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} />
               </Pressable>
             </View>
@@ -687,7 +688,8 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+          </KeyboardAvoidingView>
+</SafeAreaView>
   );
 }
 
@@ -714,7 +716,7 @@ const st = StyleSheet.create({
   modalContent: { borderTopLeftRadius: scale(24), borderTopRightRadius: scale(24), padding: scale(24), maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: scale(8) },
   modalTitle: { fontSize: scale(20), fontWeight: '700', fontFamily: 'Cairo-Bold' },
-  modalDesc: { fontSize: scale(14), lineHeight: 21, marginBottom: scale(16), fontFamily: 'Cairo-Regular' },
+  modalDesc: { fontSize: scale(14), lineHeight: scale(21), marginBottom: scale(16), fontFamily: 'Cairo-Regular' },
   inputLabel: { fontSize: scale(11), fontWeight: '700', letterSpacing: 0.8, marginBottom: scale(6), marginTop: scale(12), fontFamily: 'Cairo-SemiBold' },
   input: { height: scale(48), borderRadius: borderRadius.md, borderWidth: 1, paddingHorizontal: scale(14), fontSize: scale(15), fontWeight: '500', fontFamily: 'Cairo-Regular' },
   docPicker: { borderRadius: borderRadius.md, borderWidth: 2, borderStyle: 'dashed', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },

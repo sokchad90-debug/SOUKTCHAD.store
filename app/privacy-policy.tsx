@@ -95,7 +95,7 @@ export default function PrivacyPolicyScreen() {
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={() => router.back()} hitSlop={scale(12)}>
           <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
@@ -177,19 +177,19 @@ const styles = StyleSheet.create({
     alignItems: 'center', padding: scale(24), borderRadius: scale(16), borderWidth: 1, marginBottom: scale(16), gap: scale(6),
   },
   heroTitle: { fontSize: scale(28), fontWeight: '800', marginTop: scale(4) },
-  heroSubtitle: { fontSize: scale(13), textAlign: 'center', lineHeight: 19 },
+  heroSubtitle: { fontSize: scale(13), textAlign: 'center', lineHeight: scale(19) },
   disclaimerBox: {
     flexDirection: 'row', alignItems: 'flex-start', gap: scale(10), padding: scale(14),
     borderRadius: borderRadius.md, borderWidth: 1.5, marginBottom: scale(16),
   },
-  disclaimerText: { flex: 1, fontSize: scale(13), fontWeight: '600', lineHeight: 20 },
+  disclaimerText: { flex: 1, fontSize: scale(13), fontWeight: '600', lineHeight: scale(20) },
   sectionCard: {
     borderRadius: borderRadius.md, borderWidth: 1, padding: scale(16), marginBottom: scale(12), gap: scale(10),
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: scale(10) },
   sectionIconWrap: { width: scale(36), height: scale(36), borderRadius: scale(18), alignItems: 'center', justifyContent: 'center' },
   sectionTitle: { fontSize: scale(16), fontWeight: '700', flex: 1 },
-  sectionBody: { fontSize: scale(14), lineHeight: 22 },
+  sectionBody: { fontSize: scale(14), lineHeight: scale(22) },
   contactCard: {
     flexDirection: 'row', alignItems: 'center', gap: scale(12), padding: scale(16),
     borderRadius: borderRadius.md, borderWidth: 1, marginTop: scale(4), marginBottom: scale(12),

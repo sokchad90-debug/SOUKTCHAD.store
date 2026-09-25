@@ -85,8 +85,8 @@ export default function VerifiedStoresScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.borderLight }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
+      <View style={[styles.header, isAr && { flexDirection: 'row-reverse' }, { backgroundColor: colors.surface, borderBottomColor: colors.borderLight }]}>
+        <Pressable onPress={() => router.back()} hitSlop={scale(12)} style={styles.backBtn}>
           <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
@@ -101,7 +101,7 @@ export default function VerifiedStoresScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderStore}
         numColumns={2}
-        columnWrapperStyle={styles.grid}
+        columnWrapperStyle={[styles.grid, isAr && { flexDirection: 'row-reverse' }]}
         contentContainerStyle={{ paddingBottom: insets.bottom + scale(16) }}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   storePlaceholderText: {
     color: '#FFF', fontSize: scale(28), fontWeight: '800', textAlign: 'center',
-    lineHeight: 72,
+    lineHeight: scale(72),
   },
   storeBadge: {
     position: 'absolute', bottom: 0, right: 0,

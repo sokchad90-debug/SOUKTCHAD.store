@@ -1,5 +1,6 @@
+import { scale } from '@/ui/responsive';
 /*
- * @Description: 
+ * @Description:
  */
 
 // Powered by Sokchad
@@ -16,15 +17,15 @@ export default function NotFoundScreen() {
         colors={['#0a0a0a', '#1a1a1a']}
         style={StyleSheet.absoluteFillObject}
       />
-      
+
       <View style={styles.content}>
-        <MaterialIcons name="photo-camera" size={80} color="#FFD700" />
+        <MaterialIcons name="photo-camera" size={scale(80)} color="#FFD700" />
         <Text style={styles.title}>Page Not Found</Text>
         <Text style={styles.message}>
           The moment you&apos;re looking for seems to have been lost in the shadows.
         </Text>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.homeButton}
           onPress={() => router.push('/')}
         >
@@ -44,31 +45,31 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: scale(20),
   },
   title: {
-    fontSize: 28,
+    fontSize: scale(28),
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: scale(20),
+    marginBottom: scale(10),
   },
   message: {
-    fontSize: 16,
+    fontSize: scale(16),
     color: '#CCCCCC',
     textAlign: 'center',
-    marginBottom: 40,
-    lineHeight: 22,
+    marginBottom: scale(40),
+    lineHeight: scale(22),
   },
   homeButton: {
     backgroundColor: '#FFD700',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
+    paddingHorizontal: scale(30),
+    paddingVertical: scale(15),
+    borderRadius: scale(25),
   },
   homeButtonText: {
     color: '#0a0a0a',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: scale(16),
   },
 });

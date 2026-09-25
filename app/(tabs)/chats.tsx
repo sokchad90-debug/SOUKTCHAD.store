@@ -9,7 +9,7 @@ import { getSellerById } from '@/services/mockData';
 import LoginModal from '@/components/LoginModal';
 import { ChatListSkeleton } from '@/components/Skeleton';
 import { borderRadius } from '@/constants/theme';
-import { scale } from '@/constants/responsive';
+import { BOTTOM_NAV_CONTENT_GAP, scale } from '@/constants/responsive';
 
 export default function ChatsScreen() {
   const insets = useSafeAreaInsets();
@@ -89,7 +89,7 @@ export default function ChatsScreen() {
           </View>
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={{ paddingBottom: scale(12) }}
+            contentContainerStyle={{ paddingBottom: insets.bottom + BOTTOM_NAV_CONTENT_GAP + scale(4) }}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
@@ -121,7 +121,7 @@ export default function ChatsScreen() {
                     key={conv.id}
                     onPress={() => router.push(`/conversation/${conv.id}`)}
                     style={({ pressed }) => [
-                      styles.convItem,
+                      styles.convItem, isAr && styles.rowReverse,
                       { backgroundColor: pressed ? colors.borderLight : 'transparent', borderBottomColor: colors.borderLight },
                     ]}
                   >
@@ -143,8 +143,8 @@ export default function ChatsScreen() {
                     </View>
 
                     <View style={styles.convContent}>
-                      <View style={styles.convTopRow}>
-                        <View style={styles.nameStatusRow}>
+                      <View style={[styles.convTopRow, isAr && styles.rowReverse]}>
+                        <View style={[styles.nameStatusRow, isAr && styles.rowReverse]}>
                           <Text style={[styles.convName, { color: colors.textPrimary }]} numberOfLines={1}>
                             {otherName}
                           </Text>
@@ -183,6 +183,7 @@ export default function ChatsScreen() {
 }
 
 const styles = StyleSheet.create({
+  rowReverse: { flexDirection: 'row-reverse' },
   safeArea: { flex: 1 },
   loadingFull: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: {
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
   emptyDesc: {
     fontSize: scale(15),
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: scale(22),
     marginBottom: scale(24),
     fontFamily: 'Cairo-Regular',
   },

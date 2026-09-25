@@ -267,7 +267,7 @@ export default function CheckoutScreen() {
           <View style={{ flex: 1 }} />
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{lb('Complete your order', 'Finaliser la commande', 'إتمام الطلب')}</Text>
           <View style={{ flex: 1, alignItems: 'flex-end' }}>
-            <Pressable onPress={() => router.back()} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textPrimary} /></Pressable>
+            <Pressable onPress={() => router.back()} hitSlop={scale(12)}><MaterialIcons name="close" size={scale(24)} color={colors.textPrimary} /></Pressable>
           </View>
         </View>
         <View style={[styles.stepIndicator, isAr && { flexDirection: 'row-reverse' }, { alignSelf: 'stretch', marginTop: scale(12) }]}>
@@ -581,7 +581,7 @@ export default function CheckoutScreen() {
                     </Text>
                   ) : null}
                 </View>
-                <Pressable onPress={() => copyToClipboard(String(totalPrice), lb('Amount', 'Montant', 'المبلغ'))} style={[styles.copyBtnSmall, { backgroundColor: colors.primary + '15' }]} hitSlop={6}>
+                <Pressable onPress={() => copyToClipboard(String(totalPrice), lb('Amount', 'Montant', 'المبلغ'))} style={[styles.copyBtnSmall, { backgroundColor: colors.primary + '15' }]} hitSlop={scale(6)}>
                   <MaterialIcons name="content-copy" size={scale(16)} color={colors.primary} />
                 </Pressable>
               </View>
@@ -598,7 +598,7 @@ export default function CheckoutScreen() {
                     </Text>
                   ) : null}
                 </View>
-                <Pressable onPress={() => copyToClipboard(selectedMethod?.receivingNumber || '', lb('Number', 'Numéro', 'الرقم'))} style={[styles.copyBtnSmall, { backgroundColor: colors.verified + '15' }]} hitSlop={6}>
+                <Pressable onPress={() => copyToClipboard(selectedMethod?.receivingNumber || '', lb('Number', 'Numéro', 'الرقم'))} style={[styles.copyBtnSmall, { backgroundColor: colors.verified + '15' }]} hitSlop={scale(6)}>
                   <MaterialIcons name="content-copy" size={scale(16)} color={colors.verified} />
                 </Pressable>
               </View>
@@ -713,7 +713,7 @@ const styles = StyleSheet.create({
   stepDot: { height: scale(8), borderRadius: scale(4) },
   summaryCard: { flexDirection: 'row', padding: scale(12), borderRadius: scale(14), borderWidth: 1, gap: scale(12), marginBottom: scale(8) },
   summaryImage: { width: scale(68), height: scale(68), borderRadius: scale(10) },
-  summaryTitle: { fontSize: scale(14), fontWeight: '600', lineHeight: 18 },
+  summaryTitle: { fontSize: scale(14), fontWeight: '600', lineHeight: scale(18) },
   summaryLocation: { fontSize: scale(12), marginTop: scale(2) },
   summaryPrice: { fontSize: scale(18), fontWeight: '800' },
   discountTag: { paddingHorizontal: scale(5), paddingVertical: scale(2), borderRadius: scale(4) },
@@ -737,11 +737,11 @@ const styles = StyleSheet.create({
   shippingIcon: { width: scale(38), height: scale(38), borderRadius: scale(19), alignItems: 'center', justifyContent: 'center' },
   shippingName: { fontSize: scale(14), fontWeight: '700' },
   shippingPhone: { fontSize: scale(13), marginTop: scale(2) },
-  shippingDesc: { fontSize: scale(12), marginTop: scale(2), lineHeight: 16 },
+  shippingDesc: { fontSize: scale(12), marginTop: scale(2), lineHeight: scale(16) },
   paymentCard: { flexDirection: 'row', alignItems: 'center', padding: scale(14), borderRadius: scale(14), marginBottom: scale(10), gap: scale(12) },
   paymentIconCircle: { width: scale(48), height: scale(48), borderRadius: scale(24), alignItems: 'center', justifyContent: 'center' },
   paymentName: { fontSize: scale(16), fontWeight: '700' },
-  paymentInstructions: { fontSize: scale(12), marginTop: scale(2), lineHeight: 16 },
+  paymentInstructions: { fontSize: scale(12), marginTop: scale(2), lineHeight: scale(16) },
   radio: { width: scale(20), height: scale(20), borderRadius: scale(10), borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   copyCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: scale(16), borderRadius: scale(14), borderWidth: 1.5 },
   copyAmount: { fontSize: scale(28), fontWeight: '800' },
@@ -749,9 +749,9 @@ const styles = StyleSheet.create({
   copyNumber: { fontSize: scale(22), fontWeight: '800', marginTop: scale(2) },
   copyBtn: { width: scale(40), height: scale(40), borderRadius: scale(20), alignItems: 'center', justifyContent: 'center' },
   instructionsBox: { flexDirection: 'row', alignItems: 'flex-start', gap: scale(8), padding: scale(12), borderRadius: scale(12), borderWidth: 1, marginTop: scale(12) },
-  instructionsText: { flex: 1, fontSize: scale(12), lineHeight: 18 },
+  instructionsText: { flex: 1, fontSize: scale(12), lineHeight: scale(18) },
   messageInputWrap: { borderRadius: scale(12), borderWidth: 1, padding: scale(12) },
-  messageInput: { fontSize: scale(14), lineHeight: 20, minHeight: scale(72), maxHeight: scale(140), textAlignVertical: 'top', padding: 0 },
+  messageInput: { fontSize: scale(14), lineHeight: scale(20), minHeight: scale(72), maxHeight: scale(140), textAlignVertical: 'top', padding: 0 },
   emptyBox: { alignItems: 'center', padding: scale(32), borderRadius: scale(14), borderWidth: 1, gap: scale(8) },
   emptyText: { fontSize: scale(14), textAlign: 'center' },
   backLink: { flexDirection: 'row', alignItems: 'center', gap: scale(4), marginTop: scale(16), alignSelf: 'center' },
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
   blockContainer: { flex: 1, alignItems: 'center', paddingHorizontal: scale(24) },
   blockIcon: { width: scale(100), height: scale(100), borderRadius: scale(50), alignItems: 'center', justifyContent: 'center', marginBottom: scale(20) },
   blockTitle: { fontSize: scale(28), fontWeight: '800', marginBottom: scale(8) },
-  blockMsg: { fontSize: scale(16), textAlign: 'center', lineHeight: 24, marginBottom: scale(28) },
+  blockMsg: { fontSize: scale(16), textAlign: 'center', lineHeight: scale(24), marginBottom: scale(28) },
   receipt: { width: '100%', padding: scale(12), borderRadius: scale(12), borderWidth: 1, gap: scale(8) },
   receiptRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   receiptLabel: { fontSize: scale(13) },

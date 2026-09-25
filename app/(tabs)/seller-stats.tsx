@@ -150,7 +150,7 @@ export default function SellerStatsScreen() {
               <Pressable
                 onPress={() => { selection(); router.push('/settings' as any); }}
                 style={styles.headerGearBtn}
-                hitSlop={12}
+                hitSlop={scale(12)}
               >
                 <MaterialIcons name="settings" size={scale(24)} color="#FFF" />
               </Pressable>
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   headerAvatarWrap: { position: 'relative' },
   headerAvatar: { width: scale(52), height: scale(52), borderRadius: scale(26), borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.3)' },
   headerAvatarText: { fontSize: scale(22), fontWeight: '800', color: '#FFF', fontFamily: 'Cairo-Bold' },
-  headerVerifiedBadge: { position: 'absolute', bottom: -2, right: -2, width: scale(18), height: scale(18), borderRadius: scale(9), backgroundColor: "#3B82F6", alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFF' },
+  headerVerifiedBadge: { position: 'absolute', bottom: scale(-2), right: scale(-2), width: scale(18), height: scale(18), borderRadius: scale(9), backgroundColor: "#3B82F6", alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFF' },
   headerStoreName: { fontSize: scale(18), fontWeight: '800', color: '#FFF', fontFamily: 'Cairo-Bold' },
   headerStoreId: { fontSize: scale(12), color: 'rgba(255,255,255,0.7)', marginTop: scale(2), fontFamily: 'Cairo-Regular' },
   headerRatingRow: { flexDirection: 'row', alignItems: 'center', gap: scale(4), marginTop: scale(4) },

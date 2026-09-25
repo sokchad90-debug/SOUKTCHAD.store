@@ -175,7 +175,7 @@ export default function SellerAnalyticsScreen() {
         <Pressable
           onPress={() => { selection(); router.push('/seller-settings' as any); }}
           style={aStyles.headerGear}
-          hitSlop={12}
+          hitSlop={scale(12)}
         >
           <MaterialIcons name="settings" size={scale(22)} color={colors.textPrimary} />
         </Pressable>
@@ -491,7 +491,7 @@ const aStyles = StyleSheet.create({
   statusBarDot: { width: scale(8), height: scale(8), borderRadius: scale(4) },
   statusBarLabel: { fontSize: scale(13), fontWeight: '600', width: scale(80), fontFamily: 'Cairo-SemiBold' },
   statusBarTrack: { flex: 1, height: scale(8), borderRadius: scale(4), overflow: 'hidden' },
-  statusBarFill: { height: '100%', borderRadius: 4 },
+  statusBarFill: { height: '100%', borderRadius: scale(4) },
   statusBarValue: { fontSize: scale(12), fontWeight: '700', width: scale(72), textAlign: 'right', fontFamily: 'Cairo-Bold' },
 
   // Rating card
@@ -504,7 +504,7 @@ const aStyles = StyleSheet.create({
   ratingBarRow: { flexDirection: 'row', alignItems: 'center', gap: scale(4) },
   ratingBarStar: { fontSize: scale(12), fontWeight: '700', width: scale(12), fontFamily: 'Cairo-Bold' },
   ratingBarTrack: { flex: 1, height: scale(6), borderRadius: scale(3), overflow: 'hidden' },
-  ratingBarFill: { height: '100%', borderRadius: 3 },
+  ratingBarFill: { height: '100%', borderRadius: scale(3) },
   ratingBarCount: { fontSize: scale(11), fontWeight: '600', width: scale(20), textAlign: 'right', fontFamily: 'Cairo-SemiBold' },
 
   // Category card
@@ -513,7 +513,7 @@ const aStyles = StyleSheet.create({
   categoryDot: { width: scale(10), height: scale(10), borderRadius: scale(5) },
   categoryName: { fontSize: scale(13), fontWeight: '500', width: scale(70), fontFamily: 'Cairo-Regular' },
   categoryBar: { flex: 1, height: scale(8), borderRadius: scale(4), overflow: 'hidden' },
-  categoryBarFill: { height: '100%', borderRadius: 4 },
+  categoryBarFill: { height: '100%', borderRadius: scale(4) },
   categoryCount: { fontSize: scale(13), fontWeight: '700', width: scale(24), textAlign: 'right', fontFamily: 'Cairo-Bold' },
 
   // Top products
@@ -523,7 +523,7 @@ const aStyles = StyleSheet.create({
   topProductThumb: { width: scale(44), height: scale(44), borderRadius: scale(8) },
   topProductTitle: { fontSize: scale(14), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
   topProductPrice: { fontSize: scale(14), fontWeight: '800', fontFamily: 'Cairo-Bold' },
-  topProductViews: { flexDirection: 'row', alignItems: 'center', gap: scale(3), paddingHorizontal: scale(8), paddingVertical: scale(4), borderRadius: 9999 },
+  topProductViews: { flexDirection: 'row', alignItems: 'center', gap: scale(3), paddingHorizontal: scale(8), paddingVertical: scale(4), borderRadius: scale(9999) },
   topProductViewsText: { fontSize: scale(12), fontWeight: '700', fontFamily: 'Cairo-Bold' },
 
   // Health card
@@ -531,6 +531,6 @@ const aStyles = StyleSheet.create({
   healthRow: { flexDirection: 'row', alignItems: 'center', gap: scale(10) },
   healthIconWrap: { width: scale(34), height: scale(34), borderRadius: scale(17), alignItems: 'center', justifyContent: 'center' },
   healthLabel: { fontSize: scale(14), fontWeight: '500', fontFamily: 'Cairo-Regular' },
-  healthBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(10), paddingVertical: scale(4), borderRadius: 9999, gap: scale(4) },
+  healthBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(10), paddingVertical: scale(4), borderRadius: scale(9999), gap: scale(4) },
   healthBadgeText: { fontSize: scale(12), fontWeight: '700', fontFamily: 'Cairo-Bold' },
 });

@@ -342,7 +342,7 @@ export default function ProductDetailScreen() {
             <Pressable
               onPress={() => { impactLight(); setShowReviewsSheet(true); }}
               style={({ pressed }) => [styles.metaItem, { opacity: pressed ? 0.7 : 1 }]}
-              hitSlop={8}
+              hitSlop={scale(8)}
             >
               <MaterialIcons
                 name={productReviews.length > 0 ? 'star' : 'star-border'}
@@ -388,7 +388,7 @@ export default function ProductDetailScreen() {
             ) : product.deliveryType === 'paid' && (product.deliveryFee ?? 0) > 0 ? (
               <View style={[styles.catBadge, { backgroundColor: '#F59E0B15' }]}>
                 <MaterialIcons name="local-shipping" size={scale(14)} color="#F59E0B" />
-                <Text style={[styles.catBadgeText, { color: '#F59E0B' }]}>{lb('Delivery', 'Livraison', 'توصيل')}: {formatPrice(product.deliveryFee ?? 0)}</Text>
+                <Text style={[styles.catBadgeText, { color: '#F59E0B' }]}>{lb('Delivery', 'Livraison', 'توصيل') + ': ' + formatPrice(product.deliveryFee ?? 0)}</Text>
               </View>
             ) : null}
           </View>
@@ -398,7 +398,7 @@ export default function ProductDetailScreen() {
             <View style={[styles.stockBadge, { backgroundColor: colors.success + '10', borderColor: colors.success + '30' }]}>
               <MaterialIcons name="inventory" size={scale(16)} color={colors.success} />
               <Text style={[styles.stockBadgeText, { color: colors.success }]}>
-                {lb('In Stock', 'En stock', 'متوفر')}: {product.stock}
+                {lb('In Stock', 'En stock', 'متوفر') + ': ' + product.stock}
               </Text>
               {(product.maxOrderQty ?? 0) > 0 ? (
                 <Text style={{ fontSize: scale(12), color: colors.textTertiary, marginLeft: scale(8) }}>
@@ -576,7 +576,7 @@ export default function ProductDetailScreen() {
                   <View style={styles.sellerMeta}>
                     <MaterialIcons name="location-on" size={scale(13)} color={colors.textTertiary} />
                     <Text style={[styles.sellerMetaText, { color: colors.textSecondary }]}>{effectiveSeller.location}</Text>
-                    <Pressable onPress={() => router.push(`/seller/${effectiveSeller.id}?tab=reviews`)} style={styles.ratingTouchable} hitSlop={8}>
+                    <Pressable onPress={() => router.push(`/seller/${effectiveSeller.id}?tab=reviews`)} style={styles.ratingTouchable} hitSlop={scale(8)}>
                       <MaterialIcons name="star" size={scale(13)} color="#F59E0B" />
                       <Text style={[styles.sellerMetaText, { color: '#F59E0B', fontWeight: '700' }]}>{effectiveSeller.rating}</Text>
                       <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(14)} color="#F59E0B" />
@@ -602,7 +602,7 @@ export default function ProductDetailScreen() {
                   <Text style={{ fontSize: scale(18), fontWeight: '700', color: colors.textPrimary }}>
                     {lb('Reviews', 'Avis', 'التقييمات')} ({Math.max(productReviews.length, (product.reviewsCount ?? 0))})
                   </Text>
-                  <Pressable onPress={() => setShowReviewsSheet(false)} hitSlop={12}>
+                  <Pressable onPress={() => setShowReviewsSheet(false)} hitSlop={scale(12)}>
                     <MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} />
                   </Pressable>
                 </View>
@@ -697,7 +697,7 @@ export default function ProductDetailScreen() {
                                   ))}
                                 </View>
                               </View>
-                              {rev.text ? <Text style={{ fontSize: scale(13), color: colors.textSecondary, lineHeight: 19 }}>{rev.text}</Text> : null}
+                              {rev.text ? <Text style={{ fontSize: scale(13), color: colors.textSecondary, lineHeight: scale(19) }}>{rev.text}</Text> : null}
                               {photos.length > 0 ? (
                                 <View style={{ marginTop: scale(4) }}>
                                   <Text style={{ fontSize: scale(11), fontWeight: '600', color: colors.textTertiary, marginBottom: scale(4) }}>
@@ -813,7 +813,7 @@ export default function ProductDetailScreen() {
               <Text style={[styles.reviewModalTitle, { color: colors.textPrimary }]}>
                 {lb('Leave a Review', 'Laisser un avis', 'اترك تقييماً')}
               </Text>
-              <Pressable onPress={() => setShowReviewModal(false)} hitSlop={12}>
+              <Pressable onPress={() => setShowReviewModal(false)} hitSlop={scale(12)}>
                 <MaterialIcons name="close" size={scale(22)} color={colors.textSecondary} />
               </Pressable>
             </View>
@@ -827,7 +827,7 @@ export default function ProductDetailScreen() {
             </Text>
             <View style={styles.ratingRow}>
               {[1, 2, 3, 4, 5].map(s => (
-                <Pressable key={s} onPress={() => setReviewRating(s)} hitSlop={6}>
+                <Pressable key={s} onPress={() => setReviewRating(s)} hitSlop={scale(6)}>
                   <MaterialIcons name={s <= reviewRating ? 'star' : 'star-border'} size={scale(36)} color="#F59E0B" />
                 </Pressable>
               ))}
@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
   discountBadgeLargeText: { color: '#FFF', fontSize: scale(14), fontWeight: '800' },
   oldPriceDetail: { fontSize: scale(18), textDecorationLine: 'line-through', marginBottom: scale(4) },
   price: { fontSize: scale(30), fontWeight: '800', marginBottom: scale(2) },
-  title: { fontSize: scale(20), fontWeight: '600', lineHeight: 26, marginBottom: scale(8) },
+  title: { fontSize: scale(20), fontWeight: '600', lineHeight: scale(26), marginBottom: scale(8) },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: scale(12), marginBottom: scale(6) },
   metaRow2: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: scale(8), marginBottom: scale(14) },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: scale(4) },
@@ -918,7 +918,7 @@ const styles = StyleSheet.create({
   catBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(8), paddingVertical: scale(4), borderRadius: scale(6), gap: scale(4) },
   catBadgeText: { fontSize: scale(12), fontWeight: '600' },
   sectionLabel: { fontSize: scale(12), fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: scale(6), marginTop: scale(12) },
-  description: { fontSize: scale(15), lineHeight: 23 },
+  description: { fontSize: scale(15), lineHeight: scale(23) },
   sellerCard: { flexDirection: 'row', padding: scale(9), borderRadius: borderRadius.md, borderWidth: 1, gap: scale(10), alignItems: 'center' } as any,
   sellerAvatar: { width: scale(45), height: scale(45), borderRadius: scale(23) },
   sellerNameRow: { flexDirection: 'row', alignItems: 'center', gap: scale(6), flexWrap: 'wrap' },
@@ -941,7 +941,7 @@ const styles = StyleSheet.create({
   reviewItemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   reviewItemName: { fontSize: scale(14), fontWeight: '600' },
   starsRowSmall: { flexDirection: 'row' },
-  reviewItemText: { fontSize: scale(14), lineHeight: 20 },
+  reviewItemText: { fontSize: scale(14), lineHeight: scale(20) },
   reviewItemPhoto: { width: '100%', height: scale(140), borderRadius: scale(8), marginTop: scale(4) },
   reviewItemDate: { fontSize: scale(11) },
   noReviewsBox: { alignItems: 'center', paddingVertical: scale(16), gap: scale(6), height: scale(110), justifyContent: 'center' },
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
   reviewModalContent: { borderTopLeftRadius: scale(24), borderTopRightRadius: scale(24), padding: scale(24), maxHeight: '85%' },
   reviewModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: scale(4) },
   reviewModalTitle: { fontSize: scale(20), fontWeight: '700' },
-  reviewModalSub: { fontSize: scale(14), lineHeight: 20, marginBottom: scale(16) },
+  reviewModalSub: { fontSize: scale(14), lineHeight: scale(20), marginBottom: scale(16) },
   reviewFieldLabel: { fontSize: scale(11), fontWeight: '700', letterSpacing: 0.8, marginBottom: scale(6), marginTop: scale(10) },
   ratingRow: { flexDirection: 'row', gap: scale(8), marginBottom: scale(8) },
   reviewInput: { height: scale(100), borderRadius: scale(12), borderWidth: 1, paddingHorizontal: scale(16), paddingTop: scale(14), fontSize: scale(15), textAlignVertical: 'top' },

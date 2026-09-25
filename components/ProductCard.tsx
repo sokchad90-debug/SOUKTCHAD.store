@@ -134,7 +134,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
         <Pressable
           onPress={handleFavorite}
           style={[styles.favoriteBtn, isAr && styles.favoriteBtnRTL, { backgroundColor: colors.overlay, width: Math.round(30 * (CARD_WIDTH / 195)), height: Math.round(30 * (CARD_WIDTH / 195)), borderRadius: Math.round(16 * (CARD_WIDTH / 195)) }]}
-          hitSlop={8}
+          hitSlop={scale(8)}
         >
           <Animated.View style={{ transform: [{ scale: heartScale }] }}>
             <MaterialIcons
@@ -217,7 +217,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
               <View style={[styles.logItem, isAr && styles.rowRTL]}>
                 <MaterialIcons name="local-shipping" size={cardScale(10)} color={colors.textSecondary} />
                 <Text style={{ color: colors.textTertiary, fontSize: cardScale(10) }} numberOfLines={1}>
-                  {language === 'fr' ? 'Livraison' : language === 'ar' ? 'التوصيل' : 'Delivery'}: {formatPrice(product.deliveryFee)}
+                  {(language === 'fr' ? 'Livraison' : language === 'ar' ? 'التوصيل' : 'Delivery') + ': ' + formatPrice(product.deliveryFee)}
                 </Text>
               </View>
             ) : null}
@@ -225,7 +225,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
               <View style={[styles.logItem, isAr && styles.rowRTL]}>
                 <MaterialIcons name="inventory" size={cardScale(9)} color={DT.color.success} />
                 <Text style={[styles.stockText, { color: isDark ? DT.dark.success : DT.color.success, fontSize: cardScale(10), lineHeight: Math.round(cardScale(10) * 1.3) }]} numberOfLines={1}>
-                  {language === 'fr' ? 'Stock' : language === 'ar' ? 'مخزون' : 'Stock'}: {product.stock}
+                  {(language === 'fr' ? 'Stock' : language === 'ar' ? 'مخزون' : 'Stock') + ': ' + product.stock}
                 </Text>
               </View>
             ) : null}
@@ -249,22 +249,22 @@ ProductCard.displayName = 'ProductCard';
 export default ProductCard;
 
 const styles = StyleSheet.create({
-  tagBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,180,0,0.15)', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'flex-start', marginBottom: 4 },
-  tagBadgeText: { fontSize: 10, fontWeight: '700', color: '#B8860B', fontFamily: 'Cairo-Bold' },
+  tagBadge: { flexDirection: 'row', alignItems: 'center', gap: scale(4), backgroundColor: 'rgba(255,180,0,0.15)', borderRadius: scale(8), paddingHorizontal: scale(6), paddingVertical: scale(2), alignSelf: 'flex-start', marginBottom: scale(4) },
+  tagBadgeText: { fontSize: scale(10), fontWeight: '700', color: '#B8860B', fontFamily: 'Cairo-Bold' },
   rowRTL: { flexDirection: 'row-reverse' },
-  crownIcon: { width: 12, height: 12 },
-  shieldIcon: { width: 11, height: 11 },
-  soldRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 2 },
+  crownIcon: { width: scale(12), height: scale(12) },
+  shieldIcon: { width: scale(11), height: scale(11) },
+  soldRatingRow: { flexDirection: 'row', alignItems: 'center', gap: scale(3), marginBottom: scale(2) },
   soldText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
-  ratingInline: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  warrantyRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
+  ratingInline: { flexDirection: 'row', alignItems: 'center', gap: scale(2) },
+  warrantyRow: { flexDirection: 'row', alignItems: 'center', gap: scale(4), marginTop: scale(3) },
   warrantyText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
-  freeShipRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
+  freeShipRow: { flexDirection: 'row', alignItems: 'center', gap: scale(4), marginTop: scale(3) },
   freeShipText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
-  priceTopRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 2, flexWrap: 'wrap' },
-  logisticsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: 2 },
-  logItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  priceTopRow: { flexDirection: 'row', alignItems: 'center', gap: scale(4), flexWrap: 'wrap' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: scale(2), flexWrap: 'wrap' },
+  logisticsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: scale(8), marginTop: scale(2) },
+  logItem: { flexDirection: 'row', alignItems: 'center', gap: scale(3) },
   container: {
     borderRadius: DT.card.radius,
     borderWidth: 1,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  imgFallback: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#FFFFFF' },
+  imgFallback: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: scale(6), backgroundColor: '#FFFFFF' },
   imgFallbackText: { fontSize: scale(10), fontFamily: 'Cairo-Regular' },
   image: {
     width: '100%',
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: scale(12),
     fontWeight: '600',
-    lineHeight: 17,
+    lineHeight: scale(17),
     fontFamily: 'Cairo-SemiBold',
   },
   meta: {

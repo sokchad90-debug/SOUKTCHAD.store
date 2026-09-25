@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert, Modal, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert, Modal, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -816,6 +816,7 @@ export default function ProfileScreen() {
   // ---- SINGLE RETURN: Everything inside one SafeAreaView ----
   return (
     <SafeAreaView edges={['top']} style={[pStyles.safeArea, { backgroundColor: colors.background }]}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       {showGuest ? (
         /* Guest view — compact card */
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: scale(14), paddingTop: scale(16) }} showsVerticalScrollIndicator={false}>
@@ -828,7 +829,7 @@ export default function ProfileScreen() {
             <Pressable onPress={() => { selection(); setShowLogin(true); }} style={({ pressed }) => [pStyles.guestLoginBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.88 : 1 }]}>
               <Text style={pStyles.guestLoginBtnText}>{t('login')}</Text>
             </Pressable>
-            <Pressable onPress={() => { selection(); setShowLogin(true); }} hitSlop={12} style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+            <Pressable onPress={() => { selection(); setShowLogin(true); }} hitSlop={scale(12)} style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
               <Text style={[pStyles.guestRegisterLink, { color: colors.primary }]}>{lb('Create Account', 'Créer un compte', 'إنشاء حساب')}</Text>
             </Pressable>
           </View>
@@ -848,7 +849,7 @@ export default function ProfileScreen() {
           <View style={{ paddingHorizontal: scale(16), paddingTop: scale(4), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <ReportButton />
             {!isSeller ? (
-              <Pressable onPress={() => router.push('/settings' as any)} hitSlop={12}>
+              <Pressable onPress={() => router.push('/settings' as any)} hitSlop={scale(12)}>
                 <MaterialIcons name="settings" size={scale(22)} color={colors.textSecondary} />
               </Pressable>
             ) : null}
@@ -863,7 +864,7 @@ export default function ProfileScreen() {
                 <Image source={require('@/assets/images/profile-bg.png')} style={pStyles.coverImage} contentFit="cover" transition={200} />
               )}
               <View style={pStyles.coverGradient} />
-              <Pressable onPress={pickCover} style={pStyles.coverEditBtn} hitSlop={8}>
+              <Pressable onPress={pickCover} style={pStyles.coverEditBtn} hitSlop={scale(8)}>
                 <MaterialIcons name="camera-alt" size={scale(16)} color="#FFF" />
               </Pressable>
             </Pressable>
@@ -1072,12 +1073,12 @@ export default function ProfileScreen() {
                             {order?.orderNumber ? (
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6), marginTop: scale(2) }}>
                                 <Text style={[pStyles.orderRef, { color: colors.textTertiary }]} numberOfLines={1}>
-                                  {lb('Order #', 'Commande #', 'طلب #')}: {order.orderNumber}
+                                  {lb('Order #', 'Commande #', 'طلب #') + ': ' + order.orderNumber}
                                 </Text>
                                 <Pressable onPress={() => {
                                   import('react-native').then(({ Clipboard }) => Clipboard.setString(order.orderNumber || ''));
                                   notifySuccess();
-                                }} hitSlop={8}>
+                                }} hitSlop={scale(8)}>
                                   <MaterialIcons name="content-copy" size={scale(14)} color={colors.primary} />
                                 </Pressable>
                               </View>
@@ -1235,11 +1236,11 @@ export default function ProfileScreen() {
                             <Text style={[pStyles.orderAmount, { color: colors.primary }]}>{formatPrice(order?.amount || 0)}</Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6), marginTop: scale(2) }}>
                               <Text style={[pStyles.orderRef, { color: colors.textTertiary }]} numberOfLines={1}>
-                                {lb('Transaction #', 'Numéro de transaction', 'رقم العملية')}: {transactionNumber}
+                                {lb('Transaction #', 'Numéro de transaction', 'رقم العملية') + ': ' + transactionNumber}
                               </Text>
                               <Pressable
                                 onPress={(e) => { e.stopPropagation(); Clipboard.setStringAsync(transactionNumber); notifySuccess(); }}
-                                hitSlop={8}
+                                hitSlop={scale(8)}
                               >
                                 <MaterialIcons name="content-copy" size={scale(14)} color={colors.primary} />
                               </Pressable>
@@ -1317,7 +1318,7 @@ export default function ProfileScreen() {
                           </View>
                           <Pressable
                             onPress={(e) => { e.stopPropagation(); impactLight(); toggleFollowNotifications(sId, !(seller.notifications_enabled ?? true)); }}
-                            hitSlop={8}
+                            hitSlop={scale(8)}
                             style={{ padding: scale(6) }}
                           >
                             <MaterialIcons
@@ -1372,7 +1373,7 @@ export default function ProfileScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={pStyles.verifyModalHeader}>
                 <Text style={[pStyles.verifyModalTitle, { color: colors.primary }]}>{lb('Blue Badge Subscription', 'Abonnement Badge Bleu', 'اشتراك الشارة الزرقاء')}</Text>
-                <Pressable onPress={() => setShowVerifyModal(false)} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
+                <Pressable onPress={() => setShowVerifyModal(false)} hitSlop={scale(12)}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
               </View>
               <Text style={[pStyles.verifyModalDesc, { color: colors.textSecondary }]}>
                 {lb('Select a subscription plan, transfer the fee to the platform number below, and upload a screenshot of your payment.',
@@ -1431,7 +1432,7 @@ export default function ProfileScreen() {
               <Text style={[pStyles.verifyModalTitle, { color: colors.primary }]}>
                 {lb('Change Password', 'Changer le mot de passe', 'تغيير كلمة المرور')}
               </Text>
-              <Pressable onPress={() => setShowPasswordModal(false)} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
+              <Pressable onPress={() => setShowPasswordModal(false)} hitSlop={scale(12)}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
             </View>
             <Text style={[pStyles.verifyModalDesc, { color: colors.textSecondary }]}>
               {lb('Enter your current password and a new one.', 'Entrez votre mot de passe actuel et un nouveau.', 'أدخل كلمة المرور الحالية وكلمة جديدة.')}
@@ -1492,7 +1493,7 @@ export default function ProfileScreen() {
                 <Text style={[pStyles.verifyModalTitle, { color: colors.primary }]}>
                   {lb('Edit Profile', 'Modifier le profil', 'تعديل الملف الشخصي')}
                 </Text>
-                <Pressable onPress={() => setShowEditProfileModal(false)} hitSlop={12}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
+                <Pressable onPress={() => setShowEditProfileModal(false)} hitSlop={scale(12)}><MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} /></Pressable>
               </View>
 
               {/* Avatar + Cover pickers */}
@@ -1574,7 +1575,7 @@ export default function ProfileScreen() {
               <Text style={[pStyles.verifyModalTitle, { color: colors.error }]}>
                 {lb('Blocked Sellers', 'Vendeurs bloqués', 'البائعون المحظورون')}
               </Text>
-              <Pressable onPress={() => setShowBlockedModal(false)} hitSlop={12}>
+              <Pressable onPress={() => setShowBlockedModal(false)} hitSlop={scale(12)}>
                 <MaterialIcons name="close" size={scale(24)} color={colors.textSecondary} />
               </Pressable>
             </View>
@@ -1627,7 +1628,8 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+          </KeyboardAvoidingView>
+</SafeAreaView>
   );
 }
 
@@ -1638,7 +1640,7 @@ const pStyles = StyleSheet.create({
   guestCard: { alignItems: 'center', marginHorizontal: scale(16), paddingVertical: scale(24), paddingHorizontal: scale(24), borderRadius: borderRadius.lg, borderWidth: 0.5 },
   guestAvatarCircle: { width: scale(64), height: scale(64), borderRadius: scale(32), alignItems: 'center', justifyContent: 'center', marginBottom: scale(12) },
   guestName: { fontSize: scale(18), fontWeight: '700', marginBottom: scale(4), fontFamily: 'Cairo-Bold' },
-  guestMsg: { fontSize: scale(14), textAlign: 'center', marginBottom: scale(16), lineHeight: 20, fontFamily: 'Cairo-Regular' },
+  guestMsg: { fontSize: scale(14), textAlign: 'center', marginBottom: scale(16), lineHeight: scale(20), fontFamily: 'Cairo-Regular' },
   guestLoginBtn: { paddingHorizontal: scale(32), paddingVertical: scale(12), borderRadius: borderRadius.md, marginBottom: scale(12) },
   guestLoginBtnText: { color: '#FFF', fontSize: scale(15), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
   guestRegisterLink: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-Regular' },
@@ -1646,12 +1648,12 @@ const pStyles = StyleSheet.create({
   coverImage: { width: '100%', height: '100%' },
   coverGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: scale(60), backgroundColor: 'rgba(0,0,0,0.15)' },
   coverEditBtn: { position: 'absolute', top: scale(12), right: scale(12), width: scale(32), height: scale(32), borderRadius: scale(16), backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' },
-  profileCardContainer: { marginHorizontal: scale(16), marginTop: scale(-36), borderRadius: borderRadius.lg, borderWidth: 0.5, padding: scale(10), shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
+  profileCardContainer: { marginHorizontal: scale(16), marginTop: scale(-36), borderRadius: borderRadius.lg, borderWidth: 0.5, padding: scale(10), shadowColor: '#000', shadowOffset: { width: 0, height: scale(2) }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
   profileCardTop: { flexDirection: 'row', alignItems: 'center', marginBottom: scale(6) },
   avatarPressable: { position: 'relative' },
   profileAvatar: { width: scale(56), height: scale(56), borderRadius: scale(28), borderWidth: 3 },
   avatarEditBadge: { position: 'absolute', bottom: 0, right: 0, width: scale(18), height: scale(18), borderRadius: scale(9), alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFF' },
-  avatarVerifiedBadge: { position: 'absolute', top: -2, right: -2, width: scale(22), height: scale(22), borderRadius: scale(11), alignItems: 'center', justifyContent: 'center' },
+  avatarVerifiedBadge: { position: 'absolute', top: scale(-2), right: scale(-2), width: scale(22), height: scale(22), borderRadius: scale(11), alignItems: 'center', justifyContent: 'center' },
   nameLockRow: { flexDirection: 'row', alignItems: 'center', gap: scale(6) },
   lockBadge: { width: scale(20), height: scale(20), borderRadius: scale(10), alignItems: 'center', justifyContent: 'center' },
   profileName: { fontSize: scale(20), fontWeight: '800', flexShrink: 1, fontFamily: 'Cairo-Bold' },
@@ -1712,13 +1714,13 @@ const pStyles = StyleSheet.create({
   categoryDot: { width: scale(10), height: scale(10), borderRadius: scale(5) },
   categoryStatName: { fontSize: scale(13), fontWeight: '500', width: scale(80), fontFamily: 'Cairo-Regular' },
   categoryBar: { flex: 1, height: scale(8), borderRadius: scale(4), overflow: 'hidden' },
-  categoryBarFill: { height: '100%', borderRadius: 4 },
+  categoryBarFill: { height: '100%', borderRadius: scale(4) },
   categoryStatCount: { fontSize: scale(13), fontWeight: '700', width: scale(24), textAlign: 'right', fontFamily: 'Cairo-Bold' },
   reviewCard: { borderRadius: borderRadius.lg, borderWidth: 0.5, padding: scale(14), marginBottom: scale(10), gap: scale(6) },
   reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   reviewerName: { fontSize: scale(15), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
   starsRow: { flexDirection: 'row' },
-  reviewText: { fontSize: scale(14), lineHeight: 20, fontFamily: 'Cairo-Regular' },
+  reviewText: { fontSize: scale(14), lineHeight: scale(20), fontFamily: 'Cairo-Regular' },
   reviewPhoto: { width: '100%', height: scale(160), borderRadius: scale(8), marginTop: scale(4) },
   reviewDate: { fontSize: scale(11), fontFamily: 'Cairo-Regular' },
   orderCard: { padding: scale(14), borderRadius: borderRadius.lg, borderWidth: 0.5, marginBottom: scale(8) },
@@ -1741,7 +1743,7 @@ const pStyles = StyleSheet.create({
   verifyProgressHeader: { flexDirection: 'row', alignItems: 'center', gap: scale(8) },
   verifyProgressTitle: { fontSize: scale(14), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
   verifyBar: { height: scale(8), borderRadius: scale(4), overflow: 'hidden' },
-  verifyBarFill: { height: '100%', borderRadius: 4 },
+  verifyBarFill: { height: '100%', borderRadius: scale(4) },
   verifyProgressText: { fontSize: scale(12), fontFamily: 'Cairo-Regular' },
   legalBtn: { flexDirection: 'row', alignItems: 'center', marginHorizontal: scale(16), marginTop: scale(16), padding: scale(14), borderRadius: borderRadius.lg, borderWidth: 0.5, gap: scale(12) },
   legalIconWrap: { width: scale(36), height: scale(36), borderRadius: scale(18), alignItems: 'center', justifyContent: 'center' },
@@ -1758,14 +1760,14 @@ const pStyles = StyleSheet.create({
   verifyModalContent: { borderTopLeftRadius: scale(24), borderTopRightRadius: scale(24), padding: scale(24), maxHeight: '90%' },
   verifyModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: scale(8) },
   verifyModalTitle: { fontSize: scale(20), fontWeight: '700', fontFamily: 'Cairo-Bold' },
-  verifyModalDesc: { fontSize: scale(14), lineHeight: 21, marginBottom: scale(16), fontFamily: 'Cairo-Regular' },
+  verifyModalDesc: { fontSize: scale(14), lineHeight: scale(21), marginBottom: scale(16), fontFamily: 'Cairo-Regular' },
   verifyDocLabel: { fontSize: scale(11), fontWeight: '700', letterSpacing: 0.8, marginBottom: scale(6), marginTop: scale(12), fontFamily: 'Cairo-SemiBold' },
   verifyDocPicker: { borderRadius: borderRadius.md, borderWidth: 2, borderStyle: 'dashed', overflow: 'hidden', height: scale(120), alignItems: 'center', justifyContent: 'center' },
   verifyDocPreview: { width: '100%', height: '100%' },
   verifyDocPlaceholder: { alignItems: 'center', gap: scale(4) },
   verifyDocPlaceholderText: { fontSize: scale(12), fontWeight: '500', fontFamily: 'Cairo-Regular' },
   verifyInfoBox: { flexDirection: 'row', alignItems: 'flex-start', gap: scale(8), padding: scale(12), borderRadius: borderRadius.md, borderWidth: 1, marginTop: scale(16) },
-  verifyInfoText: { flex: 1, fontSize: scale(12), lineHeight: 18, fontFamily: 'Cairo-Regular' },
+  verifyInfoText: { flex: 1, fontSize: scale(12), lineHeight: scale(18), fontFamily: 'Cairo-Regular' },
   verifySubmitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: scale(52), borderRadius: borderRadius.md, gap: scale(8), marginTop: scale(16), marginBottom: scale(16) },
   verifySubmitBtnText: { color: '#FFF', fontSize: scale(16), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
   adminNumberCard: { flexDirection: 'row', alignItems: 'center', gap: scale(12), padding: scale(14), borderRadius: borderRadius.md, borderWidth: 1.5, marginBottom: scale(12) },
@@ -1793,7 +1795,7 @@ const pStyles = StyleSheet.create({
   aboutLinkRow: { flexDirection: 'row', alignItems: 'center', gap: scale(8), paddingVertical: scale(10), borderTopWidth: 0.5, borderTopColor: 'rgba(128,128,128,0.2)' },
   logoutBtnNew: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: scale(20), marginBottom: scale(8), paddingVertical: scale(14), borderRadius: borderRadius.lg, borderWidth: 1, gap: scale(8) },
   logoutTextNew: { fontSize: scale(16), fontWeight: '700', fontFamily: 'Cairo-Bold' },
-  subTab: { flexDirection: 'row', alignItems: 'center', gap: scale(4), paddingHorizontal: scale(12), paddingVertical: scale(8), borderRadius: 9999, borderWidth: 1 },
+  subTab: { flexDirection: 'row', alignItems: 'center', gap: scale(4), paddingHorizontal: scale(12), paddingVertical: scale(8), borderRadius: scale(9999), borderWidth: 1 },
   followedCard: { flexDirection: 'row', alignItems: 'center', padding: scale(12), borderRadius: scale(12), borderWidth: 0.5, gap: scale(10) },
   followedAvatar: { width: scale(40), height: scale(40), borderRadius: scale(20), alignItems: 'center', justifyContent: 'center' },
   followedAvatarText: { fontSize: scale(16), fontWeight: '800', color: '#FFF', fontFamily: 'Cairo-Bold' },

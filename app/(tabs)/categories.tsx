@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
 import { selection } from '@/services/haptics';
 import { shadows } from '@/constants/theme';
-import { scale, usePhoneLayout } from '@/constants/responsive';
+import { BOTTOM_NAV_CONTENT_GAP, scale, usePhoneLayout } from '@/constants/responsive';
 import { AppText } from '@/components/AppText';
 import { DS } from '@/ui/designSystem';
 import { CATEGORY_TREE, descendantsOf } from '@/services/categoryTree';
@@ -52,7 +52,7 @@ export default function CategoriesScreen() {
   const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
 
   // Container-measured card width: (container - side margins 32 - 2 column gaps 24) / 3
-  const [gridW, setGridW] = useState(() => Math.min(winW, 480));
+  const [gridW, setGridW] = useState(() => winW);
   const COLS = 3;
   const SIDE = scale(16);
   const GAP = scale(12);
@@ -151,7 +151,7 @@ export default function CategoriesScreen() {
             </View>
           ) : count == null ? (
             // products not loaded yet — show nothing rather than a fake 0
-            <View style={{ height: 16 }} />
+            <View style={{ height: scale(16) }} />
           ) : null}
         </View>
       </Pressable>
@@ -166,7 +166,7 @@ export default function CategoriesScreen() {
       {/* Breadcrumb path + back — restores level and scroll state (path kept in context) */}
       {currentCategoryPath.length > 0 && (
         <View style={[styles.crumbRow, isAr && { flexDirection: 'row-reverse' }]}>
-          <Pressable onPress={() => { selection(); goBackCategory(); }} hitSlop={10}
+          <Pressable onPress={() => { selection(); goBackCategory(); }} hitSlop={scale(10)}
             accessibilityRole="button" accessibilityLabel={lb('Back', 'Retour', 'رجوع')}>
             <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(22)} color={colors.textPrimary} />
           </Pressable>
@@ -176,7 +176,7 @@ export default function CategoriesScreen() {
             ))}
           </Text>
           {/* عرض الكل for the current level scope */}
-          <Pressable onPress={showAllForCurrent} hitSlop={8}
+          <Pressable onPress={showAllForCurrent} hitSlop={scale(8)}
             style={[styles.seeAllBtn, { borderColor: colors.primary }]}
             accessibilityRole="button" accessibilityLabel={lb('View all', 'Tout voir', 'عرض الكل')}>
             <Text style={[styles.seeAllText, { color: colors.primary }]}>
@@ -191,7 +191,7 @@ export default function CategoriesScreen() {
         keyExtractor={(item) => item.id}
         numColumns={3}
         columnWrapperStyle={[styles.row, isAr && { flexDirection: 'row-reverse' }]}
-        contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(16), paddingBottom: scale(16) }}
+        contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(16), paddingBottom: layout.safeBottom + BOTTOM_NAV_CONTENT_GAP + layout.smallGap }}
         onLayout={(e) => setGridW(e.nativeEvent.layout.width)}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   crumbText: { fontSize: scale(13), fontWeight: '600', flex: 1 },
   seeAllBtn: { borderWidth: 1, borderRadius: scale(14), paddingHorizontal: scale(12), paddingVertical: scale(6) },
   seeAllText: { fontSize: scale(12), fontWeight: '700' },
-  categoryCountWrap: { height: 20, justifyContent: 'center' },
+  categoryCountWrap: { height: scale(20), justifyContent: 'center' },
   categoryCount: { paddingHorizontal: scale(10), paddingVertical: scale(2), borderRadius: scale(10) },
   categoryCountText: { fontSize: scale(11), fontWeight: '700' },
 });

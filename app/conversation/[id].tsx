@@ -22,6 +22,7 @@ export default function ConversationScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, t, language, user, conversations, sendMessage, getProductById } = useApp();
+  const isAr = language === 'ar';
   const [text, setText] = useState('');
   const scrollRef = useRef<ScrollView>(null);
 
@@ -71,8 +72,8 @@ export default function ConversationScreen() {
   if (!conv || !user) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { paddingTop: insets.top + scale(8), backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
+        <View style={[styles.header, isAr && styles.rowReverse, { paddingTop: insets.top + scale(8), backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Pressable onPress={() => router.back()} hitSlop={scale(12)}>
             <MaterialIcons name={language === 'ar' ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
           </Pressable>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('chats')}</Text>
@@ -109,11 +110,11 @@ export default function ConversationScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header with online status */}
-      <View style={[styles.header, { paddingTop: insets.top + scale(8), backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+      <View style={[styles.header, isAr && styles.rowReverse, { paddingTop: insets.top + scale(8), backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Pressable onPress={() => router.back()} hitSlop={scale(12)}>
           <MaterialIcons name={language === 'ar' ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
         </Pressable>
-        <View style={styles.headerInfo}>
+        <View style={[styles.headerInfo, isAr && styles.rowReverse]}>
           {seller ? (
             <View style={styles.headerAvatarWrap}>
               <Image source={{ uri: seller.avatar }} style={styles.headerAvatar} contentFit="cover" />
@@ -122,8 +123,8 @@ export default function ConversationScreen() {
               ) : null}
             </View>
           ) : null}
-          <View style={styles.headerTextGroup}>
-            <View style={styles.headerNameRow}>
+          <View style={[styles.headerTextGroup, { alignItems: isAr ? 'flex-end' : 'flex-start' }]}>
+            <View style={[styles.headerNameRow, isAr && styles.rowReverse]}>
               <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{otherName}</Text>
               {seller?.isVerified ? (
                 <MaterialIcons name="verified" size={scale(16)} color={colors.verified} />
@@ -158,7 +159,7 @@ export default function ConversationScreen() {
           <ReportButton />
 
           {/* Permanent Legal Disclaimer */}
-          <View style={[styles.chatDisclaimer, { backgroundColor: colors.warning + '10', borderColor: colors.warning + '30' }]}>
+          <View style={[styles.chatDisclaimer, isAr && styles.rowReverse, { backgroundColor: colors.warning + '10', borderColor: colors.warning + '30' }]}>
             <MaterialIcons name="warning-amber" size={scale(16)} color={colors.warning} />
             <Text style={[styles.chatDisclaimerText, { color: colors.textSecondary }]}>
               {language === 'fr'
@@ -173,7 +174,7 @@ export default function ConversationScreen() {
           {product ? (
             <Pressable
               onPress={() => router.push(`/product/${product.id}`)}
-              style={[styles.productCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+              style={[styles.productCard, isAr && styles.rowReverse, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
             >
               <Image source={{ uri: product.images[0] }} style={styles.productThumb} contentFit="cover" />
               <View style={{ flex: 1 }}>
@@ -192,7 +193,7 @@ export default function ConversationScreen() {
             const displayText = getDisplayText(msg);
 
             return (
-              <View key={msg.id} style={[styles.msgRow, isMe ? styles.msgRowRight : styles.msgRowLeft]}>
+              <View key={msg.id} style={[styles.msgRow, isAr && styles.rowReverse, isMe ? styles.msgRowRight : styles.msgRowLeft]}>
                 <View style={[
                   styles.bubble,
                   isMe
@@ -210,10 +211,10 @@ export default function ConversationScreen() {
         </ScrollView>
 
         {/* Input Bar */}
-        <View style={[styles.inputBar, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insets.bottom + scale(8) }]}>
+        <View style={[styles.inputBar, isAr && styles.rowReverse, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insets.bottom + scale(8) }]}>
           <View style={[styles.inputWrapper, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
             <TextInput
-              style={[styles.input, { color: colors.textPrimary }]}
+              style={[styles.input, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}
               placeholder={t('typeMessage')}
               placeholderTextColor={colors.textTertiary}
               value={text}
@@ -237,6 +238,7 @@ export default function ConversationScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  rowReverse: { flexDirection: 'row-reverse' },
   centerContent: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(16), paddingBottom: scale(12), borderBottomWidth: 1, gap: scale(12),
@@ -258,11 +260,11 @@ const styles = StyleSheet.create({
   productThumb: { width: scale(48), height: scale(48), borderRadius: scale(8) },
   productTitle: { fontSize: scale(14), fontWeight: '600' },
   productPrice: { fontSize: scale(15), fontWeight: '700', marginTop: scale(2) },
-  msgRow: { marginBottom: scale(8) },
-  msgRowRight: { alignItems: 'flex-end' },
-  msgRowLeft: { alignItems: 'flex-start' },
+  msgRow: { flexDirection: 'row', marginBottom: scale(8) },
+  msgRowRight: { justifyContent: 'flex-end' },
+  msgRowLeft: { justifyContent: 'flex-start' },
   bubble: { maxWidth: '78%', paddingHorizontal: scale(16), paddingVertical: scale(12), borderRadius: scale(20) },
-  msgText: { fontSize: scale(15), lineHeight: 21 },
+  msgText: { fontSize: scale(15), lineHeight: scale(21) },
   msgTime: { fontSize: scale(10), marginTop: scale(4), alignSelf: 'flex-end' },
   inputBar: {
     flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: scale(12), paddingTop: scale(10), borderTopWidth: 1, gap: scale(8),
@@ -270,7 +272,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flex: 1, borderRadius: scale(24), borderWidth: 1, paddingHorizontal: scale(16), paddingVertical: scale(8), maxHeight: scale(100),
   },
-  input: { fontSize: scale(15), maxHeight: scale(80), lineHeight: 20 },
+  input: { fontSize: scale(15), maxHeight: scale(80), lineHeight: scale(20) },
   sendBtn: {
     width: scale(46), height: scale(46), borderRadius: scale(23), alignItems: 'center', justifyContent: 'center', marginBottom: scale(1),
   },
@@ -279,6 +281,6 @@ const styles = StyleSheet.create({
     padding: scale(12), borderRadius: scale(10), borderWidth: 1, marginBottom: scale(12),
   },
   chatDisclaimerText: {
-    fontSize: scale(11), lineHeight: 16, flex: 1, fontWeight: '500',
+    fontSize: scale(11), lineHeight: scale(16), flex: 1, fontWeight: '500',
   },
 });

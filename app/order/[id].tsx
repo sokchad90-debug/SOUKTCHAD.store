@@ -26,7 +26,7 @@ export default function OrderDetailsPage() {
 
   // Find the order from buyerOrders OR orders (covers buyer + seller orders) OR orders (seller orders)
   const order = buyerOrders.find((o: any) => String(o.id) === String(id)) || (orders || []).find((o: any) => String(o.id) === String(id));
-  
+
   // Normalize fields (API snake_case + mock camelCase)
   const productId = order?.productId || order?.product_id;
   const sellerId = order?.sellerId || order?.seller_id;
@@ -47,21 +47,21 @@ export default function OrderDetailsPage() {
     phone: '',
     paymentMethods: [],
   } as any : undefined);
-  
+
   // Order number (fallback only)
   const orderNumber = order?.order_number || `SC-${new Date(order?.createdAt || order?.created_at || Date.now()).getFullYear()}-${String(order?.id || 0).padStart(6, '0')}`;
   // Transaction number (20-digit) — primary identifier shown to user
   const transactionNumber = order?.transaction_number || orderNumber;
-  
+
   // Product info — use live product if available, otherwise fall back to snapshot data
   const isProductDeleted = !product;
-  const productTitle = product?.title?.[language] || product?.title?.en 
+  const productTitle = product?.title?.[language] || product?.title?.en
     || order?.product_title_snapshot
     || order?.product_title_en || order?.product_title_fr || order?.product_title_ar
     || lb('Product', 'Produit', 'منتج');
   const productImage = product?.images?.[0] || order?.product_image_snapshot || order?.product_image || '';
   const productPrice = order?.product_price_snapshot || order?.amount || 0;
-  
+
   // Status
   const getStatusLabel = (status: string) => {
     const map: Record<string, { en: string; fr: string; ar: string }> = {
@@ -76,7 +76,7 @@ export default function OrderDetailsPage() {
     const s = map[status?.toLowerCase()] || map.pending;
     return isFr ? s.fr : isAr ? s.ar : s.en;
   };
-  
+
   const getStatusColor = (status: string) => {
     const s = status?.toLowerCase();
     if (s === 'completed') return colors.success;
@@ -135,7 +135,7 @@ export default function OrderDetailsPage() {
     return (
       <SafeAreaView edges={['top']} style={[sStyles.container, { backgroundColor: colors.background }]}>
         <View style={[sStyles.header, isAr && { flexDirection: 'row-reverse' }]}>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
+          <Pressable onPress={() => router.back()} hitSlop={scale(12)}>
             <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
           </Pressable>
           <Text style={[sStyles.headerTitle, { color: colors.textPrimary }]}>{lb('Order Details', 'Détails de la commande', 'تفاصيل الطلب')}</Text>
@@ -153,7 +153,7 @@ export default function OrderDetailsPage() {
     <SafeAreaView edges={['top']} style={[sStyles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[sStyles.header, { borderBottomColor: colors.border }, isAr && { flexDirection: 'row-reverse' }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={() => router.back()} hitSlop={scale(12)}>
           <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
         </Pressable>
         <Text style={[sStyles.headerTitle, { color: colors.textPrimary, fontFamily: 'Cairo-Bold' }]}>
@@ -174,7 +174,7 @@ export default function OrderDetailsPage() {
                 {transactionNumber}
               </Text>
             </View>
-            <Pressable onPress={handleCopyOrder} hitSlop={12} style={sStyles.copyBtn}>
+            <Pressable onPress={handleCopyOrder} hitSlop={scale(12)} style={sStyles.copyBtn}>
               <MaterialIcons name={copied ? "check" : "content-copy"} size={scale(18)} color={copied ? colors.success : colors.primary} />
             </Pressable>
           </View>
@@ -219,7 +219,7 @@ export default function OrderDetailsPage() {
           <Text style={[sStyles.sectionTitle, { color: colors.textSecondary, fontFamily: 'Cairo-SemiBold' }]}>
             {lb('Order Info', 'Informations', 'معلومات الطلب')}
           </Text>
-          
+
           <View style={sStyles.detailRow}>
             <Text style={[sStyles.detailLabel, { color: colors.textSecondary, fontFamily: 'Cairo-Regular' }]}>
               {lb('Status', 'Statut', 'الحالة')}

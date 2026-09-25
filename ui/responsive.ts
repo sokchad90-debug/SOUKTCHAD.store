@@ -13,7 +13,7 @@
  * - usePhoneLayout() — React hook, reactive to window + safe area changes
  * - All Home components read from ONE engine
  *
- * Tablets/large windows get maxWidth-capped phone composition (not a different layout).
+ * The scale is deliberately fluid and unbounded: available app width / 390.
  */
 
 import { Dimensions, PixelRatio, useWindowDimensions } from 'react-native';
@@ -32,7 +32,7 @@ const REFERENCE_IMAGE_RATIO = 0.78;
 /** Reference banner ratio (height / content width) */
 const REFERENCE_BANNER_RATIO = 0.32;
 
-/** Keep the phone composition centred instead of turning tablets into a new UI. */
+/** Legacy export retained for callers that use it as an optional content constraint. */
 export const CANONICAL_MAX_SURFACE_WIDTH = 480;
 
 // ============================================================
@@ -141,7 +141,8 @@ export const getPhoneLayoutMetrics = (params: {
   const effectiveWidth = Math.max(0, width - safeLeft - safeRight);
   const effectiveHeight = height - safeTop - safeBottom;
 
-  const surfaceWidth = Math.min(effectiveWidth, CANONICAL_MAX_SURFACE_WIDTH);
+  // Owner rule: s = available app-space width / 390, with no clamp.
+  const surfaceWidth = effectiveWidth;
 
   // Height classes: informational only (s-policy keeps design uniform)
   const isShortHeight = effectiveHeight < 600;
@@ -259,9 +260,8 @@ if (Dimensions.addEventListener) {
   });
 }
 
-// UNIFIED s: same formula as usePhoneLayout — window width capped at the 480
-// canonical surface, divided by the 390 reference (Honor design). One source.
-const _surfaceWidth = () => Math.min(_w, CANONICAL_MAX_SURFACE_WIDTH);
+// UNIFIED s: same unbounded formula as usePhoneLayout.
+const _surfaceWidth = () => _w;
 const _ratio = () => _surfaceWidth() / REFERENCE_WIDTH;
 const _horizontalPadding = () => Math.round(_ratio() * 16);
 const _contentWidth = () => _surfaceWidth() - _horizontalPadding() * 2;
@@ -271,7 +271,7 @@ export const LIST_TOP_PULL = 12;
 /** Design gap between the last product card and the bottom navigation bar (approved v8.9.30). */
 export const BOTTOM_NAV_CONTENT_GAP = 14;
 
-/** Legacy scale — capped at 1.12x. Use usePhoneLayout() for new code. */
+/** Reactive consumers should prefer usePhoneLayout(); the formula itself is unbounded. */
 export const scale = (n: number): number => Math.round(n * _ratio());
 
 /**

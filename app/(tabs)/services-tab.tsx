@@ -6,7 +6,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
 import { shadows } from '@/constants/theme';
-import { scale, usePhoneLayout } from '@/constants/responsive';
+import { BOTTOM_NAV_CONTENT_GAP, scale, usePhoneLayout } from '@/constants/responsive';
+import ConnectionStateView from '@/components/ConnectionStateView';
 
 /**
  * Services — dedicated tab for الخدمات category (and future service offers).
@@ -30,7 +31,7 @@ export default function ServicesScreen() {
   const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
 
   // Container-measured card width (same rule as Categories)
-  const [gridW, setGridW] = useState(() => Math.min(winW, 480));
+  const [gridW, setGridW] = useState(() => winW);
   const COLS = 3;
   const CARD_W = Math.floor((gridW - scale(16) * 2 - scale(12) * (COLS - 1)) / COLS);
 
@@ -76,7 +77,7 @@ export default function ServicesScreen() {
           )}
         </View>
         <Text style={[styles.name, { color: colors.textPrimary }]} numberOfLines={2}>{name}</Text>
-        <View style={{ height: 20, justifyContent: 'center' }}>
+        <View style={{ height: scale(20), justifyContent: 'center' }}>
           {count != null && count > 0 ? (
             <View style={[styles.count, { backgroundColor: `${color}1A` }]}>
               <Text style={[styles.countText, { color }]}>{count}</Text>
@@ -95,16 +96,11 @@ export default function ServicesScreen() {
         keyExtractor={(item) => item.id}
         numColumns={3}
         columnWrapperStyle={[styles.row, isAr && { flexDirection: 'row-reverse' }]}
-        contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(16), paddingBottom: scale(16) }}
+        contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(16), paddingBottom: insets.bottom + BOTTOM_NAV_CONTENT_GAP + layout.smallGap }}
         onLayout={(e) => setGridW(e.nativeEvent.layout.width)}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <MaterialIcons name="handyman" size={scale(56)} color={colors.textTertiary} />
-            <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
-              {lb('Services coming soon', 'Services bientôt disponibles', 'الخدمات قريباً')}
-            </Text>
-          </View>
+          <ConnectionStateView state="empty" compact />
         }
       />
     </SafeAreaView>

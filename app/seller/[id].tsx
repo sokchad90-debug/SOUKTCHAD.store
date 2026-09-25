@@ -93,7 +93,7 @@ const ReviewItem = ({
       </View>
       <Text style={[styles.reviewText, { color: colors.textSecondary }]}>{displayText}</Text>
       {isLong ? (
-        <Pressable onPress={() => setExpanded(!expanded)} hitSlop={8}>
+        <Pressable onPress={() => setExpanded(!expanded)} hitSlop={scale(8)}>
           <Text style={[styles.readMoreText, { color: colors.primary }]}>
             {expanded ? lb('Read Less', 'Lire moins', 'قراءة أقل') : lb('Read More', 'Lire plus', 'قراءة المزيد')}
           </Text>
@@ -126,7 +126,7 @@ export default function SellerStoreScreen() {
   const layoutSL = usePhoneLayout();
   // Card width from the REAL container width (onLayout-measured) — guaranteed half-width
   // even for the lone last item in a 2-column grid (owner-reported bug).
-  const [gridW, setGridW] = useState(() => Math.min(layoutSL.contentWidth, 480));
+  const [gridW, setGridW] = useState(() => layoutSL.contentWidth);
   // 32 = row horizontal padding (16x2), 12 = row gap - two cards + gap fit exactly
   const CARD_WIDTH = Math.floor((gridW - scale(32) - scale(12)) / 2);
   const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
@@ -366,10 +366,10 @@ export default function SellerStoreScreen() {
               )}
               <View style={styles.coverOverlay} pointerEvents="none" />
               <View style={[styles.topBar, { marginTop: Math.max(insets.top, 24) + scale(4) }, isAr && { flexDirection: 'row-reverse' }]}>
-                <Pressable onPress={() => router.back()} hitSlop={12} style={styles.topBarBtn}>
+                <Pressable onPress={() => router.back()} hitSlop={scale(12)} style={styles.topBarBtn}>
                   <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color="#FFF" />
                 </Pressable>
-                <Pressable onPress={handleShare} hitSlop={12} style={[styles.topBarBtn, styles.shareBtnHighlight]}>
+                <Pressable onPress={handleShare} hitSlop={scale(12)} style={[styles.topBarBtn, styles.shareBtnHighlight]}>
                   <MaterialIcons name="ios-share" size={scale(22)} color="#FFF" />
                 </Pressable>
               </View>
@@ -821,7 +821,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(8), paddingVertical: scale(4), borderRadius: scale(10),
   },
   reviewRatingText: { fontSize: scale(12), fontWeight: '700', color: '#F59E0B' },
-  reviewText: { fontSize: scale(14), lineHeight: 20 },
+  reviewText: { fontSize: scale(14), lineHeight: scale(20) },
   readMoreText: { fontSize: scale(13), fontWeight: '700', marginTop: scale(2) },
   reviewPhoto: { width: '100%', height: scale(100), borderRadius: borderRadius.md, marginTop: scale(4) },
   reviewFooter: { flexDirection: 'row', alignItems: 'center', gap: scale(4) },

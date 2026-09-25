@@ -1,3 +1,4 @@
+import { scale } from '@/ui/responsive';
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -29,6 +30,6 @@ export default function AdminIndexScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  text: { fontSize: 14, fontWeight: '500' },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: scale(16) },
+  text: { fontSize: scale(14), fontWeight: '500' },
 });

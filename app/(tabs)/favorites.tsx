@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   stateDesc: {
     fontSize: scale(14),
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: scale(20),
     marginBottom: scale(24),
   },
 

@@ -470,7 +470,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
       />
       <Pressable
         onPress={() => setShowState(p => !p)}
-        hitSlop={10}
+        hitSlop={scale(10)}
         style={styles.eyeInside}
       >
         <MaterialIcons name={showState ? 'visibility-off' : 'visibility'} size={scale(20)} color={colors.textTertiary} />
@@ -491,7 +491,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
           >
             <View style={styles.modalHeader}>
               <View style={[styles.grabHandle, { backgroundColor: colors.border }]} />
-              <Pressable onPress={handleClose} style={styles.closeBtn} hitSlop={12}>
+              <Pressable onPress={handleClose} style={styles.closeBtn} hitSlop={scale(12)}>
                 <MaterialIcons name="close" size={scale(22)} color={colors.textSecondary} />
               </Pressable>
             </View>
@@ -553,7 +553,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                   <Pressable
                     onPress={() => { setStep('forgot_pw_link'); setError(''); setForgotSent(false); }}
                     style={styles.forgotBtn}
-                    hitSlop={8}
+                    hitSlop={scale(8)}
                   >
                     <Text style={[styles.forgotText, { color: colors.primary }]}>
                       {label('Forgot Password?', 'Mot de passe oublié ?', 'نسيت كلمة المرور؟')}
@@ -586,7 +586,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                     <Text style={[styles.demoTitle, { color: colors.textTertiary }]}>
                       {label('Instant Demo Access', 'Accès démo instantané', 'دخول تجريبي فوري')}
                     </Text>
-                    <Text style={[{ fontSize: 13, color: '#999', textAlign: 'center', marginTop: 4 } as any, { color: colors.textTertiary }]}>
+                    <Text style={[{ fontSize: scale(13), color: '#999', textAlign: 'center', marginTop: scale(4) } as any, { color: colors.textTertiary }]}>
                       {label('Tap to explore the app instantly', "Touchez pour explorer l'app", 'اضغط لاستكشاف التطبيق فوراً')}
                     </Text>
                     <View style={styles.demoBtnRow}>
@@ -680,14 +680,14 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                         {accountType === 'seller' ? label('Seller', 'Vendeur', 'بائع') : label('Buyer', 'Acheteur', 'مشتري')}
                       </Text>
                     </View>
-                    <Pressable onPress={() => { setStep('signup_choose'); setError(''); }} hitSlop={8} style={styles.changeTypeBtn}>
+                    <Pressable onPress={() => { setStep('signup_choose'); setError(''); }} hitSlop={scale(8)} style={styles.changeTypeBtn}>
                       <Text style={[styles.changeTypeText, { color: colors.textSecondary }]}>
                         {label('Change', 'Changer', 'تغيير')}
                       </Text>
                     </Pressable>
                   </View>
 
-                  <Text style={[styles.title, { color: colors.textPrimary, marginTop: 8 }]}>
+                  <Text style={[styles.title, { color: colors.textPrimary, marginTop: scale(8) }]}>
                     {label('Sign Up', "S'inscrire", 'إنشاء حساب')}
                   </Text>
 
@@ -821,7 +821,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                       <Text style={[styles.consentText, { color: colors.textSecondary }]}>
                         {label('I confirm I am over 18 years old and agree to the ', "Je confirme avoir plus de 18 ans et accepte la ", 'أؤكد أنني فوق 18 عاماً وأوافق على ')}
                       </Text>
-                      <Pressable onPress={openPrivacyPolicy} hitSlop={6}>
+                      <Pressable onPress={openPrivacyPolicy} hitSlop={scale(6)}>
                         <Text style={[styles.consentLink, { color: colors.primary }]}>
                           {label('Privacy Policy', 'Politique de confidentialité', 'سياسة الخصوصية')}
                         </Text>
@@ -829,7 +829,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                       <Text style={[styles.consentText, { color: colors.textSecondary }]}>
                         {label(' and the ', ' et les ', ' و')}
                       </Text>
-                      <Pressable onPress={openPrivacyPolicy} hitSlop={6}>
+                      <Pressable onPress={openPrivacyPolicy} hitSlop={scale(6)}>
                         <Text style={[styles.consentLink, { color: colors.primary }]}>
                           {label('Terms of Service', 'conditions', 'شروط الخدمة')}
                         </Text>
@@ -870,7 +870,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
               {step === 'forgot_email' ? (
                 <>
                   <View style={styles.formHeaderRow}>
-                    <Pressable onPress={() => { setStep('login'); setError(''); }} hitSlop={12}>
+                    <Pressable onPress={() => { setStep('login'); setError(''); }} hitSlop={scale(12)}>
                       <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
                     </Pressable>
                     <View style={[styles.accountTypeBadge, { backgroundColor: colors.warning + '15' }]}>
@@ -964,7 +964,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
               {step === 'forgot_pw_link' ? (
                 <>
                   <View style={styles.formHeaderRow}>
-                    <Pressable onPress={() => { setStep('login'); setError(''); setForgotSent(false); setForgotEmail(''); }} hitSlop={12}>
+                    <Pressable onPress={() => { setStep('login'); setError(''); setForgotSent(false); setForgotEmail(''); }} hitSlop={scale(12)}>
                       <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
                     </Pressable>
                     <View style={[styles.accountTypeBadge, { backgroundColor: colors.warning + '15' }]}>
@@ -1053,7 +1053,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
               {step === 'forgot_otp' ? (
                 <>
                   <View style={styles.formHeaderRow}>
-                    <Pressable onPress={() => { setStep('forgot_email'); setOtpError(''); }} hitSlop={12}>
+                    <Pressable onPress={() => { setStep('forgot_email'); setOtpError(''); }} hitSlop={scale(12)}>
                       <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
                     </Pressable>
                     <View style={[styles.accountTypeBadge, { backgroundColor: colors.warning + '15' }]}>
@@ -1156,7 +1156,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
               {step === 'forgot_new_password' ? (
                 <>
                   <View style={styles.formHeaderRow}>
-                    <Pressable onPress={() => { setStep('forgot_otp'); setError(''); }} hitSlop={12}>
+                    <Pressable onPress={() => { setStep('forgot_otp'); setError(''); }} hitSlop={scale(12)}>
                       <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
                     </Pressable>
                     <View style={[styles.accountTypeBadge, { backgroundColor: colors.success + '15' }]}>
@@ -1218,7 +1218,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                     />
                     <Pressable
                       onPress={() => setShowNewPassword(p => !p)}
-                      hitSlop={10}
+                      hitSlop={scale(10)}
                       style={styles.eyeInside}
                     >
                       <MaterialIcons name={showNewPassword ? 'visibility-off' : 'visibility'} size={scale(20)} color={colors.textTertiary} />
@@ -1300,7 +1300,7 @@ const styles = StyleSheet.create({
   closeBtn: { position: 'absolute', right: scale(20), top: scale(12) },
   scrollContent: { paddingHorizontal: SP.xxl, paddingTop: scale(4) },
   title: { fontSize: scale(24), fontWeight: '700', marginBottom: scale(4), fontFamily: 'Cairo-Bold' },
-  subtitle: { fontSize: scale(14), lineHeight: 20, marginBottom: SP.xl, fontFamily: 'Cairo-Regular' },
+  subtitle: { fontSize: scale(14), lineHeight: scale(20), marginBottom: SP.xl, fontFamily: 'Cairo-Regular' },
   fieldLabel: { fontSize: scale(11), fontWeight: '700', letterSpacing: 0.8, marginBottom: scale(6), marginTop: SP.s, fontFamily: 'Cairo-Bold' },
   input: {
     height: FIELD_HEIGHT,
@@ -1308,7 +1308,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: SP.l,
     fontSize: scale(16),
-    marginBottom: 2,
+    marginBottom: scale(2),
     fontFamily: 'Cairo-Regular',
   },
   // compact variant for the signup form (~8-10% shorter)
@@ -1319,7 +1319,7 @@ const styles = StyleSheet.create({
   passwordWrap: {
     position: 'relative',
     justifyContent: 'center',
-    marginBottom: 2,
+    marginBottom: scale(2),
   },
   passwordInputInner: {
     height: FIELD_HEIGHT,
@@ -1334,7 +1334,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  phoneRow: { flexDirection: 'row', gap: SP.s, marginBottom: 2 },
+  phoneRow: { flexDirection: 'row', gap: SP.s, marginBottom: scale(2) },
   countryPrefix: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1347,11 +1347,11 @@ const styles = StyleSheet.create({
   countryFlag: { fontSize: scale(20), fontFamily: 'Cairo-Regular' },
   countryCode: { fontSize: scale(14), fontWeight: '700', fontFamily: 'Cairo-Bold' },
   phoneInput: { flex: 1, height: FIELD_HEIGHT, borderRadius: borderRadius.md, borderWidth: 1, paddingHorizontal: SP.l, fontSize: scale(16), fontFamily: 'Cairo-Regular' },
-  phoneHint: { fontSize: scale(11), fontWeight: '500', marginTop: scale(4), marginBottom: 2, fontFamily: 'Cairo-Regular' },
+  phoneHint: { fontSize: scale(11), fontWeight: '500', marginTop: scale(4), marginBottom: scale(2), fontFamily: 'Cairo-Regular' },
   fieldError: { fontSize: scale(12), fontWeight: '500', marginTop: scale(4), marginBottom: scale(4), fontFamily: 'Cairo-Regular' },
   errorBanner: { flexDirection: 'row', alignItems: 'center', padding: SP.m, borderRadius: borderRadius.sm, gap: SP.s, marginBottom: SP.s },
   errorText: { fontSize: scale(13), fontWeight: '500', flex: 1, fontFamily: 'Cairo-Regular' },
-  inlineErrorRow: { flexDirection: 'row', alignItems: 'center', gap: scale(4), marginTop: scale(4), marginBottom: 2 },
+  inlineErrorRow: { flexDirection: 'row', alignItems: 'center', gap: scale(4), marginTop: scale(4), marginBottom: scale(2) },
   inlineErrorText: { fontSize: scale(12), fontWeight: '500', fontFamily: 'Cairo-Regular' },
   primaryBtn: {
     height: BTN_HEIGHT,
@@ -1400,8 +1400,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  accountTypeTitle: { fontSize: scale(16), fontWeight: '700', marginBottom: 2, fontFamily: 'Cairo-Bold' },
-  accountTypeDesc: { fontSize: scale(13), lineHeight: 18, fontFamily: 'Cairo-Regular' },
+  accountTypeTitle: { fontSize: scale(16), fontWeight: '700', marginBottom: scale(2), fontFamily: 'Cairo-Bold' },
+  accountTypeDesc: { fontSize: scale(13), lineHeight: scale(18), fontFamily: 'Cairo-Regular' },
   formHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   changeTypeBtn: { paddingHorizontal: scale(8), paddingVertical: scale(4) },
   changeTypeText: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
@@ -1410,8 +1410,8 @@ const styles = StyleSheet.create({
   consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: scale(10), marginTop: SP.l, paddingRight: scale(8) },
   checkbox: { width: scale(24), height: scale(24), borderRadius: scale(6), borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   consentTextWrap: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
-  consentText: { fontSize: scale(13), lineHeight: 19, fontFamily: 'Cairo-Regular' },
-  consentLink: { fontSize: scale(13), fontWeight: '700', lineHeight: 19, textDecorationLine: 'underline', fontFamily: 'Cairo-Bold' },
+  consentText: { fontSize: scale(13), lineHeight: scale(19), fontFamily: 'Cairo-Regular' },
+  consentLink: { fontSize: scale(13), fontWeight: '700', lineHeight: scale(19), textDecorationLine: 'underline', fontFamily: 'Cairo-Bold' },
   otpIconWrap: { alignItems: 'center', marginTop: scale(8), marginBottom: SP.m },
   otpIconCircle: { width: scale(88), height: scale(88), borderRadius: scale(16), alignItems: 'center', justifyContent: 'center' },
   otpInput: { height: scale(60), borderRadius: borderRadius.md, borderWidth: 2, fontSize: scale(28), fontWeight: '800', letterSpacing: 16, marginBottom: scale(4), fontFamily: 'Cairo-Bold' },

@@ -96,7 +96,7 @@ export default function VerificationScreen() {
     return (
       <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: COLORS.background }]}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} hitSlop={8}>
+          <Pressable onPress={() => router.back()} hitSlop={scale(8)}>
             <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(24)} color={COLORS.text} />
           </Pressable>
           <Text style={styles.headerTitle}>{isAr ? 'التوثيق' : 'Vérification'}</Text>
@@ -117,7 +117,7 @@ export default function VerificationScreen() {
   return (
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: COLORS.background }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+        <Pressable onPress={() => router.back()} hitSlop={scale(8)}>
           <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(24)} color={COLORS.text} />
         </Pressable>
         <Text style={styles.headerTitle}>{isAr ? 'توثيق الحساب' : 'Vérification du compte'}</Text>

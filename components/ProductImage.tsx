@@ -1,3 +1,4 @@
+import { scale } from '@/ui/responsive';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
@@ -58,6 +59,6 @@ export default ProductImage;
 const styles = StyleSheet.create({
   frame: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
-  fallback: { alignItems: 'center', justifyContent: 'center', gap: 6 },
-  fallbackText: { fontSize: 10, color: DS.colors.textTertiary, fontFamily: DS.fontFamily.regular },
+  fallback: { alignItems: 'center', justifyContent: 'center', gap: scale(6) },
+  fallbackText: { fontSize: scale(10), color: DS.colors.textTertiary, fontFamily: DS.fontFamily.regular },
 });

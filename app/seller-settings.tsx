@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, ActivityIndicator,
-} from 'react-native';
+  View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -165,8 +164,9 @@ export default function SellerSettingsScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View style={[styles.header, isAr && { flexDirection: 'row-reverse' }, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Pressable onPress={() => router.back()} hitSlop={scale(8)} style={styles.backBtn}>
           <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(22)} color={colors.textPrimary} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
@@ -179,8 +179,8 @@ export default function SellerSettingsScreen() {
         {/* Store Info */}
         <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.borderLight }, shadows.card]}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{lb('Store Information', 'Informations', 'معلومات المتجر')}</Text>
-          
-          <View style={styles.row}>
+
+          <View style={[styles.row, isAr && { flexDirection: 'row-reverse' }]}>
             <Text style={[styles.label, { color: colors.textTertiary }]}>{lb('Logo', 'Logo', 'الشعار')}</Text>
             <Pressable onPress={handleLogoUpload} style={styles.logoPicker}>
               {user?.avatar ? (
@@ -194,7 +194,7 @@ export default function SellerSettingsScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.row}>
+          <View style={[styles.row, isAr && { flexDirection: 'row-reverse' }]}>
             <Text style={[styles.label, { color: colors.textTertiary }]}>{lb('Banner', 'Bannière', 'البانر')}</Text>
             <Pressable onPress={handleBannerUpload} style={styles.bannerPicker}>
               {user?.coverImage ? (
@@ -237,7 +237,7 @@ export default function SellerSettingsScreen() {
         {/* Delivery Cities */}
         <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.borderLight }, shadows.card]}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{lb('Delivery Cities', 'Villes de livraison', 'مدن التوصيل')}</Text>
-          <View style={styles.citiesGrid}>
+          <View style={[styles.citiesGrid, isAr && { flexDirection: 'row-reverse' }]}>
             {CHAD_CITIES.map(city => {
               const isSelected = selectedCities.includes(city);
               return (
@@ -320,7 +320,8 @@ export default function SellerSettingsScreen() {
           {saving ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={styles.mainSaveBtnText}>{lb('Save Changes', 'Enregistrer', 'حفظ التغييرات')}</Text>}
         </Pressable>
       </ScrollView>
-    </SafeAreaView>
+          </KeyboardAvoidingView>
+</SafeAreaView>
   );
 }
 

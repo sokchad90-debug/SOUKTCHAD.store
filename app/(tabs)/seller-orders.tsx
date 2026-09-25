@@ -11,7 +11,7 @@ import { useApp } from '@/contexts/AppContext';
 import { formatPrice } from '@/constants/config';
 import { shadows } from '@/constants/theme';
 import { selection } from '@/services/haptics';
-import { scale } from '@/constants/responsive';
+import { BOTTOM_NAV_CONTENT_GAP, scale } from '@/constants/responsive';
 
 type OrderTab = 'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
@@ -156,7 +156,7 @@ export default function SellerOrdersScreen() {
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
       {/* ─── Header ─── */}
-      <View style={[oStyles.header, { borderBottomColor: colors.border }]}>
+      <View style={[oStyles.header, isAr && { flexDirection: 'row-reverse' }, { borderBottomColor: colors.border }]}>
         <View>
           <Text style={[oStyles.headerTitle, { color: colors.textPrimary }]}>
             {lb('Orders', 'Commandes', 'الطلبات')}
@@ -168,7 +168,7 @@ export default function SellerOrdersScreen() {
       </View>
 
       {/* ─── Summary Cards ─── */}
-      <View style={oStyles.summaryRow}>
+      <View style={[oStyles.summaryRow, isAr && { flexDirection: 'row-reverse' }]}>
         <View style={[oStyles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.card]}>
           <View style={[oStyles.summaryIcon, { backgroundColor: '#10B98115' }]}>
             <MaterialIcons name="payments" size={scale(18)} color="#10B981" />
@@ -186,7 +186,7 @@ export default function SellerOrdersScreen() {
       </View>
 
       {/* ─── Status Tabs — full width, evenly distributed ─── */}
-      <View style={[oStyles.tabBar, { borderBottomColor: colors.border }]}>
+      <View style={[oStyles.tabBar, isAr && { flexDirection: 'row-reverse' }, { borderBottomColor: colors.border }]}>
         {statusTabs.map(tab => {
           const isActive = activeTab === tab.key;
           return (
@@ -207,7 +207,7 @@ export default function SellerOrdersScreen() {
       </View>
 
       {/* ─── Orders List ─── */}
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: scale(16), paddingHorizontal: scale(16), paddingTop: scale(8) }}
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + BOTTOM_NAV_CONTENT_GAP + scale(4), paddingHorizontal: scale(16), paddingTop: scale(8) }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />}>
         {filteredOrders.length === 0 ? (
@@ -236,7 +236,7 @@ export default function SellerOrdersScreen() {
 
                   <View style={oStyles.orderBody}>
                     {/* Top: image + info + status */}
-                    <View style={oStyles.orderTopRow}>
+                    <View style={[oStyles.orderTopRow, isAr && { flexDirection: 'row-reverse' }]}>
                       {product?.images?.[0] ? (
                         <Image source={{ uri: product.images[0] }} style={oStyles.orderThumb} contentFit="cover" transition={150} />
                       ) : (
@@ -246,7 +246,7 @@ export default function SellerOrdersScreen() {
                       )}
                       <View style={{ flex: 1, gap: scale(3) }}>
                         <Text style={[oStyles.orderProduct, { color: colors.textPrimary }]} numberOfLines={2}>{pTitle}</Text>
-                        <View style={oStyles.orderMetaRow}>
+                        <View style={[oStyles.orderMetaRow, isAr && { flexDirection: 'row-reverse' }]}>
                           <MaterialIcons name="person-outline" size={scale(13)} color={colors.textTertiary} />
                           <Text style={[oStyles.orderMetaText, { color: colors.textTertiary }]} numberOfLines={1}>{buyerName}</Text>
                           {qty > 1 && (
@@ -261,7 +261,7 @@ export default function SellerOrdersScreen() {
                     </View>
 
                     {/* Bottom: amount + date + chevron */}
-                    <View style={[oStyles.orderBottomRow, { borderTopColor: colors.border }]}>
+                    <View style={[oStyles.orderBottomRow, isAr && { flexDirection: 'row-reverse' }, { borderTopColor: colors.border }]}>
                       <View style={oStyles.orderAmountCol}>
                         <Text style={[oStyles.orderAmount, { color: colors.primary }]}>{formatPrice(order?.amount || 0)}</Text>
                         {order?.transactionNumber && (
@@ -271,7 +271,7 @@ export default function SellerOrdersScreen() {
                           </View>
                         )}
                       </View>
-                      <View style={oStyles.orderDateCol}>
+                      <View style={[oStyles.orderDateCol, isAr && { flexDirection: 'row-reverse' }]}>
                         <Text style={[oStyles.orderDate, { color: colors.textTertiary }]}>{formatDate(order?.createdAt || order?.date || order?.created_at || '')}</Text>
                         <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(18)} color={colors.textTertiary} />
                       </View>
@@ -302,7 +302,7 @@ const oStyles = StyleSheet.create({
 
   // Status tabs — full width row, evenly distributed
   tabBar: { flexDirection: 'row', paddingHorizontal: scale(8), paddingVertical: scale(6), gap: scale(4), borderBottomWidth: 0.5 },
-  tabChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: scale(6), borderRadius: 9999, borderWidth: 1, gap: scale(4) },
+  tabChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: scale(6), borderRadius: scale(9999), borderWidth: 1, gap: scale(4) },
   tabChipText: { fontSize: scale(11), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
   tabBadge: { paddingHorizontal: scale(5), paddingVertical: scale(0), borderRadius: scale(7), minWidth: scale(16), alignItems: 'center' },
   tabBadgeText: { fontSize: scale(9), fontWeight: '800', fontFamily: 'Cairo-Bold' },
@@ -317,7 +317,7 @@ const oStyles = StyleSheet.create({
   orderMetaRow: { flexDirection: 'row', alignItems: 'center', gap: scale(4) },
   orderMetaText: { fontSize: scale(12), fontFamily: 'Cairo-Regular', flex: 1 },
   orderQty: { fontSize: scale(12), fontWeight: '600', fontFamily: 'Cairo-Medium' },
-  orderStatusPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(8), paddingVertical: scale(4), borderRadius: 9999, gap: scale(4) },
+  orderStatusPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(8), paddingVertical: scale(4), borderRadius: scale(9999), gap: scale(4) },
   orderStatusDot: { width: scale(6), height: scale(6), borderRadius: scale(3) },
   orderStatusText: { fontSize: scale(10), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   orderBottomRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingTop: scale(10), borderTopWidth: 0.5 },

@@ -2,8 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import {
   View, Text, StyleSheet, ScrollView, TextInput, Pressable,
   RefreshControl, Modal, Platform, FlatList, ActivityIndicator,
-  Animated,
-} from 'react-native';
+  Animated, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -17,6 +16,7 @@ import {
 import { categories, sellers, Product } from '@/services/mockData';
 import { formatPrice } from '@/constants/config';
 import ProductCard from '@/components/ProductCard';
+import ConnectionStateView from '@/components/ConnectionStateView';
 import { AppText, AppTextInput } from '@/components/AppText';
 import { shadows } from '@/constants/theme';
 import { selection, notifySuccess } from '@/services/haptics';
@@ -114,14 +114,14 @@ function HomeListHeader({
                 {cat.image ? (
                   <Image
                     source={cat.image}
-                    style={{ width: '100%', height: '100%', borderRadius: 10 }}
+                    style={{ width: '100%', height: '100%', borderRadius: scale(10) }}
                     contentFit="cover"
                     transition={150}
                   />
                 ) : (
                   <MaterialIcons
                     name={cat.icon as any}
-                    size={24}
+                    size={scale(24)}
                     color={cat.color}
                   />
                 )}
@@ -146,14 +146,14 @@ function HomeListHeader({
       {/* Verified Stores — horizontal scroll (only when All category is active).
           Hidden entirely on very short screens to make room for product cards. */}
       {verifiedSellers.length > 0 && showHeaderContent && !IS_VERY_SHORT_SCREEN ? (
-        <View style={{ marginBottom: 4 }}>
+        <View style={{ marginBottom: scale(4) }}>
           <View style={[styles.sectionHeaderRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
             <AppText weight={700} style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
               {lb('Verified Stores', 'Boutiques vérifiées', 'متاجر موثّقة')}
             </AppText>
             <Pressable onPress={() => router.push('/verified-stores' as any)} style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
               <Text style={[styles.seeAllText, { color: colors.verified }]}>{lb('See All', 'Voir tout', 'عرض الكل')}</Text>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.verified} />
+              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(18)} color={colors.verified} />
             </Pressable>
           </View>
           <ScrollView
@@ -184,8 +184,8 @@ function HomeListHeader({
                     </View>
                   )}
                   {seller.isVerified ? (
-                    <View style={[styles.verifiedStoreBadge, { width: Math.min(22, layout.storeAvatarSize * 0.36), height: Math.min(22, layout.storeAvatarSize * 0.36), borderRadius: 11, backgroundColor: colors.verified, borderColor: colors.surface }]}>
-                      <MaterialIcons name="verified" size={10} color="#FFF" />
+                    <View style={[styles.verifiedStoreBadge, { width: Math.min(22, layout.storeAvatarSize * 0.36), height: Math.min(22, layout.storeAvatarSize * 0.36), borderRadius: scale(11), backgroundColor: colors.verified, borderColor: colors.surface }]}>
+                      <MaterialIcons name="verified" size={scale(10)} color="#FFF" />
                     </View>
                   ) : null}
                 </View>
@@ -211,7 +211,7 @@ function HomeListHeader({
             <AppText weight={700} style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>{t('pinnedProducts')}</AppText>
             <View style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
               <Text style={[styles.seeAllText, { color: colors.primary }]}>{lb('See All', 'Voir tout', 'عرض الكل')}</Text>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.primary} />
+              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(18)} color={colors.primary} />
             </View>
           </Pressable>
           <ScrollView
@@ -276,7 +276,7 @@ function HomeListHeader({
         {!(activeFilterCount > 0) ? (
           <Pressable onPress={() => router.push('/all-products' as any)} style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
             <Text style={[styles.seeAllText, { color: colors.verified }]}>{lb('See All', 'Tout voir', 'عرض الكل')}</Text>
-            <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={18} color={colors.verified} />
+            <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(18)} color={colors.verified} />
           </Pressable>
         ) : null}
       </View>
@@ -316,7 +316,7 @@ export default function HomeScreen() {
     colors, t, language, isDark, searchQuery, setSearchQuery,
     selectedCategory, setSelectedCategory, getFilteredProducts, products, subCategories, lastCategory,
     filters, setFilters, resetFilters, activeFilterCount,
-    refreshProducts, selectedCity, setSelectedCity,
+    refreshProducts, productsError, productsLoading, selectedCity, setSelectedCity,
     navigateToCategory, currentCategoryPath, goBackCategory, resetCategoryNavigation,
   } = useApp();
 
@@ -456,6 +456,9 @@ export default function HomeScreen() {
 
   // Empty state
   const ListEmpty = useMemo(() => (
+    activeFilterCount === 0 && !searchQuery ? (
+      <ConnectionStateView state={productsError ? 'error' : 'empty'} onRetry={productsError ? refreshProducts : undefined} retrying={productsLoading} />
+    ) : (
     <View style={styles.emptyState}>
       <Image
         source={require('@/assets/images/empty-products.png')}
@@ -470,12 +473,13 @@ export default function HomeScreen() {
           onPress={() => resetFilters()}
           style={[styles.clearFiltersBtn, { backgroundColor: colors.primary }]}
         >
-          <MaterialIcons name="filter-list-off" size={16} color="#FFF" />
+          <MaterialIcons name="filter-list-off" size={scale(16)} color="#FFF" />
           <Text style={[styles.clearFiltersBtnText]}>{lb('Clear Filters', 'Effacer les filtres', 'مسح الفلاتر')}</Text>
         </Pressable>
       ) : null}
     </View>
-  ), [colors, lb, activeFilterCount, resetFilters]);
+    )
+  ), [colors, lb, activeFilterCount, resetFilters, searchQuery, productsError, productsLoading, refreshProducts]);
 
   // ---- isReady check: show loading screen while data loads ----
   if (!isReady) {
@@ -488,6 +492,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: isDark ? '#39276A' : '#4C1CEA' }]}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={[styles.homeBackdrop, { backgroundColor: colors.background }]}>
         <View style={[styles.homeSurface, { width: layout.surfaceWidth, backgroundColor: colors.background }]}>
           {/* Sticky Search Bar — always visible at top */}
@@ -499,25 +504,25 @@ export default function HomeScreen() {
             <View style={styles.headerRow}>
               {isAr ? (
                 <View style={styles.headerFlexGroup}>
-                  <Pressable hitSlop={12} onPress={() => { selection(); openFilters(); }} style={styles.headerTouch44}>
-                    <MaterialIcons name="menu" size={28} color="#FFFFFF" />
+                  <Pressable hitSlop={scale(12)} onPress={() => { selection(); openFilters(); }} style={styles.headerTouch44}>
+                    <MaterialIcons name="menu" size={scale(28)} color="#FFFFFF" />
                     {activeFilterCount > 0 ? (
                       <View style={styles.filterBadge}>
                         <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
                       </View>
                     ) : null}
                   </Pressable>
-                  <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }} style={styles.headerTouch44}>
-                    <MaterialIcons name="location-on" size={26} color="#FFFFFF" />
+                  <Pressable hitSlop={scale(12)} onPress={() => { selection(); setShowCityDropdown(true); }} style={styles.headerTouch44}>
+                    <MaterialIcons name="location-on" size={scale(26)} color="#FFFFFF" />
                   </Pressable>
                 </View>
               ) : (
                 <View style={styles.headerFlexGroup}>
-                  <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)} style={styles.headerTouch44}>
-                    <MaterialIcons name="notifications-none" size={26} color="#FFFFFF" />
+                  <Pressable hitSlop={scale(10)} onPress={() => router.push('/settings' as any)} style={styles.headerTouch44}>
+                    <MaterialIcons name="notifications-none" size={scale(26)} color="#FFFFFF" />
                   </Pressable>
-                  <Pressable hitSlop={10} onPress={() => router.push('/checkout' as any)} style={styles.headerTouch44}>
-                    <MaterialIcons name="shopping-cart" size={26} color="#FFFFFF" />
+                  <Pressable hitSlop={scale(10)} onPress={() => router.push('/checkout' as any)} style={styles.headerTouch44}>
+                    <MaterialIcons name="shopping-cart" size={scale(26)} color="#FFFFFF" />
                   </Pressable>
                 </View>
               )}
@@ -529,20 +534,20 @@ export default function HomeScreen() {
               />
               {isAr ? (
                 <View style={[styles.headerFlexGroup, { justifyContent: 'flex-end' }]}>
-                  <Pressable hitSlop={10} onPress={() => router.push('/settings' as any)} style={styles.headerTouch44}>
-                    <MaterialIcons name="notifications-none" size={26} color="#FFFFFF" />
+                  <Pressable hitSlop={scale(10)} onPress={() => router.push('/settings' as any)} style={styles.headerTouch44}>
+                    <MaterialIcons name="notifications-none" size={scale(26)} color="#FFFFFF" />
                   </Pressable>
-                  <Pressable hitSlop={10} onPress={() => router.push('/checkout' as any)} style={styles.headerTouch44}>
-                    <MaterialIcons name="shopping-cart" size={26} color="#FFFFFF" />
+                  <Pressable hitSlop={scale(10)} onPress={() => router.push('/checkout' as any)} style={styles.headerTouch44}>
+                    <MaterialIcons name="shopping-cart" size={scale(26)} color="#FFFFFF" />
                   </Pressable>
                 </View>
               ) : (
                 <View style={[styles.headerFlexGroup, { justifyContent: 'flex-end' }]}>
-                  <Pressable hitSlop={12} onPress={() => { selection(); setShowCityDropdown(true); }} style={styles.headerTouch44}>
-                    <MaterialIcons name="location-on" size={26} color="#FFFFFF" />
+                  <Pressable hitSlop={scale(12)} onPress={() => { selection(); setShowCityDropdown(true); }} style={styles.headerTouch44}>
+                    <MaterialIcons name="location-on" size={scale(26)} color="#FFFFFF" />
                   </Pressable>
-                  <Pressable hitSlop={12} onPress={() => { selection(); openFilters(); }} style={styles.headerTouch44}>
-                    <MaterialIcons name="menu" size={28} color="#FFFFFF" />
+                  <Pressable hitSlop={scale(12)} onPress={() => { selection(); openFilters(); }} style={styles.headerTouch44}>
+                    <MaterialIcons name="menu" size={scale(28)} color="#FFFFFF" />
                     {activeFilterCount > 0 ? (
                       <View style={styles.filterBadge}>
                         <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
@@ -553,10 +558,10 @@ export default function HomeScreen() {
               )}
             </View>
 {/* Search bar — stays sticky */}
-            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: 2 }]}>
+            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: scale(2) }]}>
               <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
-              <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: 16 }, isAr && { flexDirection: 'row-reverse' }]}>
-                <MaterialIcons name="search" size={18} color={colors.textTertiary} />
+              <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: scale(16) }, isAr && { flexDirection: 'row-reverse' }]}>
+                <MaterialIcons name="search" size={scale(18)} color={colors.textTertiary} />
                 <AppTextInput
                   testID="home-search-input"
                   weight={400}
@@ -568,8 +573,8 @@ export default function HomeScreen() {
                   onChangeText={setSearchQuery}
                 />
                 {searchQuery.length > 0 ? (
-                  <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
-                    <MaterialIcons name="close" size={18} color={colors.textTertiary} />
+                  <Pressable onPress={() => setSearchQuery('')} hitSlop={scale(8)}>
+                    <MaterialIcons name="close" size={scale(18)} color={colors.textTertiary} />
                   </Pressable>
                 ) : null}
               </View>
@@ -588,12 +593,12 @@ export default function HomeScreen() {
             <Pressable style={styles.cityDropdownOverlay} onPress={() => setShowCityDropdown(false)}>
               <View style={[styles.cityDropdownSheet, { backgroundColor: colors.surface }]}>
                 <View style={[styles.cityDropdownHeader, { borderBottomColor: colors.border }]}>
-                  <MaterialIcons name="location-on" size={18} color="#8B5CF6" />
+                  <MaterialIcons name="location-on" size={scale(18)} color="#8B5CF6" />
                   <Text style={[styles.cityDropdownTitle, { color: colors.textPrimary }]}>
                     {lb('Select City', 'Choisir la ville', 'اختر المدينة')}
                   </Text>
-                  <Pressable onPress={() => setShowCityDropdown(false)} hitSlop={12} style={styles.cityDropdownCloseBtn}>
-                    <MaterialIcons name="close" size={20} color={colors.textSecondary} />
+                  <Pressable onPress={() => setShowCityDropdown(false)} hitSlop={scale(12)} style={styles.cityDropdownCloseBtn}>
+                    <MaterialIcons name="close" size={scale(20)} color={colors.textSecondary} />
                   </Pressable>
                 </View>
                 <ScrollView
@@ -604,14 +609,14 @@ export default function HomeScreen() {
                 >
                   <Pressable
                     onPress={() => { selection(); setSelectedCity('all'); setShowCityDropdown(false); }}
-                    style={({ pressed }) => [styles.cityDropdownItem, { backgroundColor: selectedCity === 'all' ? '#8B5CF615' : 'transparent', opacity: pressed ? 0.7 : 1 }]}
+                    style={({ pressed }) => [styles.cityDropdownItem, isAr && { flexDirection: 'row-reverse' }, { backgroundColor: selectedCity === 'all' ? '#8B5CF615' : 'transparent', opacity: pressed ? 0.7 : 1 }]}
                   >
-                    <MaterialIcons name="public" size={18} color={selectedCity === 'all' ? '#8B5CF6' : colors.textTertiary} />
+                    <MaterialIcons name="public" size={scale(18)} color={selectedCity === 'all' ? '#8B5CF6' : colors.textTertiary} />
                     <Text style={[styles.cityDropdownItemText, { color: selectedCity === 'all' ? '#8B5CF6' : colors.textPrimary, flex: 1 }]}>
                       {lb('All Cities', 'Toutes les villes', 'كل المدن')}
                     </Text>
                     {selectedCity === 'all' ? (
-                      <MaterialIcons name="check" size={18} color="#8B5CF6" />
+                      <MaterialIcons name="check" size={scale(18)} color="#8B5CF6" />
                     ) : null}
                   </Pressable>
                   {CHAD_CITIES.map(city => {
@@ -620,14 +625,14 @@ export default function HomeScreen() {
                       <Pressable
                         key={city}
                         onPress={() => { selection(); setSelectedCity(city); setShowCityDropdown(false); }}
-                        style={({ pressed }) => [styles.cityDropdownItem, { backgroundColor: isActive ? '#8B5CF615' : 'transparent', opacity: pressed ? 0.7 : 1 }]}
+                        style={({ pressed }) => [styles.cityDropdownItem, isAr && { flexDirection: 'row-reverse' }, { backgroundColor: isActive ? '#8B5CF615' : 'transparent', opacity: pressed ? 0.7 : 1 }]}
                       >
-                        <MaterialIcons name="location-on" size={18} color={isActive ? '#8B5CF6' : colors.textTertiary} />
+                        <MaterialIcons name="location-on" size={scale(18)} color={isActive ? '#8B5CF6' : colors.textTertiary} />
                         <Text style={[styles.cityDropdownItemText, { color: isActive ? '#8B5CF6' : colors.textPrimary, flex: 1 }]}>
                           {city}
                         </Text>
                         {isActive ? (
-                          <MaterialIcons name="check" size={18} color="#8B5CF6" />
+                          <MaterialIcons name="check" size={scale(18)} color="#8B5CF6" />
                         ) : null}
                       </Pressable>
                     );
@@ -693,14 +698,14 @@ export default function HomeScreen() {
                 {lb('Filters', 'Filtres', 'الفلاتر')}
               </Text>
               {tempFilterCount > 0 ? (
-                <Pressable onPress={handleResetFilters} hitSlop={8}>
+                <Pressable onPress={handleResetFilters} hitSlop={scale(8)}>
                   <Text style={[styles.resetText, { color: colors.error }]}>
                     {lb('Reset', 'Réinitialiser', 'إعادة تعيين')}
                   </Text>
                 </Pressable>
               ) : null}
-              <Pressable onPress={() => setShowFilters(false)} hitSlop={12} style={styles.closeModalBtn}>
-                <MaterialIcons name="close" size={22} color={colors.textSecondary} />
+              <Pressable onPress={() => setShowFilters(false)} hitSlop={scale(12)} style={styles.closeModalBtn}>
+                <MaterialIcons name="close" size={scale(22)} color={colors.textSecondary} />
               </Pressable>
             </View>
 
@@ -717,14 +722,14 @@ export default function HomeScreen() {
                 style={({ pressed }) => [styles.sortChip, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border, opacity: pressed ? 0.88 : 1, justifyContent: 'space-between' }]}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(6) }}>
-                  <MaterialIcons name="location-on" size={16} color={colors.primary} />
+                  <MaterialIcons name="location-on" size={scale(16)} color={colors.primary} />
                   <Text style={[styles.sortChipText, { color: colors.textPrimary }]}>
                     {selectedCity === 'all'
                       ? lb('All Cities', 'Toutes les villes', 'كل المدن')
                       : selectedCity}
                   </Text>
                 </View>
-                <MaterialIcons name="expand-more" size={18} color={colors.textTertiary} />
+                <MaterialIcons name="expand-more" size={scale(18)} color={colors.textTertiary} />
               </Pressable>
 
               <Text style={[styles.filterSectionTitle, { color: colors.textTertiary }]}>
@@ -745,7 +750,7 @@ export default function HomeScreen() {
                         },
                       ]}
                     >
-                      <MaterialIcons name={opt.icon as any} size={16} color={isActive ? colors.primary : colors.textTertiary} />
+                      <MaterialIcons name={opt.icon as any} size={scale(16)} color={isActive ? colors.primary : colors.textTertiary} />
                       <Text style={[styles.sortChipText, { color: isActive ? colors.primary : colors.textPrimary }]}>
                         {opt[language]}
                       </Text>
@@ -773,7 +778,7 @@ export default function HomeScreen() {
                   />
                 </View>
                 <View style={styles.priceSeparator}>
-                  <MaterialIcons name="remove" size={20} color={colors.textTertiary} />
+                  <MaterialIcons name="remove" size={scale(20)} color={colors.textTertiary} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.priceInputLabel, { color: colors.textTertiary }]}>Max</Text>
@@ -806,7 +811,7 @@ export default function HomeScreen() {
                 onPress={applyFilters}
                 style={({ pressed }) => [styles.applyBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }]}
               >
-                <MaterialIcons name="check" size={18} color="#FFF" />
+                <MaterialIcons name="check" size={scale(18)} color="#FFF" />
                 <Text style={styles.applyBtnText}>
                   {lb('Apply', 'Appliquer', 'تطبيق')}
                   {tempFilterCount > 0 ? ` (${tempFilterCount})` : ''}
@@ -816,7 +821,8 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+          </KeyboardAvoidingView>
+</SafeAreaView>
   );
 }
 
@@ -836,17 +842,17 @@ const styles = StyleSheet.create({
   },
   logo: { fontSize: scale(18), fontWeight: '800', letterSpacing: -0.3, fontFamily: 'Cairo-Bold' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: scale(6) },
-  headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(8) },
   headerFlexGroup: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: scale(10) },
-  headerTouch44: { width: 43, height: 43, alignItems: 'center', justifyContent: 'center' },
-  headerSideIcons: { position: 'absolute', left: 12, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: scale(14) },
+  headerTouch44: { width: scale(43), height: scale(43), alignItems: 'center', justifyContent: 'center' },
+  headerSideIcons: { position: 'absolute', left: scale(12), top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: scale(14) },
   actionIconsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(16), paddingTop: scale(10), paddingBottom: scale(8) },
   actionIconsGroup: { flexDirection: 'row', alignItems: 'center', gap: scale(18) },
-  headerSideRight: { left: undefined, right: 12 },
-  headerLocationChip: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 7, paddingVertical: 4, borderRadius: 999, maxWidth: 86 },
-  headerLocationChipText: { fontSize: 11, fontWeight: '700', maxWidth: 58, fontFamily: 'Cairo-Bold' },
+  headerSideRight: { left: undefined, right: scale(12) },
+  headerLocationChip: { flexDirection: 'row', alignItems: 'center', gap: scale(2), paddingHorizontal: scale(7), paddingVertical: scale(4), borderRadius: scale(999), maxWidth: scale(86) },
+  headerLocationChipText: { fontSize: scale(11), fontWeight: '700', maxWidth: scale(58), fontFamily: 'Cairo-Bold' },
   logoImage: { width: LOGO_IMG, height: LOGO_IMG, borderRadius: scale(6) },
-  logoHeaderImage: { width: 68, height: 34, resizeMode: 'contain' },
+  logoHeaderImage: { width: scale(68), height: scale(34), resizeMode: 'contain' },
   notifBtn: { width: NOTIF_BTN, height: NOTIF_BTN, borderRadius: Math.round(NOTIF_BTN / 2), alignItems: 'center', justifyContent: 'center' },
   searchContainer: { flexDirection: 'row', paddingHorizontal: scale(16), marginBottom: 0, gap: 0 },
   searchWrapper: {
@@ -854,14 +860,14 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     flex: 1, flexDirection: 'row', alignItems: 'center',
-    borderRadius: 999, paddingHorizontal: scale(14),
+    borderRadius: scale(999), paddingHorizontal: scale(14),
     borderWidth: 0,
     gap: scale(8),
   },
   searchInput: { flex: 1, fontSize: scale(15), height: '100%' },
   searchBtn: {
     width: NOTIF_BTN, height: NOTIF_BTN,
-    borderRadius: 999,
+    borderRadius: scale(999),
     alignItems: 'center', justifyContent: 'center',
   },
   searchBtnRTL: {
@@ -914,7 +920,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 2,
   },
-  verifiedStoreName: { fontSize: scale(9), fontWeight: '600', marginTop: scale(4), textAlign: 'center', width: VERIFIED_STORE_ITEM_W, overflow: 'hidden', lineHeight: 12, fontFamily: 'Cairo-SemiBold' },
+  verifiedStoreName: { fontSize: scale(9), fontWeight: '600', marginTop: scale(4), textAlign: 'center', width: VERIFIED_STORE_ITEM_W, overflow: 'hidden', lineHeight: scale(12), fontFamily: 'Cairo-SemiBold' },
 
   sectionHeader: { paddingHorizontal: scale(16), paddingTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(3), paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', width: '100%', paddingHorizontal: scale(16), paddingTop: 0, paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },

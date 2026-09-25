@@ -62,10 +62,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: scale(13),
     fontWeight: '500',
-    lineHeight: 18,
+    lineHeight: scale(18),
   },
   compactText: {
     fontSize: scale(11),
-    lineHeight: 15,
+    lineHeight: scale(15),
   },
 });

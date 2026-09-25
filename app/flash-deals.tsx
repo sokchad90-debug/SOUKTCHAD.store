@@ -5,9 +5,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useApp } from '@/contexts/AppContext';
-import { products, Product } from '@/services/mockData';
+import { Product } from '@/services/mockData';
 import ProductCard from '@/components/ProductCard';
-import { scale, usePhoneLayout } from '@/constants/responsive';
+import { BOTTOM_NAV_CONTENT_GAP, scale, usePhoneLayout } from '@/constants/responsive';
+import ConnectionStateView from '@/components/ConnectionStateView';
 
 function formatCountdown(ms: number, language: string = 'en'): string {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -32,7 +33,7 @@ export default function FlashDealsScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const layout = usePhoneLayout(tabBarHeight);
   const router = useRouter();
-  const { colors, language } = useApp();
+  const { colors, language, products, productsError, productsLoading, refreshProducts } = useApp();
   const isFr = language === 'fr';
   const isAr = language === 'ar';
   const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
@@ -48,7 +49,7 @@ export default function FlashDealsScreen() {
       return new Date(p.discountUntil).getTime() > now;
     });
     setDeals(active);
-  }, []);
+  }, [products]);
 
   // Tick every second for countdown
   useEffect(() => {
@@ -75,8 +76,8 @@ export default function FlashDealsScreen() {
   return (
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { width: layout.surfaceWidth, backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
+      <View style={[styles.header, isAr && { flexDirection: 'row-reverse' }, { width: layout.surfaceWidth, backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Pressable onPress={() => router.back()} hitSlop={scale(8)} style={styles.backBtn}>
            <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(22)} color={colors.textPrimary} />
         </Pressable>
         <View style={styles.headerTitle}>
@@ -91,12 +92,7 @@ export default function FlashDealsScreen() {
       </View>
 
       {deals.length === 0 ? (
-        <View style={[styles.emptyState, { width: layout.surfaceWidth }]}>
-          <MaterialIcons name="flash-off" size={scale(48)} color={colors.textTertiary} />
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            {lb('No active flash deals', 'Aucune offre flash active', 'لا توجد عروض سريعة حاليا')}
-          </Text>
-        </View>
+        <ConnectionStateView state={productsError ? 'error' : 'empty'} onRetry={productsError ? refreshProducts : undefined} retrying={productsLoading} />
       ) : (
         <FlatList
           style={{ width: layout.surfaceWidth }}
@@ -105,7 +101,7 @@ export default function FlashDealsScreen() {
           renderItem={renderProduct}
           numColumns={2}
           columnWrapperStyle={[styles.grid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
-          contentContainerStyle={{ paddingTop: 8, paddingBottom: tabBarHeight + 16 }}
+          contentContainerStyle={{ paddingTop: scale(8), paddingBottom: layout.safeBottom + BOTTOM_NAV_CONTENT_GAP + layout.smallGap }}
           showsVerticalScrollIndicator={false}
         />
       )}

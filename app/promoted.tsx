@@ -10,6 +10,7 @@ import { borderRadius, shadows } from '@/constants/theme';
 import { FlatList } from 'react-native';
 import { scale, usePhoneLayout } from '@/constants/responsive';
 import ProductCard from '@/components/ProductCard';
+import ConnectionStateView from '@/components/ConnectionStateView';
 
 
 export default function PromotedScreen() {
@@ -17,8 +18,8 @@ export default function PromotedScreen() {
   const CARD_WIDTH = Math.floor((layoutP.contentWidth - scale(24)) / 2);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors, language, products } = useApp();
-  
+  const { colors, language, products, productsError, productsLoading, refreshProducts } = useApp();
+
   const isFr = language === 'fr';
   const isAr = language === 'ar';
   const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
@@ -40,8 +41,8 @@ export default function PromotedScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+      <View style={[styles.header, isAr && { flexDirection: 'row-reverse' }, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Pressable onPress={() => router.back()} hitSlop={scale(12)}>
           <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(24)} color={colors.textPrimary} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
@@ -51,19 +52,14 @@ export default function PromotedScreen() {
       </View>
 
       {promoted.length === 0 ? (
-        <View style={styles.empty}>
-          <MaterialIcons name="campaign" size={scale(56)} color={colors.textTertiary} />
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            {lb('No promoted products', 'Aucun produit sponsorisé', 'لا توجد منتجات مميزة')}
-          </Text>
-        </View>
+        <ConnectionStateView state={productsError ? 'error' : 'empty'} onRetry={productsError ? refreshProducts : undefined} retrying={productsLoading} />
       ) : (
         <FlatList
           data={promoted}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           numColumns={2}
-          columnWrapperStyle={styles.row}
+          columnWrapperStyle={[styles.row, isAr && { flexDirection: 'row-reverse' }]}
           contentContainerStyle={{ padding: scale(16), paddingBottom: insets.bottom + scale(16) }}
           showsVerticalScrollIndicator={false}
         />
@@ -91,7 +87,7 @@ const styles = StyleSheet.create({
   pinnedBadgeText: { color: '#FFF', fontSize: scale(9), fontWeight: '700' },
   cardInfo: { padding: scale(10), gap: scale(2) },
   cardPrice: { fontSize: scale(15), fontWeight: '700' },
-  cardTitle: { fontSize: scale(13), fontWeight: '500', lineHeight: 18 },
+  cardTitle: { fontSize: scale(13), fontWeight: '500', lineHeight: scale(18) },
   cardMeta: { flexDirection: 'row', alignItems: 'center', gap: scale(3), marginTop: scale(4) },
   cardLocation: { fontSize: scale(11) },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: scale(12) },

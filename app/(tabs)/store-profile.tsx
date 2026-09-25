@@ -13,7 +13,7 @@ import { formatPrice } from '@/constants/config';
 import { shadows } from '@/constants/theme';
 import * as ImagePicker from "expo-image-picker";
 import { selection, impactLight, notifySuccess } from '@/services/haptics';
-import { scale, usePhoneLayout } from '@/constants/responsive';
+import { BOTTOM_NAV_CONTENT_GAP, scale, usePhoneLayout } from '@/constants/responsive';
 import { fetchSellerStats as apiFetchSellerStats, StatsFromAPI } from '@/services/ordersService';
 
 const CARD_GAP = scale(10);
@@ -151,9 +151,9 @@ export default function StoreProfileScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: scale(16) }}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: layoutSP.safeBottom + BOTTOM_NAV_CONTENT_GAP + layoutSP.smallGap }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />}>
-        
+
         {/* ===== STORE HEADER ===== */}
         <View style={styles.headerWrap}>
           <Pressable onPress={handleBannerUpload} style={[styles.bannerContainer, { width: '100%' }]}>
@@ -178,12 +178,12 @@ export default function StoreProfileScreen() {
 
           {/* Top-right icons: edit store (👤) + general settings (⚙️) */}
           <View style={styles.headerButtons}>
-            <Pressable onPress={() => { selection(); router.push('/seller-settings' as any); }} hitSlop={12} style={styles.headerBtn}>
+            <Pressable onPress={() => { selection(); router.push('/seller-settings' as any); }} hitSlop={scale(12)} style={styles.headerBtn}>
               <View style={styles.gearWrap}>
                 <MaterialIcons name="person" size={scale(16)} color="#FFF" />
               </View>
             </Pressable>
-            <Pressable onPress={() => { selection(); router.push('/settings' as any); }} hitSlop={12} style={styles.headerBtn}>
+            <Pressable onPress={() => { selection(); router.push('/settings' as any); }} hitSlop={scale(12)} style={styles.headerBtn}>
               <View style={styles.gearWrap}>
                 <MaterialIcons name="settings" size={scale(16)} color="#FFF" />
               </View>
@@ -222,13 +222,13 @@ export default function StoreProfileScreen() {
                   <MaterialIcons name="people-alt" size={scale(14)} color="#FFFFFFCC" />
                   <Text style={[styles.metaText, { color: '#FFFFFFCC' }]}>{followerCount}</Text>
                 </View>
-                <Pressable onPress={handleShareStore} hitSlop={8}>
+                <Pressable onPress={handleShareStore} hitSlop={scale(8)}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(4) }}>
                     <MaterialIcons name="share" size={scale(14)} color="#FFFFFFCC" />
                     <Text style={[styles.metaText, { color: '#FFFFFFCC' }]}>{lb('Share', 'Partager', 'مشاركة')}</Text>
                   </View>
                 </Pressable>
-                <Pressable onPress={handleCopyLink} hitSlop={8}>
+                <Pressable onPress={handleCopyLink} hitSlop={scale(8)}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(4) }}>
                     <MaterialIcons name="content-copy" size={scale(14)} color={copied ? colors.primary : '#FFFFFFCC'} />
                     <Text style={[styles.metaText, { color: copied ? colors.primary : '#FFFFFFCC' }]} numberOfLines={1}>
@@ -275,14 +275,14 @@ const styles = StyleSheet.create({
   bannerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
   bannerHint: { flexDirection: 'row', alignItems: 'center', gap: scale(4), paddingHorizontal: scale(10), paddingVertical: scale(5), borderRadius: scale(16), marginTop: scale(8) },
   bannerHintText: { fontSize: scale(11), fontWeight: '600', color: '#FFF', fontFamily: 'Cairo-Medium' },
-  bannerEditBadge: { position: 'absolute', bottom: scale(8), right: scale(8), width: scale(28), height: scale(28), borderRadius: scale(14), alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 },
+  bannerEditBadge: { position: 'absolute', bottom: scale(8), right: scale(8), width: scale(28), height: scale(28), borderRadius: scale(14), alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: scale(2) }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 },
   storeInfoRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(16), marginTop: scale(-30), gap: scale(14) },
   logoContainer: { position: 'relative' },
   logoImage: { width: scale(72), height: scale(72), borderRadius: scale(36), borderWidth: 3, borderColor: '#FFF' },
   logoPlaceholder: { width: scale(72), height: scale(72), borderRadius: scale(36), alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#FFF' },
   logoText: { fontSize: scale(28), fontWeight: '800', color: '#FFF', fontFamily: 'Cairo-Bold' },
   logoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: scale(36), backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
-  logoCameraBadge: { position: 'absolute', bottom: -scale(2), right: -scale(2), width: scale(24), height: scale(24), borderRadius: scale(12), alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 },
+  logoCameraBadge: { position: 'absolute', bottom: -scale(2), right: -scale(2), width: scale(24), height: scale(24), borderRadius: scale(12), alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFF', shadowColor: '#000', shadowOffset: { width: 0, height: scale(2) }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 },
   storeMeta: { flex: 1, gap: scale(2) },
   storeName: { fontSize: scale(20), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   storeId: { fontSize: scale(12), fontWeight: '600', fontFamily: 'Cairo-Medium' },

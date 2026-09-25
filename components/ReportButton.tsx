@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   modal: { width: '100%', borderRadius: borderRadius.lg, padding: scale(24) },
   modalHeader: { flexDirection: 'row', alignItems: 'center', gap: scale(10), marginBottom: scale(8) },
   modalTitle: { fontSize: scale(20), fontWeight: '700' },
-  modalDesc: { fontSize: scale(14), lineHeight: 21, marginBottom: scale(16) },
+  modalDesc: { fontSize: scale(14), lineHeight: scale(21), marginBottom: scale(16) },
   input: { height: scale(120), borderRadius: borderRadius.md, borderWidth: 1, paddingHorizontal: scale(16), paddingTop: scale(14), fontSize: scale(15), textAlignVertical: 'top' },
   modalBtns: { flexDirection: 'row', gap: scale(10), marginTop: scale(16) },
   cancelBtn: { flex: 1, height: scale(48), borderRadius: borderRadius.md, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },

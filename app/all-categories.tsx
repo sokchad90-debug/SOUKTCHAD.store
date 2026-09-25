@@ -33,7 +33,7 @@ export default function AllCategoriesScreen() {
     <Pressable
       onPress={() => handleSelect(item)}
       style={({ pressed }) => [
-        styles.categoryCard,
+        styles.categoryCard, isAr && { flexDirection: 'row-reverse' },
         {
           backgroundColor: colors.surface,
           borderColor: colors.borderLight,
@@ -45,7 +45,7 @@ export default function AllCategoriesScreen() {
         {item.image ? (
           <Image
             source={item.image}
-            style={{ width: '100%', height: '100%', borderRadius: 10 }}
+            style={{ width: '100%', height: '100%', borderRadius: scale(10) }}
             contentFit="cover"
             transition={150}
           />
@@ -62,8 +62,8 @@ export default function AllCategoriesScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
+      <View style={[styles.header, isAr && { flexDirection: 'row-reverse' }, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Pressable onPress={() => router.back()} hitSlop={scale(8)} style={styles.backBtn}>
           <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(22)} color={colors.textPrimary} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>

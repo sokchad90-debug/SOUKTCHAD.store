@@ -342,9 +342,9 @@ export default function SellScreen() {
                       {index === 0 ? <View style={[styles.thumbCoverDot, { backgroundColor: colors.primary }]}><MaterialIcons name="star" size={scale(8)} color="#FFF" /></View> : null}
                     </Pressable>
                     <View style={styles.thumbActions}>
-                      {index > 0 ? <Pressable onPress={() => moveImage(index, 'left')} style={[styles.thumbActionBtn, { backgroundColor: colors.surfaceElevated }]} hitSlop={4}><MaterialIcons name="chevron-left" size={scale(14)} color={colors.textSecondary} /></Pressable> : <View style={styles.thumbActionBtn} />}
-                      <Pressable onPress={() => removeImage(img.id)} style={[styles.thumbActionBtn, { backgroundColor: colors.errorLight }]} hitSlop={4}><MaterialIcons name="close" size={scale(14)} color={colors.error} /></Pressable>
-                      {index < images.length - 1 ? <Pressable onPress={() => moveImage(index, 'right')} style={[styles.thumbActionBtn, { backgroundColor: colors.surfaceElevated }]} hitSlop={4}><MaterialIcons name="chevron-right" size={scale(14)} color={colors.textSecondary} /></Pressable> : <View style={styles.thumbActionBtn} />}
+                      {index > 0 ? <Pressable onPress={() => moveImage(index, 'left')} style={[styles.thumbActionBtn, { backgroundColor: colors.surfaceElevated }]} hitSlop={scale(4)}><MaterialIcons name="chevron-left" size={scale(14)} color={colors.textSecondary} /></Pressable> : <View style={styles.thumbActionBtn} />}
+                      <Pressable onPress={() => removeImage(img.id)} style={[styles.thumbActionBtn, { backgroundColor: colors.errorLight }]} hitSlop={scale(4)}><MaterialIcons name="close" size={scale(14)} color={colors.error} /></Pressable>
+                      {index < images.length - 1 ? <Pressable onPress={() => moveImage(index, 'right')} style={[styles.thumbActionBtn, { backgroundColor: colors.surfaceElevated }]} hitSlop={scale(4)}><MaterialIcons name="chevron-right" size={scale(14)} color={colors.textSecondary} /></Pressable> : <View style={styles.thumbActionBtn} />}
                     </View>
                     {index !== 0 && activePreview === index ? (
                       <Pressable onPress={() => setCoverImage(index)} style={[styles.setCoverBtn, { backgroundColor: colors.primary + '15' }]}>
@@ -499,7 +499,7 @@ export default function SellScreen() {
                         {lb('Variant photo (this version)', 'Photo de cette version', 'صورة هذه النسخة')}
                       </Text>
                     </Pressable>
-                    <Pressable onPress={() => setVariantItems(prev => prev.filter(x => x.id !== it.id))} hitSlop={8}>
+                    <Pressable onPress={() => setVariantItems(prev => prev.filter(x => x.id !== it.id))} hitSlop={scale(8)}>
                       <MaterialIcons name="delete-outline" size={scale(20)} color={colors.error} />
                     </Pressable>
                   </View>
@@ -702,32 +702,32 @@ export default function SellScreen() {
       </Modal>
 
       <LoginModal visible={showLogin} onClose={() => setShowLogin(false)} />
-    
+
       {/* Optional image preview: keep full (default) or optional square crop — original always preserved */}
       <Modal visible={pendingImages.length > 0} transparent animationType="fade" onRequestClose={() => setPendingImages([])}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 }}>
-          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, alignItems: 'center' }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: scale(20) }}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: scale(16), padding: scale(14), alignItems: 'center' }}>
             <Image
               source={{ uri: pendingImages[previewIndex]?.uri || pendingImages[0]?.uri }}
-              style={{ width: 260, height: 260, borderRadius: 12, backgroundColor: '#F1F5F9', resizeMode: 'contain' }}
+              style={{ width: scale(260), height: scale(260), borderRadius: scale(12), backgroundColor: '#F1F5F9', resizeMode: 'contain' }}
               contentFit="contain"
             />
-            <Text style={{ marginTop: 10, fontSize: 14, fontWeight: '800', color: '#0F172A', fontFamily: 'Cairo-Bold' }}>
+            <Text style={{ marginTop: scale(10), fontSize: scale(14), fontWeight: '800', color: '#0F172A', fontFamily: 'Cairo-Bold' }}>
               {lb('Product image preview', 'Aperçu de l\'image', 'معاينة صورة المنتج')}
             </Text>
-            <Text style={{ marginTop: 4, fontSize: 12, color: '#64748B', textAlign: 'center', fontFamily: 'Cairo-Regular' }}>
+            <Text style={{ marginTop: scale(4), fontSize: scale(12), color: '#64748B', textAlign: 'center', fontFamily: 'Cairo-Regular' }}>
               {lb('Full view (recommended) or optional square crop — original is kept either way.', 'Vue complète (recommandée) ou recadrage carré optionnel — l\'original est conservé.', 'عرض كامل (موصى به) أو قصّ مربع اختياري — الأصل يُحفظ في الحالتين.')}
             </Text>
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
-              <Pressable onPress={() => commitImages('full')} style={{ paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10, backgroundColor: '#10B981' }}>
+            <View style={{ flexDirection: 'row', gap: scale(10), marginTop: scale(12) }}>
+              <Pressable onPress={() => commitImages('full')} style={{ paddingVertical: scale(10), paddingHorizontal: scale(16), borderRadius: scale(10), backgroundColor: '#10B981' }}>
                 <Text style={{ color: '#FFF', fontWeight: '700', fontFamily: 'Cairo-Bold' }}>{lb('Use full', 'Vue complète', 'استخدام كاملة')}</Text>
               </Pressable>
-              <Pressable onPress={() => commitImages('square')} style={{ paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10, backgroundColor: '#4C1CEA' }}>
+              <Pressable onPress={() => commitImages('square')} style={{ paddingVertical: scale(10), paddingHorizontal: scale(16), borderRadius: scale(10), backgroundColor: '#4C1CEA' }}>
                 <Text style={{ color: '#FFF', fontWeight: '700', fontFamily: 'Cairo-Bold' }}>{lb('Square crop', 'Recadrage carré', 'قصّ مربع')}</Text>
               </Pressable>
             </View>
             {pendingImages.length > 1 ? (
-              <Pressable onPress={() => setPreviewIndex((i) => (i + 1) % pendingImages.length)} hitSlop={8} style={{ marginTop: 10 }}>
+              <Pressable onPress={() => setPreviewIndex((i) => (i + 1) % pendingImages.length)} hitSlop={scale(8)} style={{ marginTop: scale(10) }}>
                 <Text style={{ color: '#4C1CEA', fontWeight: '700', fontFamily: 'Cairo-Bold' }}>
                   {lb('Next image', 'Image suivante', 'الصورة التالية')} ({previewIndex + 1}/{pendingImages.length})
                 </Text>

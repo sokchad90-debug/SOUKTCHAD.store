@@ -123,7 +123,7 @@ export default function SellerPaymentsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={[styles.headerBackBtn, { backgroundColor: colors.backgroundSecondary }]}>
+        <Pressable onPress={() => router.back()} hitSlop={scale(12)} style={[styles.headerBackBtn, { backgroundColor: colors.backgroundSecondary }]}>
           <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(20)} color={colors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
@@ -274,7 +274,7 @@ export default function SellerPaymentsScreen() {
                       <Pressable
                         onPress={() => handleClearMethod(method.id)}
                         style={[styles.clearBtn, { backgroundColor: colors.errorLight }]}
-                        hitSlop={8}
+                        hitSlop={scale(8)}
                       >
                         <MaterialIcons name="close" size={scale(18)} color={colors.error} />
                       </Pressable>
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   saveBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(14), paddingVertical: scale(8), borderRadius: scale(10), gap: scale(4) },
   saveBtnText: { color: '#FFF', fontSize: scale(14), fontWeight: '700' },
   infoBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: scale(10), padding: scale(14), borderRadius: scale(14), borderWidth: 1, marginBottom: scale(12) },
-  infoText: { flex: 1, fontSize: scale(13), lineHeight: 20 },
+  infoText: { flex: 1, fontSize: scale(13), lineHeight: scale(20) },
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: scale(12), padding: scale(14), borderRadius: scale(14), borderWidth: 1, marginBottom: scale(16) },
   summaryIcon: { width: scale(40), height: scale(40), borderRadius: scale(20), alignItems: 'center', justifyContent: 'center' },
   summaryTitle: { fontSize: scale(16), fontWeight: '700' },
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   methodName: { fontSize: scale(16), fontWeight: '700' },
   configuredBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(8), paddingVertical: scale(3), borderRadius: scale(20), gap: scale(4) },
   configuredBadgeText: { fontSize: scale(11), fontWeight: '700' },
-  methodInstructions: { fontSize: scale(12), marginTop: scale(3), lineHeight: 16 },
+  methodInstructions: { fontSize: scale(12), marginTop: scale(3), lineHeight: scale(16) },
   inputSection: { gap: scale(6) },
   inputLabel: { fontSize: scale(10), fontWeight: '700', letterSpacing: 0.8 },
   inputRow: { flexDirection: 'row', gap: scale(8), alignItems: 'center' },
@@ -375,18 +375,18 @@ const styles = StyleSheet.create({
   clearBtn: { width: scale(38), height: scale(38), borderRadius: scale(19), alignItems: 'center', justifyContent: 'center' },
   emptyState: { alignItems: 'center', paddingVertical: scale(48), gap: scale(8) },
   emptyTitle: { fontSize: scale(18), fontWeight: '700' },
-  emptyDesc: { fontSize: scale(14), textAlign: 'center', paddingHorizontal: scale(24), lineHeight: 22 },
+  emptyDesc: { fontSize: scale(14), textAlign: 'center', paddingHorizontal: scale(24), lineHeight: scale(22) },
   tipsCard: { borderRadius: scale(14), borderWidth: 1, padding: scale(16), marginTop: scale(8), gap: scale(8) },
   tipsHeader: { flexDirection: 'row', alignItems: 'center', gap: scale(8) },
   tipsTitle: { fontSize: scale(15), fontWeight: '700' },
   tipItem: { flexDirection: 'row', gap: scale(8), paddingLeft: scale(4) },
-  tipBullet: { fontSize: scale(14), fontWeight: '700', lineHeight: 20 },
-  tipText: { flex: 1, fontSize: scale(13), lineHeight: 20 },
+  tipBullet: { fontSize: scale(14), fontWeight: '700', lineHeight: scale(20) },
+  tipText: { flex: 1, fontSize: scale(13), lineHeight: scale(20) },
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: scale(16), paddingTop: scale(12), borderTopWidth: 1 },
   saveFullBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: scale(54), borderRadius: scale(14), gap: scale(8) },
   saveFullBtnText: { color: '#FFF', fontSize: scale(17), fontWeight: '700' },
   blockTitle: { fontSize: scale(22), fontWeight: '800', marginTop: scale(16), marginBottom: scale(8) },
-  blockMsg: { fontSize: scale(15), textAlign: 'center', lineHeight: 22, marginBottom: scale(24) },
+  blockMsg: { fontSize: scale(15), textAlign: 'center', lineHeight: scale(22), marginBottom: scale(24) },
   backBtn: { paddingHorizontal: scale(32), paddingVertical: scale(14), borderRadius: scale(12) },
   backBtnText: { color: '#FFF', fontSize: scale(16), fontWeight: '700' },
 });
