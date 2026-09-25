@@ -92,7 +92,7 @@ android {
         applicationId 'com.anonymous.sokchadapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 305
+        versionCode 400
         versionName "8.9.110"
 
         ndk {
