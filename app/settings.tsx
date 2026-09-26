@@ -318,7 +318,7 @@ export default function SettingsScreen() {
       </Pressable>
 
       <View style={[st.page, { backgroundColor: pageBg, paddingBottom: insets.bottom + scale(10) }]}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(14), paddingTop: scale(8), flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(14), paddingTop: scale(8) }} showsVerticalScrollIndicator={false}>
           {/* ================= PRÉFÉRENCES ================= */}
           <SectionTitle>{lb('PREFERENCES', 'PRÉFÉRENCES', 'التفضيلات')}</SectionTitle>
 
