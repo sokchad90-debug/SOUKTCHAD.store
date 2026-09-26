@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
   logo: { fontSize: scale(18), fontWeight: '800', letterSpacing: -0.3, fontFamily: 'Cairo-Bold' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: scale(6) },
   headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(8) },
-  headerSearchRow: { flexDirection: 'row', alignItems: 'center', gap: scale(12), alignSelf: 'stretch' },
+  headerSearchRow: { flexDirection: 'row', alignItems: 'center', gap: scale(12), width: '100%' },
   headerFlexGroup: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: scale(10) },
   headerTouch44: { width: scale(43), height: scale(43), alignItems: 'center', justifyContent: 'center' },
   headerSideIcons: { position: 'absolute', left: scale(12), top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: scale(14) },
