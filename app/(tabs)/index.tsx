@@ -80,6 +80,34 @@ function HomeListHeader({
   return (
     <View>
       {showHeaderContent ? (
+        <View style={[styles.quickAccessCard, isAr && { flexDirection: 'row-reverse' }]} testID="home-quick-access">
+          {[
+            { icon: 'location-on', label: lb('My City', 'Ma ville', 'مدينتي'), action: () => { selection(); setShowCityDropdown(true); } },
+            { icon: 'widgets', label: lb('Orders', 'Commandes', 'طلباتي'), action: () => router.push('/orders' as any) },
+            { icon: 'favorite-border', label: lb('Favorites', 'Favoris', 'المفضلة'), action: () => router.push('/favorites' as any) },
+            { icon: 'person-outline', label: lb('Account', 'Compte', 'حسابي'), action: () => router.push('/(tabs)/profile' as any) },
+            { icon: 'storefront', label: lb('Verified Stores', 'Boutiques vérifiées', 'متاجر موثقة'), action: () => router.push('/verified-stores' as any), badge: true },
+          ].map((qa, idx) => (
+            <React.Fragment key={idx}>
+              {idx > 0 ? <View style={styles.quickAccessDivider} /> : null}
+              <Pressable hitSlop={scale(4)} onPress={qa.action} style={styles.quickAccessItem}>
+                <View style={styles.quickAccessIconWrap}>
+                  <MaterialIcons name={qa.icon as any} size={scale(24)} color="#5B48D9" />
+                  {qa.badge ? (
+                    <View style={styles.quickAccessBadge}>
+                      <MaterialIcons name="verified" size={scale(9)} color="#FFFFFF" />
+                    </View>
+                  ) : null}
+                </View>
+                <Text style={styles.quickAccessLabel} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.75}>
+                  {qa.label}
+                </Text>
+              </Pressable>
+            </React.Fragment>
+          ))}
+        </View>
+      ) : null}
+      {showHeaderContent ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={lb('Explore all products', 'Explorer tous les produits', 'استكشف كل المنتجات')}
@@ -422,62 +450,34 @@ export default function HomeScreen() {
             style={[styles.stickySearchWrap, { backgroundColor: '#5B48D9', paddingTop: 0 }]}
             onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}
           >
-                        {/* Mockup header — order swapped per language; groups are equal flex, sides fixed */}
-            <View style={styles.headerRow}>
-              {isAr ? (
-                <View style={styles.headerFlexGroup}>
-                  <Pressable hitSlop={scale(12)} onPress={() => { selection(); openFilters(); }} style={styles.headerTouch44}>
-                    <MaterialIcons name="menu" size={scale(28)} color="#FFFFFF" />
-                    {activeFilterCount > 0 ? (
-                      <View style={styles.filterBadge}>
-                        <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-                      </View>
-                    ) : null}
-                  </Pressable>
-                  <Pressable hitSlop={scale(12)} onPress={() => { selection(); setShowCityDropdown(true); }} style={styles.headerTouch44}>
-                    <MaterialIcons name="location-on" size={scale(26)} color="#FFFFFF" />
-                  </Pressable>
+                        {/* Reference header: [search field] [cart] [chat] — icons right in FR, left in AR */}
+            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginTop: scale(4), marginBottom: scale(2) }]}>
+              <View style={[styles.headerSearchRow, isAr && { flexDirection: 'row-reverse' }]}>
+                <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: scale(16), flex: 1 }, isAr && { flexDirection: 'row-reverse' }]}>
+                  <MaterialIcons name="search" size={scale(20)} color={colors.textTertiary} />
+                  <AppTextInput
+                    testID="home-search-input"
+                    weight={400}
+                    maxScale={1.2}
+                    style={[styles.searchInput, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}
+                    placeholder={isAr ? 'ابحث في سوكشاد' : 'Rechercher sur Sokchad'}
+                    placeholderTextColor={colors.textTertiary}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                  />
+                  {searchQuery.length > 0 ? (
+                    <Pressable onPress={() => setSearchQuery('')} hitSlop={scale(8)}>
+                      <MaterialIcons name="close" size={scale(18)} color={colors.textTertiary} />
+                    </Pressable>
+                  ) : null}
                 </View>
-              ) : (
-                <View style={styles.headerFlexGroup}>
-                  <Pressable hitSlop={scale(10)} onPress={() => router.push('/settings' as any)} style={styles.headerTouch44}>
-                    <MaterialIcons name="notifications-none" size={scale(26)} color="#FFFFFF" />
-                  </Pressable>
-                  <Pressable hitSlop={scale(10)} onPress={() => router.push('/checkout' as any)} style={styles.headerTouch44}>
-                    <MaterialIcons name="shopping-cart" size={scale(26)} color="#FFFFFF" />
-                  </Pressable>
-                </View>
-              )}
-              <Image
-                source={require('../../assets/branding/sokchad-logo-white.png')}
-                style={styles.logoHeaderImage}
-                contentFit="contain"
-                transition={150}
-              />
-              {isAr ? (
-                <View style={[styles.headerFlexGroup, { justifyContent: 'flex-end' }]}>
-                  <Pressable hitSlop={scale(10)} onPress={() => router.push('/settings' as any)} style={styles.headerTouch44}>
-                    <MaterialIcons name="notifications-none" size={scale(26)} color="#FFFFFF" />
-                  </Pressable>
-                  <Pressable hitSlop={scale(10)} onPress={() => router.push('/checkout' as any)} style={styles.headerTouch44}>
-                    <MaterialIcons name="shopping-cart" size={scale(26)} color="#FFFFFF" />
-                  </Pressable>
-                </View>
-              ) : (
-                <View style={[styles.headerFlexGroup, { justifyContent: 'flex-end' }]}>
-                  <Pressable hitSlop={scale(12)} onPress={() => { selection(); setShowCityDropdown(true); }} style={styles.headerTouch44}>
-                    <MaterialIcons name="location-on" size={scale(26)} color="#FFFFFF" />
-                  </Pressable>
-                  <Pressable hitSlop={scale(12)} onPress={() => { selection(); openFilters(); }} style={styles.headerTouch44}>
-                    <MaterialIcons name="menu" size={scale(28)} color="#FFFFFF" />
-                    {activeFilterCount > 0 ? (
-                      <View style={styles.filterBadge}>
-                        <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-                      </View>
-                    ) : null}
-                  </Pressable>
-                </View>
-              )}
+                <Pressable hitSlop={scale(10)} onPress={() => router.push('/checkout' as any)} style={styles.headerTouch44}>
+                  <MaterialIcons name="shopping-cart" size={scale(28)} color="#FFFFFF" />
+                </Pressable>
+                <Pressable hitSlop={scale(10)} onPress={() => router.push('/(tabs)/chats' as any)} style={styles.headerTouch44}>
+                  <MaterialIcons name="chat-bubble-outline" size={scale(26)} color="#FFFFFF" />
+                </Pressable>
+              </View>
             </View>
 {/* Search bar — stays sticky */}
             <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: scale(2) }]}>
@@ -765,6 +765,7 @@ const styles = StyleSheet.create({
   logo: { fontSize: scale(18), fontWeight: '800', letterSpacing: -0.3, fontFamily: 'Cairo-Bold' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: scale(6) },
   headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(8) },
+  headerSearchRow: { flexDirection: 'row', alignItems: 'center', gap: scale(12) },
   headerFlexGroup: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: scale(10) },
   headerTouch44: { width: scale(43), height: scale(43), alignItems: 'center', justifyContent: 'center' },
   headerSideIcons: { position: 'absolute', left: scale(12), top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: scale(14) },
@@ -823,6 +824,12 @@ const styles = StyleSheet.create({
   categoryAllTile: { backgroundColor: '#EFEDFA', borderColor: '#5B48D9' },
   categoryImage: { width: '100%', height: '100%', borderRadius: scale(18) },
   categoryCircleLabel: { fontSize: scale(12), fontWeight: '600', marginTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(5), textAlign: 'center', fontFamily: 'Cairo-SemiBold' },
+  quickAccessCard: { backgroundColor: '#FFFFFF', marginHorizontal: 0, borderRadius: scale(16), paddingHorizontal: scale(6), paddingVertical: scale(12), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: scale(8), elevation: 2, marginBottom: scale(10) },
+  quickAccessItem: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: scale(4) },
+  quickAccessIconWrap: { position: 'relative' },
+  quickAccessBadge: { position: 'absolute', right: scale(-6), bottom: scale(-2), backgroundColor: '#3B82F6', borderRadius: scale(7), width: scale(13), height: scale(13), alignItems: 'center', justifyContent: 'center', borderWidth: scale(1), borderColor: '#FFFFFF' },
+  quickAccessDivider: { width: 1, height: scale(30), backgroundColor: '#EAE7F5' },
+  quickAccessLabel: { fontSize: scale(10), color: '#1F2430', textAlign: 'center', fontFamily: 'Cairo-Regular' },
   discoveryBanner: {
     height: scale(80), borderRadius: scale(18), marginTop: scale(10), marginBottom: scale(8),
     backgroundColor: '#FFFFFF', overflow: 'hidden', flexDirection: 'row', alignItems: 'center',
