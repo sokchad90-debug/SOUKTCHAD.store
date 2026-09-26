@@ -225,6 +225,106 @@ export const sellers: Seller[] = [
     joinedDate: '2023-11-01', phone: '+235 77 XX XX XX', isOnline: true, followersCount: 45,
     paymentMethods: [{ methodId: 'airtel', receivingNumber: '77 33 44 55' }, { methodId: 'moov', receivingNumber: '77 66 77 88' }],
   },
+  {
+    id: 'seller6', name: 'Tchad Mobile Center', avatar: 'https://souktchad.shop/dl/products/photo-1472099645785-5658abf4ff4e.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1498049794561-7780e7231661.jpg',
+    sellerId: 'Sok-20541', isVerified: true, verifiedUntil: '2027-06-30', isBanned: false, location: "N'Djamena", rating: 4.9, totalSales: 428, joinedDate: '2022-08-12', phone: '+235 66 XX XX 14', isOnline: true, followersCount: 516,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '66 20 54 14' }, { methodId: 'moov', receivingNumber: '99 20 54 14' }],
+  },
+  {
+    id: 'seller7', name: 'Boutique Al-Amana', avatar: 'https://souktchad.shop/dl/products/photo-1494790108377-be9c29b29330.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1441986300917-64674bd600d8.jpg',
+    sellerId: 'Sok-73196', isVerified: true, verifiedUntil: '2027-03-15', isBanned: false, location: 'Abéché', rating: 4.8, totalSales: 276, joinedDate: '2022-11-03', phone: '+235 95 XX XX 31', isOnline: false, lastSeen: '2026-09-25T19:20:00Z', followersCount: 341,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '65 73 19 60' }, { methodId: 'cod', receivingNumber: 'N/A' }],
+  },
+  {
+    id: 'seller8', name: 'Moundou Maison Moderne', avatar: 'https://souktchad.shop/dl/products/photo-1438761681033-6461ffad8d80.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1556228453-efd6c1ff04f6.jpg',
+    sellerId: 'Sok-46820', isVerified: true, verifiedUntil: '2027-01-20', isBanned: false, location: 'Moundou', rating: 4.7, totalSales: 193, joinedDate: '2023-02-18', phone: '+235 99 XX XX 42', isOnline: true, followersCount: 228,
+    paymentMethods: [{ methodId: 'moov', receivingNumber: '99 46 82 00' }],
+  },
+  {
+    id: 'seller9', name: 'Épicerie du Logone', avatar: 'https://souktchad.shop/dl/products/photo-1507003211169-0a1dd7228f2d.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1416879595882-3373a0480b5b.jpg',
+    sellerId: 'Sok-58314', isVerified: true, verifiedUntil: '2027-04-02', isBanned: false, location: 'Kelo', rating: 4.6, totalSales: 612, joinedDate: '2021-09-24', phone: '+235 68 XX XX 51', isOnline: true, followersCount: 184,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '68 58 31 40' }, { methodId: 'cod', receivingNumber: 'N/A' }],
+  },
+  {
+    id: 'seller10', name: 'Sahel Auto Services', avatar: 'https://souktchad.shop/dl/products/photo-1472099645785-5658abf4ff4e.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1568605117036-5fe5e7bab0b7.jpg',
+    sellerId: 'Sok-91427', isVerified: true, verifiedUntil: '2027-08-11', isBanned: false, location: "N'Djamena", rating: 4.8, totalSales: 147, joinedDate: '2022-05-09', phone: '+235 63 XX XX 72', isOnline: false, lastSeen: '2026-09-26T07:45:00Z', followersCount: 295,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '63 91 42 70' }, { methodId: 'moov', receivingNumber: '97 91 42 70' }],
+  },
+  {
+    id: 'seller11', name: 'Doba Agro Équipement', avatar: 'https://souktchad.shop/dl/products/photo-1500648767791-00dcc994a43e.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1500382017468-9049fed747ef.jpg',
+    sellerId: 'Sok-32685', isVerified: true, verifiedUntil: '2027-02-28', isBanned: false, location: 'Doba', rating: 4.7, totalSales: 221, joinedDate: '2022-10-14', phone: '+235 77 XX XX 63', isOnline: true, followersCount: 176,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '77 32 68 50' }, { methodId: 'cod', receivingNumber: 'N/A' }],
+  },
+  {
+    id: 'seller12', name: 'Bongor Beauté', avatar: 'https://souktchad.shop/dl/products/photo-1494790108377-be9c29b29330.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1594633312681-425c7b97ccd1.jpg',
+    sellerId: 'Sok-64019', isVerified: true, verifiedUntil: '2027-05-19', isBanned: false, location: 'Bongor', rating: 4.9, totalSales: 354, joinedDate: '2023-01-07', phone: '+235 90 XX XX 18', isOnline: true, followersCount: 463,
+    paymentMethods: [{ methodId: 'moov', receivingNumber: '90 64 01 90' }],
+  },
+  {
+    id: 'seller13', name: 'Sarh Bâtiment Plus', avatar: 'https://souktchad.shop/dl/products/photo-1507003211169-0a1dd7228f2d.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1581091226825-a6a2a5aee158.jpg',
+    sellerId: 'Sok-15743', isVerified: true, verifiedUntil: '2027-07-08', isBanned: false, location: 'Sarh', rating: 4.6, totalSales: 189, joinedDate: '2022-12-16', phone: '+235 66 XX XX 85', isOnline: false, lastSeen: '2026-09-24T16:10:00Z', followersCount: 132,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '66 15 74 30' }, { methodId: 'cod', receivingNumber: 'N/A' }],
+  },
+  {
+    id: 'seller14', name: 'Faya Froid & Solaire', avatar: 'https://souktchad.shop/dl/products/photo-1472099645785-5658abf4ff4e.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1509391366360-2e959784a276.jpg',
+    sellerId: 'Sok-80264', isVerified: true, verifiedUntil: '2027-09-01', isBanned: false, location: 'Faya', rating: 4.8, totalSales: 118, joinedDate: '2023-04-21', phone: '+235 62 XX XX 06', isOnline: true, followersCount: 207,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '62 80 26 40' }, { methodId: 'moov', receivingNumber: '96 80 26 40' }],
+  },
+  {
+    id: 'seller15', name: 'Mongo Sport', avatar: 'https://souktchad.shop/dl/products/photo-1507003211169-0a1dd7228f2d.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1600185365483-26d7a4cc7519.jpg',
+    sellerId: 'Sok-47592', isVerified: false, isBanned: false, location: 'Mongo', rating: 4.5, totalSales: 83, joinedDate: '2024-02-11', phone: '+235 95 XX XX 29', isOnline: false, lastSeen: '2026-09-25T14:35:00Z', followersCount: 91,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '65 47 59 20' }],
+  },
+  {
+    id: 'seller16', name: 'Les Petits du Chari', avatar: 'https://souktchad.shop/dl/products/photo-1494790108377-be9c29b29330.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1441986300917-64674bd600d8.jpg',
+    sellerId: 'Sok-23976', isVerified: true, verifiedUntil: '2027-03-09', isBanned: false, location: "N'Djamena", rating: 4.7, totalSales: 265, joinedDate: '2023-05-27', phone: '+235 99 XX XX 37', isOnline: true, followersCount: 319,
+    paymentMethods: [{ methodId: 'moov', receivingNumber: '99 23 97 60' }, { methodId: 'cod', receivingNumber: 'N/A' }],
+  },
+  {
+    id: 'seller17', name: 'Oum Hadjer Immobilier', avatar: 'https://souktchad.shop/dl/products/photo-1472099645785-5658abf4ff4e.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1564013799919-ab600027ffc6.jpg',
+    sellerId: 'Sok-68431', isVerified: true, verifiedUntil: '2027-06-12', isBanned: false, location: 'Oum Hadjer', rating: 4.6, totalSales: 42, joinedDate: '2022-07-30', phone: '+235 93 XX XX 41', isOnline: false, lastSeen: '2026-09-23T10:00:00Z', followersCount: 157,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '63 68 43 10' }],
+  },
+  {
+    id: 'seller18', name: 'Atelier Couture Djamila', avatar: 'https://souktchad.shop/dl/products/photo-1494790108377-be9c29b29330.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1591047139829-d91aecb6caea.jpg',
+    sellerId: 'Sok-51804', isVerified: false, isBanned: false, location: 'Moundou', rating: 4.4, totalSales: 97, joinedDate: '2024-03-08', phone: '+235 66 XX XX 80', isOnline: true, followersCount: 126,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '66 51 80 40' }],
+  },
+  {
+    id: 'seller19', name: 'Techno Kelo', avatar: 'https://souktchad.shop/dl/products/photo-1507003211169-0a1dd7228f2d.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1498049794561-7780e7231661.jpg',
+    sellerId: 'Sok-76028', isVerified: false, isBanned: false, location: 'Kelo', rating: 4.3, totalSales: 64, joinedDate: '2024-06-19', phone: '+235 68 XX XX 28', isOnline: true, followersCount: 73,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '68 76 02 80' }, { methodId: 'cod', receivingNumber: 'N/A' }],
+  },
+  {
+    id: 'seller20', name: 'Garage Moderne d’Abéché', avatar: 'https://souktchad.shop/dl/products/photo-1507003211169-0a1dd7228f2d.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1568605117036-5fe5e7bab0b7.jpg',
+    sellerId: 'Sok-39247', isVerified: true, verifiedUntil: '2027-04-25', isBanned: false, location: 'Abéché', rating: 4.7, totalSales: 132, joinedDate: '2023-07-04', phone: '+235 95 XX XX 47', isOnline: false, lastSeen: '2026-09-26T06:15:00Z', followersCount: 169,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '65 39 24 70' }, { methodId: 'moov', receivingNumber: '95 39 24 70' }],
+  },
+  {
+    id: 'seller21', name: 'Saveurs du Moyen-Chari', avatar: 'https://souktchad.shop/dl/products/photo-1500648767791-00dcc994a43e.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1416879595882-3373a0480b5b.jpg',
+    sellerId: 'Sok-84613', isVerified: false, isBanned: false, location: 'Sarh', rating: 4.5, totalSales: 305, joinedDate: '2023-10-22', phone: '+235 77 XX XX 13', isOnline: true, followersCount: 144,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '77 84 61 30' }, { methodId: 'cod', receivingNumber: 'N/A' }],
+  },
+  {
+    id: 'seller22', name: 'Bongor Bureau & École', avatar: 'https://souktchad.shop/dl/products/photo-1472099645785-5658abf4ff4e.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1496181133206-80ce9b88a853.jpg',
+    sellerId: 'Sok-12795', isVerified: false, isBanned: false, location: 'Bongor', rating: 4.2, totalSales: 76, joinedDate: '2024-01-26', phone: '+235 90 XX XX 95', isOnline: false, lastSeen: '2026-09-22T17:40:00Z', followersCount: 68,
+    paymentMethods: [{ methodId: 'moov', receivingNumber: '90 12 79 50' }],
+  },
+  {
+    id: 'seller23', name: 'Services Express Doba', avatar: 'https://souktchad.shop/dl/products/photo-1472099645785-5658abf4ff4e.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1621905252507-b35492cc74b4.jpg',
+    sellerId: 'Sok-95360', isVerified: true, verifiedUntil: '2027-02-14', isBanned: false, location: 'Doba', rating: 4.6, totalSales: 154, joinedDate: '2023-06-13', phone: '+235 66 XX XX 60', isOnline: true, followersCount: 201,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '66 95 36 00' }, { methodId: 'cod', receivingNumber: 'N/A' }],
+  },
+  {
+    id: 'seller24', name: 'Marché Vert de Mongo', avatar: 'https://souktchad.shop/dl/products/photo-1500648767791-00dcc994a43e.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1500382017468-9049fed747ef.jpg',
+    sellerId: 'Sok-60482', isVerified: false, isBanned: false, location: 'Mongo', rating: 4.1, totalSales: 58, joinedDate: '2024-05-02', phone: '+235 63 XX XX 82', isOnline: true, followersCount: 51,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '63 60 48 20' }],
+  },
+  {
+    id: 'seller25', name: 'Faya Artisanat & Déco', avatar: 'https://souktchad.shop/dl/products/photo-1494790108377-be9c29b29330.jpg', storeBg: 'https://souktchad.shop/dl/products/photo-1556228453-efd6c1ff04f6.jpg',
+    sellerId: 'Sok-21867', isVerified: false, isBanned: false, location: 'Faya', rating: 4.0, totalSales: 31, joinedDate: '2024-08-17', phone: '+235 62 XX XX 67', isOnline: false, lastSeen: '2026-09-20T12:05:00Z', followersCount: 39,
+    paymentMethods: [{ methodId: 'airtel', receivingNumber: '62 21 86 70' }, { methodId: 'cod', receivingNumber: 'N/A' }],
+  },
 ];
 
 export const mockSellerStats: Record<string, any> = {
@@ -402,6 +502,96 @@ export const products: Product[] = [
     price: 275000, images: ['https://souktchad.shop/dl/products/photo-1621905252507-b35492cc74b4.jpg'],
     categoryId: 'energy_backup', sellerId: 'seller1', condition: 'new', location: "N'Djamena",
     postedDate: '2024-12-14', isPinned: true, pinnedUntil: '2025-02-14', isFeatured: false, views: 110,
+  },
+  {
+    id: 'p23', title: { en: 'Tecno Camon 30 256GB', fr: 'Tecno Camon 30 256 Go', ar: 'تكنو كامون 30 سعة 256 جيجابايت' },
+    description: { en: 'New dual-SIM smartphone with 256GB storage, 8GB RAM, AMOLED display and fast charger included.', fr: 'Smartphone neuf double SIM avec 256 Go, 8 Go de RAM, écran AMOLED et chargeur rapide inclus.', ar: 'هاتف ذكي جديد بشريحتي اتصال وسعة 256 جيجابايت وذاكرة 8 جيجابايت وشاشة AMOLED مع شاحن سريع.' },
+    price: 168000, images: ['https://souktchad.shop/dl/products/photo-1610945415295-d9bbf067e59c.jpg'], categoryId: 'electronics_phones', sellerId: 'seller6', condition: 'new', location: "N'Djamena",
+    postedDate: '2026-09-18', isPinned: true, pinnedUntil: '2026-10-18', isFeatured: true, views: 486, stock: 24, maxOrderQty: 4, rating: 4.8, reviewsCount: 67, soldCount: 193, warrantyDays: 14,
+  },
+  {
+    id: 'p24', title: { en: 'Embroidered Women’s Abaya', fr: 'Abaya femme brodée', ar: 'عباية نسائية مطرزة' },
+    description: { en: 'Flowing premium crepe abaya with hand-finished embroidery, matching belt and sizes M to XXL.', fr: 'Abaya fluide en crêpe premium avec broderie soignée, ceinture assortie et tailles M à XXL.', ar: 'عباية انسيابية من الكريب الفاخر بتطريز متقن وحزام مطابق، متوفرة من مقاس M إلى XXL.' },
+    price: 28500, images: ['https://souktchad.shop/dl/products/photo-1594633312681-425c7b97ccd1.jpg'], categoryId: 'fashion_women', sellerId: 'seller7', condition: 'new', location: 'Abéché',
+    postedDate: '2026-09-17', isPinned: false, isFeatured: true, views: 238, stock: 36, maxOrderQty: 6, rating: 4.7, reviewsCount: 44, soldCount: 121,
+  },
+  {
+    id: 'p25', title: { en: 'Solid Wood Dining Set for Six', fr: 'Salle à manger en bois pour six', ar: 'طقم سفرة خشبي لستة أشخاص' },
+    description: { en: 'Locally finished solid-wood dining table with six padded chairs, protected varnish and delivery in Moundou.', fr: 'Table à manger en bois massif avec six chaises rembourrées, vernis protecteur et livraison à Moundou.', ar: 'طاولة طعام من الخشب الصلب مع ستة كراسٍ مبطنة وطلاء واقٍ، مع التوصيل داخل موندو.' },
+    price: 395000, images: ['https://souktchad.shop/dl/products/photo-1555041469-a586c61ea9bc.jpg'], categoryId: 'furniture_dining', sellerId: 'seller8', condition: 'new', location: 'Moundou',
+    postedDate: '2026-09-12', isPinned: false, isFeatured: true, views: 174, stock: 5, maxOrderQty: 1, rating: 4.6, reviewsCount: 19, soldCount: 34,
+  },
+  {
+    id: 'p26', title: { en: 'Local Rice 25kg Bag', fr: 'Sac de riz local 25 kg', ar: 'كيس أرز محلي 25 كجم' },
+    description: { en: 'Clean, sorted Chadian rice packed in a sealed 25kg bag, suitable for households, restaurants and retailers.', fr: 'Riz tchadien propre et trié, conditionné en sac scellé de 25 kg pour ménages, restaurants et détaillants.', ar: 'أرز تشادي نظيف ومفرز في كيس محكم وزن 25 كجم، مناسب للأسر والمطاعم وتجار التجزئة.' },
+    price: 19500, images: ['https://souktchad.shop/dl/products/photo-1416879595882-3373a0480b5b.jpg'], categoryId: 'grocery_cereals', sellerId: 'seller9', condition: 'new', location: 'Kelo',
+    postedDate: '2026-09-20', isPinned: false, isFeatured: false, views: 321, stock: 85, maxOrderQty: 12, rating: 4.9, reviewsCount: 112, soldCount: 487,
+  },
+  {
+    id: 'p27', title: { en: 'Toyota Hilux 2017 Double Cab', fr: 'Toyota Hilux 2017 double cabine', ar: 'تويوتا هايلوكس 2017 غمارتين' },
+    description: { en: 'Diesel 4x4 pickup with manual gearbox, working air conditioning, inspected suspension and 126,000 km.', fr: 'Pick-up diesel 4x4, boîte manuelle, climatisation fonctionnelle, suspension contrôlée et 126 000 km.', ar: 'سيارة بيك أب ديزل دفع رباعي بناقل يدوي وتكييف يعمل، تم فحص نظام التعليق، قطعت 126 ألف كم.' },
+    price: 13750000, images: ['https://souktchad.shop/dl/products/photo-1621007947382-bb3c3994e3fb.jpg'], categoryId: 'vehicles', sellerId: 'seller10', condition: 'used', location: "N'Djamena",
+    postedDate: '2026-09-09', isPinned: true, pinnedUntil: '2026-10-09', isFeatured: true, views: 903, stock: 1, maxOrderQty: 1, rating: 4.5, reviewsCount: 11, soldCount: 7,
+  },
+  {
+    id: 'p28', title: { en: 'Petrol Water Pump 3 Inch', fr: 'Motopompe essence 3 pouces', ar: 'مضخة مياه بنزين 3 بوصات' },
+    description: { en: 'Portable four-stroke irrigation pump with 3-inch inlet and outlet, filter, clamps and suction hose fittings.', fr: 'Motopompe d’irrigation portable à quatre temps, entrée et sortie 3 pouces, filtre, colliers et raccords inclus.', ar: 'مضخة ري محمولة رباعية الأشواط بمدخل ومخرج 3 بوصات، مع فلتر ومشابك ووصلات خرطوم السحب.' },
+    price: 128000, images: ['https://souktchad.shop/dl/products/photo-1581091226825-a6a2a5aee158.jpg'], categoryId: 'agriculture_irrigation', sellerId: 'seller11', condition: 'new', location: 'Doba',
+    postedDate: '2026-09-14', isPinned: false, isFeatured: false, views: 196, stock: 14, maxOrderQty: 3, rating: 4.6, reviewsCount: 28, soldCount: 76, warrantyDays: 30,
+  },
+  {
+    id: 'p29', title: { en: 'Shea Body Care Set', fr: 'Coffret soin corporel au karité', ar: 'مجموعة عناية بالجسم بزبدة الشيا' },
+    description: { en: 'Moisturizing set with pure shea body butter, gentle soap and nourishing oil for dry skin.', fr: 'Coffret hydratant avec beurre corporel au karité pur, savon doux et huile nourrissante pour peau sèche.', ar: 'مجموعة ترطيب تضم زبدة جسم من الشيا النقية وصابونًا لطيفًا وزيتًا مغذيًا للبشرة الجافة.' },
+    price: 14500, images: ['https://souktchad.shop/dl/products/photo-1594633312681-425c7b97ccd1.jpg'], categoryId: 'beauty_skin', sellerId: 'seller12', condition: 'new', location: 'Bongor',
+    postedDate: '2026-09-21', isPinned: false, isFeatured: true, views: 267, stock: 48, maxOrderQty: 8, rating: 4.8, reviewsCount: 73, soldCount: 216,
+  },
+  {
+    id: 'p30', title: { en: 'Portland Cement 50kg', fr: 'Ciment Portland 50 kg', ar: 'أسمنت بورتلاندي 50 كجم' },
+    description: { en: 'General-purpose Portland cement in a sealed 50kg bag for masonry, concrete slabs and structural work.', fr: 'Ciment Portland polyvalent en sac scellé de 50 kg pour maçonnerie, dalles et travaux de structure.', ar: 'أسمنت بورتلاندي متعدد الاستخدامات في كيس محكم وزن 50 كجم للبناء وصب البلاطات والأعمال الإنشائية.' },
+    price: 11250, images: ['https://souktchad.shop/dl/products/photo-1581091226825-a6a2a5aee158.jpg'], categoryId: 'construction_materials', sellerId: 'seller13', condition: 'new', location: 'Sarh',
+    postedDate: '2026-09-22', isPinned: false, isFeatured: false, views: 412, stock: 240, maxOrderQty: 50, rating: 4.7, reviewsCount: 86, soldCount: 531,
+  },
+  {
+    id: 'p31', title: { en: 'Solar Chest Freezer 210L', fr: 'Congélateur solaire 210 L', ar: 'فريزر شمسي أفقي 210 لتر' },
+    description: { en: 'Efficient 12/24V chest freezer for solar systems, with thick insulation, basket and low-voltage protection.', fr: 'Congélateur coffre efficace 12/24 V pour système solaire, avec isolation renforcée, panier et protection basse tension.', ar: 'فريزر أفقي موفر للطاقة يعمل بجهد 12/24 فولت للأنظمة الشمسية، بعزل سميك وسلة وحماية من انخفاض الجهد.' },
+    price: 325000, images: ['https://souktchad.shop/dl/products/photo-1584568694244-14fbdf83bd30.jpg'], categoryId: 'electromenager_froid', sellerId: 'seller14', condition: 'new', location: 'Faya',
+    postedDate: '2026-09-13', isPinned: true, pinnedUntil: '2026-10-13', isFeatured: true, views: 351, stock: 7, maxOrderQty: 2, rating: 4.9, reviewsCount: 35, soldCount: 62, warrantyDays: 90,
+  },
+  {
+    id: 'p32', title: { en: 'Adjustable Dumbbell Set 30kg', fr: 'Kit haltères réglables 30 kg', ar: 'طقم دمبل قابل للتعديل 30 كجم' },
+    description: { en: 'Home training set with two bars, secure spin-lock collars and coated plates totaling 30kg.', fr: 'Kit d’entraînement à domicile avec deux barres, bagues de serrage sécurisées et disques gainés totalisant 30 kg.', ar: 'طقم تدريب منزلي بقضيبين وأقفال لولبية آمنة وأقراص مغطاة بوزن إجمالي 30 كجم.' },
+    price: 62000, images: ['https://souktchad.shop/dl/products/photo-1600185365483-26d7a4cc7519.jpg'], categoryId: 'sports_fitness', sellerId: 'seller15', condition: 'new', location: 'Mongo',
+    postedDate: '2026-09-16', isPinned: false, isFeatured: false, views: 145, stock: 11, maxOrderQty: 2, rating: 4.4, reviewsCount: 22, soldCount: 49,
+  },
+  {
+    id: 'p33', title: { en: 'Convertible Baby Stroller', fr: 'Poussette bébé convertible', ar: 'عربة أطفال قابلة للتحويل' },
+    description: { en: 'Foldable stroller with reversible seat, sun canopy, storage basket and five-point safety harness for newborns and toddlers.', fr: 'Poussette pliable avec siège réversible, pare-soleil, panier et harnais cinq points pour nouveau-nés et jeunes enfants.', ar: 'عربة قابلة للطي بمقعد عكسي ومظلة شمسية وسلة تخزين وحزام أمان خماسي للرضع والأطفال الصغار.' },
+    price: 78000, images: ['https://souktchad.shop/dl/products/photo-1441986300917-64674bd600d8.jpg'], categoryId: 'baby_mobility', sellerId: 'seller16', condition: 'new', location: "N'Djamena",
+    postedDate: '2026-09-19', isPinned: false, isFeatured: true, views: 289, stock: 13, maxOrderQty: 2, rating: 4.8, reviewsCount: 51, soldCount: 94, warrantyDays: 14,
+  },
+  {
+    id: 'p34', title: { en: 'Fenced Residential Plot 600m²', fr: 'Terrain résidentiel clôturé 600 m²', ar: 'قطعة أرض سكنية مسوّرة 600 م²' },
+    description: { en: 'Surveyed 600m² residential plot with perimeter wall, road access and ownership documents available for verification.', fr: 'Terrain résidentiel borné de 600 m² avec mur de clôture, accès routier et documents de propriété vérifiables.', ar: 'قطعة أرض سكنية محددة المساحة 600 م² ومحاطة بسور مع طريق وصول ووثائق ملكية متاحة للتحقق.' },
+    price: 6800000, images: ['https://souktchad.shop/dl/products/photo-1500382017468-9049fed747ef.jpg'], categoryId: 'real_estate', sellerId: 'seller17', condition: 'new', location: 'Oum Hadjer',
+    postedDate: '2026-09-08', isPinned: true, pinnedUntil: '2026-10-08', isFeatured: false, views: 377, stock: 1, maxOrderQty: 1, rating: 4.5, reviewsCount: 8, soldCount: 3,
+  },
+  {
+    id: 'p35', title: { en: 'Electric Sewing Machine', fr: 'Machine à coudre électrique', ar: 'ماكينة خياطة كهربائية' },
+    description: { en: 'Compact sewing machine with 16 stitch patterns, buttonhole function, foot pedal and LED work light.', fr: 'Machine à coudre compacte avec 16 points, boutonnière, pédale de commande et éclairage de travail LED.', ar: 'ماكينة خياطة مدمجة تضم 16 غرزة ووظيفة عروة زر ودواسة تحكم وإضاءة LED للعمل.' },
+    price: 115000, images: ['https://souktchad.shop/dl/products/photo-1591047139829-d91aecb6caea.jpg'], categoryId: 'trade_sewing', sellerId: 'seller18', condition: 'new', location: 'Moundou',
+    postedDate: '2026-09-15', isPinned: false, isFeatured: false, views: 183, stock: 9, maxOrderQty: 2, rating: 4.6, reviewsCount: 26, soldCount: 58, warrantyDays: 30,
+  },
+  {
+    id: 'p36', title: { en: 'Wi-Fi 6 Dual-Band Router', fr: 'Routeur Wi-Fi 6 double bande', ar: 'راوتر واي فاي 6 ثنائي النطاق' },
+    description: { en: 'Dual-band Wi-Fi 6 router with four antennas, parental controls and stable coverage for homes and small offices.', fr: 'Routeur Wi-Fi 6 double bande avec quatre antennes, contrôle parental et couverture stable pour maison ou petit bureau.', ar: 'راوتر واي فاي 6 ثنائي النطاق بأربعة هوائيات ورقابة أبوية وتغطية مستقرة للمنازل والمكاتب الصغيرة.' },
+    price: 47500, images: ['https://souktchad.shop/dl/products/photo-1498049794561-7780e7231661.jpg'], categoryId: 'electronics_networks', sellerId: 'seller19', condition: 'new', location: 'Kelo',
+    postedDate: '2026-09-23', isPinned: false, isFeatured: false, views: 204, stock: 18, maxOrderQty: 4, rating: 4.3, reviewsCount: 31, soldCount: 69, warrantyDays: 14,
+  },
+  {
+    id: 'p37', title: { en: 'Home Air-Conditioner Cleaning', fr: 'Nettoyage de climatiseur à domicile', ar: 'تنظيف مكيفات منزلية' },
+    description: { en: 'On-site split air-conditioner cleaning with filter wash, coil dust removal, drain check and performance test.', fr: 'Nettoyage sur place d’un climatiseur split avec lavage des filtres, dépoussiérage, contrôle du drain et test de fonctionnement.', ar: 'تنظيف مكيف سبليت في الموقع، يشمل غسل الفلاتر وإزالة غبار الملفات وفحص التصريف واختبار الأداء.' },
+    price: 15000, images: ['https://souktchad.shop/dl/products/photo-1621905252507-b35492cc74b4.jpg'], categoryId: 'services', sellerId: 'seller23', condition: 'new', location: 'Doba',
+    postedDate: '2026-09-24', isPinned: false, isFeatured: false, views: 162, stock: 20, maxOrderQty: 3, rating: 4.7, reviewsCount: 39, soldCount: 88,
   },
 ];
 

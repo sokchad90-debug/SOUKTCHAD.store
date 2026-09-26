@@ -179,18 +179,57 @@ export const CATEGORY_TREE: CatNode[] = [
   { id: 'services', nameAr: 'خدمات', nameFr: 'Services', sort: 22, icon: 'build', color: '#8B5CF6' },
 ];
 
-/** Map of category id -> image asset (reused from existing category images). */
-export const CATEGORY_IMAGE_BY_ID: Record<string, any> = {
+/** Local category artwork. Every tree node below inherits the closest matching family image. */
+const CATEGORY_FAMILY_IMAGES: Record<string, any> = {
   electronics: require('@/assets/images/categories/electronics.png'),
   fashion: require('@/assets/images/categories/fashion.png'),
   shoes: require('@/assets/images/categories/shoes.png'),
-  home_garden: require('@/assets/images/categories/home_garden.png'),
   home_kitchen: require('@/assets/images/categories/home_garden.png'),
   vehicles: require('@/assets/images/categories/vehicles.png'),
   agriculture: require('@/assets/images/categories/agriculture.png'),
   services: require('@/assets/images/categories/services.png'),
   real_estate: require('@/assets/images/categories/real_estate.png'),
 };
+
+const CATEGORY_IMAGE_FAMILY_BY_ROOT: Record<string, keyof typeof CATEGORY_FAMILY_IMAGES> = {
+  electronics: 'electronics',
+  fashion: 'fashion',
+  shoes: 'shoes',
+  bags_accessories: 'fashion',
+  beauty: 'fashion',
+  baby: 'fashion',
+  home_kitchen: 'home_kitchen',
+  furniture: 'home_kitchen',
+  electromenager: 'home_kitchen',
+  energy: 'electronics',
+  construction: 'home_kitchen',
+  vehicles: 'vehicles',
+  agriculture: 'agriculture',
+  grocery: 'agriculture',
+  office_school: 'electronics',
+  sports: 'shoes',
+  toys: 'fashion',
+  books_music: 'electronics',
+  pets: 'agriculture',
+  trade_equipment: 'home_kitchen',
+  real_estate: 'real_estate',
+  services: 'services',
+};
+
+const categoryById = new Map(CATEGORY_TREE.map(category => [category.id, category]));
+const rootCategoryId = (category: CatNode): string => {
+  let current = category;
+  while (current.parentId) current = categoryById.get(current.parentId) || current;
+  return current.id;
+};
+
+/** Map of every category id -> a bundled local image asset. */
+export const CATEGORY_IMAGE_BY_ID: Record<string, any> = Object.fromEntries(
+  CATEGORY_TREE.map(category => {
+    const family = CATEGORY_IMAGE_FAMILY_BY_ROOT[rootCategoryId(category)] || 'home_kitchen';
+    return [category.id, CATEGORY_FAMILY_IMAGES[family]];
+  }),
+);
 
 /**
  * Dry-run product migration preview (v1):
