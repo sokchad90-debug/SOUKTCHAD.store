@@ -1,5 +1,6 @@
 import React from 'react';
 import { Animated, GestureResponderEvent, View, Text, StyleSheet, Pressable } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -75,6 +76,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
   const isDark = (colors as any).background === '#0B1120' || (colors as any).surface === '#161E2E';
   const { cardWidth: CARD_WIDTH, imageHeight: IMAGE_HEIGHT, cardScale } = useCardDimensions(imageHeightRatio, containerWidth);
   const heartScale = React.useRef(new Animated.Value(1)).current;
+  const reduceMotion = useReducedMotion();
 
   // Guard: if product is undefined/null, render nothing to prevent white screen crashes
   if (!product || !product.id) return null;
@@ -82,6 +84,9 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
   const seller = getSellerById(product?.sellerId) || (product?.sellerName ? { id: product.sellerId, name: product.sellerName, isVerified: product.sellerVerified || false } : null);
 
   const title = product?.title?.[language] || product?.title?.en || '';
+  const favorite = isFavorite(product.id);
+  const openLabel = language === 'fr' ? `Ouvrir ${title}` : isAr ? `فتح ${title}` : `Open ${title}`;
+  const favoriteLabel = language === 'fr' ? `Ajouter ${title} aux favoris` : isAr ? `إضافة ${title} إلى المفضلة` : `Add ${title} to favorites`;
 
   const handlePress = () => {
     router.push(`/product/${product.id}`);
@@ -91,15 +96,20 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
     event.stopPropagation?.();
     impactLight();
     toggleFavorite(product.id);
-    Animated.sequence([
-      Animated.timing(heartScale, { toValue: 1.25, duration: 110, useNativeDriver: true }),
-      Animated.spring(heartScale, { toValue: 1, friction: 3, useNativeDriver: true }),
-    ]).start();
+    if (!reduceMotion) {
+      Animated.sequence([
+        Animated.timing(heartScale, { toValue: 1.25, duration: 110, useNativeDriver: true }),
+        Animated.spring(heartScale, { toValue: 1, friction: 3, useNativeDriver: true }),
+      ]).start();
+    }
   };
 
   return (
     <Pressable
       onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={openLabel}
+      accessibilityState={{ disabled: false }}
       testID={`product-card-${product.id}`}
       style={({ pressed }) => [
         styles.container,
@@ -108,7 +118,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           backgroundColor: colors.surface,
           borderColor: colors.borderLight,
           opacity: pressed ? 0.92 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
+          transform: [{ scale: pressed && !reduceMotion ? 0.98 : 1 }],
         },
         shadows.card,
       ]}
@@ -119,6 +129,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           frameWidth={CARD_WIDTH}
           frameRatio={CARD_WIDTH / IMAGE_HEIGHT}
           neutralBg={colors.borderLight}
+          accessibilityLabel={title}
           failedText={language === 'fr' ? 'Image indisponible' : language === 'ar' ? 'الصورة غير متوفرة' : 'Image unavailable'}
         />
         {isPinActive(product) ? (
@@ -133,14 +144,17 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
         ) : null}
         <Pressable
           onPress={handleFavorite}
+          accessibilityRole="button"
+          accessibilityLabel={favoriteLabel}
+          accessibilityState={{ checked: favorite }}
           style={[styles.favoriteBtn, isAr && styles.favoriteBtnRTL, { backgroundColor: colors.overlay, width: Math.round(30 * (CARD_WIDTH / 195)), height: Math.round(30 * (CARD_WIDTH / 195)), borderRadius: Math.round(16 * (CARD_WIDTH / 195)) }]}
-          hitSlop={scale(8)}
+          hitSlop={9}
         >
           <Animated.View style={{ transform: [{ scale: heartScale }] }}>
             <MaterialIcons
-              name={isFavorite(product.id) ? 'favorite' : 'favorite-border'}
+              name={favorite ? 'favorite' : 'favorite-border'}
               size={scale(16)}
-              color={isFavorite(product.id) ? DT.color.danger : '#FFF'}
+              color={favorite ? DT.color.danger : '#FFF'}
             />
           </Animated.View>
         </Pressable>
@@ -151,7 +165,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
         <View style={[styles.priceTopRow, isAr && styles.rowRTL]}>
           {isDiscountActive(product) ? (
             <>
-              <Text style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(14), lineHeight: cardScale(17) }]}>
+              <Text style={[styles.price, { color: isDark ? colors.primary : '#4F46E5', textAlign: isAr ? 'right' : 'left', fontSize: cardScale(14), lineHeight: cardScale(17) }]}>
                 {isAr ? '\u200E' : ''}{formatPrice(getDiscountedPrice(product))}{isAr ? '\u200E' : ''}
               </Text>
               <View style={[styles.discountBadge, { backgroundColor: '#EF4444' }]}>
@@ -159,7 +173,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
               </View>
             </>
           ) : (
-            <AppText testID="product-card-price" weight={800} style={[styles.price, { color: colors.primary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(14), lineHeight: cardScale(17) }]}>
+            <AppText testID="product-card-price" weight={800} style={[styles.price, { color: isDark ? colors.primary : '#4F46E5', textAlign: isAr ? 'right' : 'left', fontSize: cardScale(14), lineHeight: cardScale(17) }]}>
               {isAr ? '\u200E' : ''}{formatPrice(product.price)}{isAr ? '\u200E' : ''}
             </AppText>
           )}
@@ -208,8 +222,9 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           <View style={[styles.logisticsRow, isAr && { flexDirection: 'row-reverse' }]}>
             {product?.deliveryType === 'free' || product?.freeShipping ? (
               <View style={[styles.logItem, isAr && styles.rowRTL]}>
-                <MaterialIcons name="local-shipping" size={cardScale(10)} color={DT.color.success} />
-                <Text style={[styles.freeShipText, { color: DT.color.success, fontSize: cardScale(10), lineHeight: Math.round(cardScale(10) * 1.3) }]} numberOfLines={1}>
+                <MaterialIcons name="local-shipping" size={cardScale(10)} color={isDark ? DT.dark.success : '#15803D'} />
+                {/* #15803D on #FFFFFF is 5.02:1 (WCAG AA for normal text). */}
+                <Text style={[styles.freeShipText, { color: isDark ? DT.dark.success : '#15803D', fontSize: cardScale(10), lineHeight: Math.round(cardScale(10) * 1.3) }]} numberOfLines={1}>
                   {language === 'fr' ? 'Livraison offerte' : language === 'ar' ? 'توصيل مجاني' : 'Free delivery'}
                 </Text>
               </View>

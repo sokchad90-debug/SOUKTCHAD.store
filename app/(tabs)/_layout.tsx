@@ -204,53 +204,63 @@ export default function TabLayout() {
       {/* BUYER/PUBLIC TABS — order reverses in Arabic (RTL) so "home" sits at the right */}
       {(isAr ? [
         <Tabs.Screen key="profile" name="profile" options={{
+          tabBarAccessibilityLabel: t('profile'),
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('profile')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="person" size={size} color={color} />,
           tabBarBadge: profileBadgeCount > 0 ? profileBadgeCount : undefined,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
         <Tabs.Screen key="chats" name="chats" options={{
+          tabBarAccessibilityLabel: t('messages'),
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('messages')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="chat" size={size} color={color} />,
           tabBarBadge: chatBadgeCount > 0 ? chatBadgeCount : undefined,
         }} />,
         <Tabs.Screen key="services" name="services-tab" options={{
+          tabBarAccessibilityLabel: t('services'),
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('services')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="handyman" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
         <Tabs.Screen key="categories" name="categories" options={{
+          tabBarAccessibilityLabel: t('categories'),
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('categories')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="grid-view" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
         <Tabs.Screen key="index" name="index" options={{
+          tabBarAccessibilityLabel: t('home'),
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('home')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="storefront" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
       ] : [
         <Tabs.Screen key="index" name="index" options={{
+          tabBarAccessibilityLabel: t('home'),
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('home')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="storefront" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
         <Tabs.Screen key="categories" name="categories" options={{
+          tabBarAccessibilityLabel: t('categories'),
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('categories')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="grid-view" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
         <Tabs.Screen key="services" name="services-tab" options={{
+          tabBarAccessibilityLabel: t('services'),
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('services')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="handyman" size={size} color={color} />,
           href: isSeller ? HIDDEN : VISIBLE,
         }} />,
         <Tabs.Screen key="chats" name="chats" options={{
+          tabBarAccessibilityLabel: t('messages'),
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('messages')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="chat" size={size} color={color} />,
           tabBarBadge: chatBadgeCount > 0 ? chatBadgeCount : undefined,
         }} />,
         <Tabs.Screen key="profile" name="profile" options={{
+          tabBarAccessibilityLabel: t('profile'),
           tabBarLabel: ({ color }) => <AdaptiveTabLabel label={t('profile')} color={color} />,
           tabBarIcon: ({ color, size }) => <TabIcon name="person" size={size} color={color} />,
           tabBarBadge: profileBadgeCount > 0 ? profileBadgeCount : undefined,

@@ -1,6 +1,6 @@
 import { scale } from '@/ui/responsive';
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { DS } from '@/ui/designSystem';
@@ -18,9 +18,10 @@ interface Props {
   neutralBg?: string;
   failedText?: string;
   loadingText?: string;
+  accessibilityLabel?: string;
 }
 
-function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.product, neutralBg = '#FFFFFF', failedText, loadingText }: Props) {
+function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.product, neutralBg = '#FFFFFF', failedText, accessibilityLabel }: Props) {
   const [failed, setFailed] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const height = Math.round(frameWidth / frameRatio);
@@ -38,6 +39,7 @@ function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.pr
           contentFit="contain"
           transition={150}
           recyclingKey={uri}
+          accessibilityLabel={accessibilityLabel}
           onLoadEnd={() => setLoading(false)}
           onError={() => { setFailed(true); setLoading(false); }}
         />
@@ -49,6 +51,11 @@ function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.pr
           ) : null}
         </View>
       )}
+      {loading && uri && !failed ? (
+        <View style={styles.loading} pointerEvents="none">
+          <ActivityIndicator color="#5B48D9" />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -60,5 +67,6 @@ const styles = StyleSheet.create({
   frame: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   fallback: { alignItems: 'center', justifyContent: 'center', gap: scale(6) },
-  fallbackText: { fontSize: scale(10), color: DS.colors.textTertiary, fontFamily: DS.fontFamily.regular },
+  loading: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  fallbackText: { fontSize: scale(10), color: '#475569', fontFamily: DS.fontFamily.regular },
 });

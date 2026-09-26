@@ -67,6 +67,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
 
   const isFr = language === 'fr';
   const isAr = language === 'ar';
+  const errorTextColor = colors.background === '#242426' ? colors.error : '#B91C1C';
 
   const label = useCallback((en: string, fr: string, ar: string) => {
     if (isFr) return fr;
@@ -491,7 +492,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
           >
             <View style={styles.modalHeader}>
               <View style={[styles.grabHandle, { backgroundColor: colors.border }]} />
-              <Pressable onPress={handleClose} style={styles.closeBtn} hitSlop={scale(12)}>
+              <Pressable accessibilityRole="button" accessibilityLabel={label('Close', 'Fermer', 'إغلاق')} onPress={handleClose} style={styles.closeBtn}>
                 <MaterialIcons name="close" size={scale(22)} color={colors.textSecondary} />
               </Pressable>
             </View>
@@ -514,7 +515,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                   {error ? (
                     <View style={[styles.errorBanner, { backgroundColor: colors.errorLight }]}>
                       <MaterialIcons name="error-outline" size={scale(16)} color={colors.error} />
-                      <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+                      <Text style={[styles.errorText, { color: errorTextColor }]}>{error}</Text>
                     </View>
                   ) : null}
 
@@ -533,7 +534,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                     editable={!isLoading}
                   />
                   {emailInvalid ? (
-                    <Text style={[styles.fieldError, { color: colors.error }]}>
+                    <Text style={[styles.fieldError, { color: errorTextColor }]}>
                       {label('Enter a valid email', 'E-mail invalide', 'بريد غير صالح')}
                     </Text>
                   ) : null}
@@ -694,7 +695,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                   {error ? (
                     <View style={[styles.errorBanner, { backgroundColor: colors.errorLight }]}>
                       <MaterialIcons name="error-outline" size={scale(16)} color={colors.error} />
-                      <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+                      <Text style={[styles.errorText, { color: errorTextColor }]}>{error}</Text>
                     </View>
                   ) : null}
 
@@ -710,7 +711,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                     editable={!isLoading}
                   />
                   {nameInvalid ? (
-                    <Text style={[styles.fieldError, { color: colors.error }]}>
+                    <Text style={[styles.fieldError, { color: errorTextColor }]}>
                       {label('Enter a real name (min 3 letters)', 'Nom invalide', 'اسم غير صالح')}
                     </Text>
                   ) : null}
@@ -730,7 +731,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                   {usernameError ? (
                     <View style={styles.inlineErrorRow}>
                       <MaterialIcons name="error-outline" size={scale(13)} color={colors.error} />
-                      <Text style={[styles.inlineErrorText, { color: colors.error }]}>{usernameError}</Text>
+                      <Text style={[styles.inlineErrorText, { color: errorTextColor }]}>{usernameError}</Text>
                     </View>
                   ) : username.trim().length > 0 ? (
                     <View style={styles.inlineErrorRow}>
@@ -754,7 +755,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                     editable={!isLoading}
                   />
                   {emailInvalid ? (
-                    <Text style={[styles.fieldError, { color: colors.error }]}>
+                    <Text style={[styles.fieldError, { color: errorTextColor }]}>
                       {label('Enter a valid email (e.g. name@example.com)', 'E-mail invalide', 'بريد غير صالح')}
                     </Text>
                   ) : null}
@@ -779,7 +780,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                     />
                   </View>
                   {phoneInvalid ? (
-                    <Text style={[styles.fieldError, { color: colors.error }]}>
+                    <Text style={[styles.fieldError, { color: errorTextColor }]}>
                       {label(`Chad: exactly ${CHAD.phoneLength} digits`, `Tchad: exactement ${CHAD.phoneLength} chiffres`, `تشاد: ${CHAD.phoneLength} أرقام بالضبط`)}
                     </Text>
                   ) : (
@@ -800,11 +801,11 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                     editable={!isLoading}
                   />
                   {passwordTooShort ? (
-                    <Text style={[styles.fieldError, { color: colors.error }]}>
+                    <Text style={[styles.fieldError, { color: errorTextColor }]}>
                       {label('Password must be at least 6 characters.', 'Min 6 caractères.', '6 أحرف على الأقل.')}
                     </Text>
                   ) : passwordWeak ? (
-                    <Text style={[styles.fieldError, { color: colors.error }]}>
+                    <Text style={[styles.fieldError, { color: errorTextColor }]}>
                       {label('Password must contain both letters and numbers.', 'Lettres et chiffres requis.', 'أحرف وأرقام مطلوبة.')}
                     </Text>
                   ) : null}
@@ -901,7 +902,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                   {error ? (
                     <View style={[styles.errorBanner, { backgroundColor: colors.errorLight }]}>
                       <MaterialIcons name="error-outline" size={scale(16)} color={colors.error} />
-                      <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+                      <Text style={[styles.errorText, { color: errorTextColor }]}>{error}</Text>
                     </View>
                   ) : null}
 
@@ -1008,7 +1009,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                       {error ? (
                         <View style={[styles.errorBanner, { backgroundColor: colors.errorLight }]}>
                           <MaterialIcons name="error-outline" size={scale(16)} color={colors.error} />
-                          <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+                          <Text style={[styles.errorText, { color: errorTextColor }]}>{error}</Text>
                         </View>
                       ) : null}
 
@@ -1095,7 +1096,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                   {otpError ? (
                     <View style={[styles.errorBanner, { backgroundColor: colors.errorLight }]}>
                       <MaterialIcons name="error-outline" size={scale(16)} color={colors.error} />
-                      <Text style={[styles.errorText, { color: colors.error }]}>{otpError}</Text>
+                      <Text style={[styles.errorText, { color: errorTextColor }]}>{otpError}</Text>
                     </View>
                   ) : null}
 
@@ -1187,7 +1188,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                   {error ? (
                     <View style={[styles.errorBanner, { backgroundColor: colors.errorLight }]}>
                       <MaterialIcons name="error-outline" size={scale(16)} color={colors.error} />
-                      <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+                      <Text style={[styles.errorText, { color: errorTextColor }]}>{error}</Text>
                     </View>
                   ) : null}
 
@@ -1225,7 +1226,7 @@ export default function LoginModal({ visible, isVisible, onClose, onSuccess }: L
                     </Pressable>
                   </View>
                   {confirmNewPassword.length > 0 && newPassword !== confirmNewPassword ? (
-                    <Text style={[styles.fieldError, { color: colors.error }]}>
+                    <Text style={[styles.fieldError, { color: errorTextColor }]}>
                       {label('Passwords do not match.', 'Les mots de passe ne correspondent pas.', 'كلمات المرور غير متطابقة.')}
                     </Text>
                   ) : null}
@@ -1297,7 +1298,7 @@ const styles = StyleSheet.create({
   modal: { borderTopLeftRadius: scale(24), borderTopRightRadius: scale(24), maxHeight: '92%' },
   modalHeader: { alignItems: 'center', paddingTop: scale(12), paddingBottom: scale(4), paddingHorizontal: SP.xl },
   grabHandle: { width: scale(40), height: scale(4), borderRadius: scale(2), marginBottom: scale(8) },
-  closeBtn: { position: 'absolute', right: scale(20), top: scale(12) },
+  closeBtn: { position: 'absolute', right: scale(8), top: 0, width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   scrollContent: { paddingHorizontal: SP.xxl, paddingTop: scale(4) },
   title: { fontSize: scale(24), fontWeight: '700', marginBottom: scale(4), fontFamily: 'Cairo-Bold' },
   subtitle: { fontSize: scale(14), lineHeight: scale(20), marginBottom: SP.xl, fontFamily: 'Cairo-Regular' },
@@ -1354,6 +1355,7 @@ const styles = StyleSheet.create({
   inlineErrorRow: { flexDirection: 'row', alignItems: 'center', gap: scale(4), marginTop: scale(4), marginBottom: scale(2) },
   inlineErrorText: { fontSize: scale(12), fontWeight: '500', fontFamily: 'Cairo-Regular' },
   primaryBtn: {
+    minHeight: 48,
     height: BTN_HEIGHT,
     borderRadius: borderRadius.md,
     alignItems: 'center',
@@ -1361,13 +1363,14 @@ const styles = StyleSheet.create({
     marginTop: SP.l,
   },
   primaryBtnText: { color: '#FFF', fontSize: scale(16), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
-  toggleBtn: { flexDirection: 'row', justifyContent: 'center', marginTop: SP.l, paddingBottom: SP.s },
+  toggleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minHeight: 48, marginTop: SP.l, paddingBottom: SP.s },
   forgotBtn: { alignSelf: 'flex-end', marginTop: SP.s, marginBottom: scale(4), paddingVertical: scale(4) },
   forgotText: { fontSize: scale(14), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
   toggleText: { fontSize: scale(14), fontFamily: 'Cairo-Regular' },
   toggleLink: { fontSize: scale(14), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
   // ─── Google OAuth button & divider ───
   googleBtn: {
+    minHeight: 48,
     height: BTN_HEIGHT,
     borderRadius: borderRadius.md,
     alignItems: 'center',
@@ -1441,6 +1444,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: scale(12),
+    minHeight: 48,
     borderRadius: scale(12),
     borderWidth: 1,
     gap: scale(8),

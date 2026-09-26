@@ -50,6 +50,7 @@ export default function ConnectionStateView({ state, onRetry, retrying = false, 
       {state === 'error' && onRetry ? (
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={pick('Try again', 'Réessayer', 'إعادة المحاولة')}
           disabled={retrying}
           onPress={retry}
           style={({ pressed }) => [styles.retry, { backgroundColor: colors.primary, opacity: pressed || retrying ? 0.7 : 1 }]}
@@ -67,6 +68,6 @@ const styles = StyleSheet.create({
   compact: { paddingVertical: scale(28) },
   title: { fontSize: scale(16), lineHeight: scale(24), fontWeight: '700', fontFamily: 'Cairo-Bold' },
   detail: { fontSize: scale(13), lineHeight: scale(20), fontFamily: 'Cairo-Regular' },
-  retry: { flexDirection: 'row', alignItems: 'center', gap: scale(6), minHeight: scale(42), marginTop: scale(8), paddingHorizontal: scale(18), borderRadius: scale(12) },
+  retry: { flexDirection: 'row', alignItems: 'center', gap: scale(6), minHeight: 48, marginTop: scale(8), paddingHorizontal: scale(18), borderRadius: scale(12) },
   retryText: { color: '#FFFFFF', fontSize: scale(14), fontWeight: '700', fontFamily: 'Cairo-Bold' },
 });
