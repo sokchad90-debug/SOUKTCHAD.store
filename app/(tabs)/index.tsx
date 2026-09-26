@@ -479,30 +479,7 @@ export default function HomeScreen() {
                 </Pressable>
               </View>
             </View>
-{/* Search bar — stays sticky */}
-            <View style={[styles.searchContainer, { paddingHorizontal: layout.horizontalPadding, marginBottom: scale(2) }]}>
-              <View style={[styles.searchWrapper, isAr && { flexDirection: 'row-reverse' }]}>
-              <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', height: searchBarH, borderRadius: scale(16) }, isAr && { flexDirection: 'row-reverse' }]}>
-                <MaterialIcons name="search" size={scale(18)} color={colors.textTertiary} />
-                <AppTextInput
-                  testID="home-search-input"
-                  weight={400}
-                  maxScale={1.2}
-                  style={[styles.searchInput, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}
-                  placeholder={isAr ? 'ابحث عن منتج...' : 'Quel produit recherchez-vous ?'}
-                  placeholderTextColor={colors.textTertiary}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-                {searchQuery.length > 0 ? (
-                  <Pressable onPress={() => setSearchQuery('')} hitSlop={scale(8)}>
-                    <MaterialIcons name="close" size={scale(18)} color={colors.textTertiary} />
-                  </Pressable>
-                ) : null}
-              </View>
 
-              </View>
-            </View>
           </View>
 
           {/* City Picker Dropdown Modal — outside sticky so it overlays full screen */}
