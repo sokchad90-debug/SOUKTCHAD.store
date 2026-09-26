@@ -10,7 +10,7 @@ import { shadows } from '@/constants/theme';
 import { BOTTOM_NAV_CONTENT_GAP, scale, usePhoneLayout } from '@/constants/responsive';
 import { AppText } from '@/components/AppText';
 import { DS } from '@/ui/designSystem';
-import { CATEGORY_TREE, descendantsOf } from '@/services/categoryTree';
+import { CATEGORY_TREE, descendantsOf, CATEGORY_IMAGE_BY_ID } from '@/services/categoryTree';
 
 // Static per-category images (managed data source) — mapped by category id family.
 const CATEGORY_IMAGES: Record<string, any> = {
@@ -117,7 +117,7 @@ export default function CategoriesScreen() {
     const name = (cat.name as Record<string, string>)?.[language] || (cat.name as Record<string, string>)?.en || cat.id;
     const icon = (cat.icon || 'category') as any;
     const color = cat.color || '#FF7A00';
-    const image = CATEGORY_IMAGES[cat.id];
+    const image = CATEGORY_IMAGES[cat.id] || CATEGORY_IMAGE_BY_ID[cat.id];
     return (
       <Pressable
         onPress={() => handleCategoryPress(cat)}
