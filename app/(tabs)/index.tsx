@@ -5,6 +5,7 @@ import {
   Animated, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
+import { StatusBar } from 'expo-status-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -78,61 +79,6 @@ function HomeListHeader({
 
   return (
     <View>
-      {/* Categories - Grid (only show when "all" is selected, hidden when a category is chosen) */}
-            {selectedCategory === 'all' && showHeaderContent ? (
-      <View style={[styles.categoryGrid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
-        testID="home-categories"
-      >
-        {(ORIGINAL_HOME_CATEGORIES.map(id => (categories as any[]).find(c => c.id === id)).filter(Boolean)).map(cat => {
-          const isSelected = selectedCategory === cat.id;
-          return (
-            <Pressable
-              key={cat.id}
-              onPress={() => { selection(); openHomeCategory(cat); }}
-              style={styles.categoryGridItem}
-            >
-              <View
-                style={[
-                  styles.categoryCircle,
-                  {
-                    width: layout.categoryCircleSize,
-                    height: layout.categoryCircleSize,
-                    borderColor: isSelected ? cat.color : 'transparent',
-                  },
-                ]}
-              >
-                {cat.image ? (
-                  <Image
-                    source={cat.image}
-                    style={{ width: '100%', height: '100%', borderRadius: scale(10) }}
-                    contentFit="cover"
-                    transition={150}
-                  />
-                ) : (
-                  <MaterialIcons
-                    name={cat.icon as any}
-                    size={scale(24)}
-                    color={cat.color}
-                  />
-                )}
-              </View>
-              <Text
-                style={[
-                  styles.categoryCircleLabel,
-                  { color: isSelected ? cat.color : colors.textSecondary, fontWeight: isSelected ? '700' : '600', textAlign: 'center' },
-                ]}
-                numberOfLines={1}
-                adjustsFontSizeToFit={true}
-                minimumFontScale={0.5}
-              >
-                {getCategoryName(cat)}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-      ) : null}
-
       {showHeaderContent ? (
         <Pressable
           accessibilityRole="button"
@@ -149,11 +95,33 @@ function HomeListHeader({
           </View>
           <View style={styles.discoveryArtwork} pointerEvents="none">
             <View style={styles.discoveryOrbLarge} />
-            <View style={styles.discoveryOrbSmall} />
-            <View style={styles.discoveryBag}><MaterialIcons name="shopping-bag" size={scale(34)} color="#5B48D9" /></View>
-            <MaterialIcons name="headphones" size={scale(50)} color="#8B7BE8" style={styles.discoveryHeadphones} />
+            <Image source={require('@/assets/images/categories/electronics.png')} style={styles.discoveryProductBack} contentFit="cover" />
+            <Image source={require('@/assets/images/categories/bags_accessories.png')} style={styles.discoveryProductFront} contentFit="cover" />
           </View>
         </Pressable>
+      ) : null}
+
+      {/* Categories - four large reference tiles */}
+      {selectedCategory === 'all' && showHeaderContent ? (
+        <View style={[styles.categoryGrid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]} testID="home-categories">
+          {(ORIGINAL_HOME_CATEGORIES.map(id => (categories as any[]).find(c => c.id === id)).filter(Boolean)).map(cat => {
+            const isAll = cat.id === 'all';
+            return (
+              <Pressable key={cat.id} onPress={() => { selection(); openHomeCategory(cat); }} style={styles.categoryGridItem}>
+                <View style={[styles.categoryCircle, isAll && styles.categoryAllTile]}>
+                  {cat.image ? (
+                    <Image source={cat.image} style={styles.categoryImage} contentFit="cover" transition={150} />
+                  ) : (
+                    <MaterialIcons name="grid-view" size={scale(34)} color="#5B48D9" />
+                  )}
+                </View>
+                <Text style={[styles.categoryCircleLabel, { color: isAll ? '#5B48D9' : colors.textPrimary, textAlign: 'center' }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+                  {getCategoryName(cat)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       ) : null}
 
       {/* Verified Stores — horizontal scroll (only when All category is active).
@@ -444,13 +412,14 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: isDark ? '#39276A' : '#4C1CEA' }]}>
+    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: '#5B48D9' }]}>
+      <StatusBar style="light" backgroundColor="#5B48D9" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={[styles.homeBackdrop, { backgroundColor: colors.background }]}>
         <View style={[styles.homeSurface, { width: layout.surfaceWidth, backgroundColor: colors.background }]}>
           {/* Sticky Search Bar — always visible at top */}
           <View
-            style={[styles.stickySearchWrap, { backgroundColor: isDark ? '#39276A' : '#4C1CEA', paddingTop: 0 }]}
+            style={[styles.stickySearchWrap, { backgroundColor: '#5B48D9', paddingTop: 0 }]}
             onLayout={(e) => setStickyHeight(e.nativeEvent.layout.height)}
           >
                         {/* Mockup header — order swapped per language; groups are equal flex, sides fixed */}
@@ -520,7 +489,7 @@ export default function HomeScreen() {
                   weight={400}
                   maxScale={1.2}
                   style={[styles.searchInput, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}
-                  placeholder={isAr ? 'ما المنتج الذي تبحث عنه؟' : 'Quel produit recherchez-vous ?'}
+                  placeholder={isAr ? 'ابحث عن منتج...' : 'Quel produit recherchez-vous ?'}
                   placeholderTextColor={colors.textTertiary}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -841,30 +810,31 @@ const styles = StyleSheet.create({
   catChipText: { fontSize: scale(13), fontWeight: '700', fontFamily: 'Cairo-Bold' },
 
   activeFilterText: { fontSize: scale(11), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(16), paddingTop: scale(14), paddingBottom: scale(4), gap: 0 },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: scale(16), paddingTop: scale(2), paddingBottom: scale(8), gap: 0 },
   categoryGridItem: { alignItems: 'center', width: '25%', marginBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4) },
   categoryCircleScroll: { paddingHorizontal: scale(16), gap: scale(10), paddingBottom: scale(2), marginBottom: 0, paddingTop: scale(10) },
   categoryCircleItem: { alignItems: 'center', width: scale(68) },
   categoryCircle: {
-    width: CATEGORY_CIRCLE, height: CATEGORY_CIRCLE, borderRadius: scale(12),
+    width: scale(76), height: scale(76), borderRadius: scale(18),
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: scale(1), borderColor: 'transparent',
     overflow: 'hidden',
   },
-  categoryCircleLabel: { fontSize: scale(10), marginTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4), textAlign: 'center', fontFamily: 'Cairo-Regular' },
+  categoryAllTile: { backgroundColor: '#EFEDFA', borderColor: '#5B48D9' },
+  categoryImage: { width: '100%', height: '100%', borderRadius: scale(18) },
+  categoryCircleLabel: { fontSize: scale(12), fontWeight: '600', marginTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(5), textAlign: 'center', fontFamily: 'Cairo-SemiBold' },
   discoveryBanner: {
-    height: scale(80), borderRadius: scale(14), marginTop: scale(6), marginBottom: scale(10),
-    backgroundColor: '#E8E1FF', overflow: 'hidden', flexDirection: 'row', alignItems: 'center',
+    height: scale(80), borderRadius: scale(18), marginTop: scale(10), marginBottom: scale(8),
+    backgroundColor: '#FFFFFF', overflow: 'hidden', flexDirection: 'row', alignItems: 'center',
   },
   discoveryCopy: { zIndex: 2, flex: 1, paddingHorizontal: scale(16), justifyContent: 'center', alignItems: 'flex-start' },
   discoveryTitle: { color: '#21164D', fontSize: scale(18), lineHeight: scale(22), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   discoveryButton: { flexDirection: 'row', alignItems: 'center', gap: scale(2), marginTop: scale(4), backgroundColor: '#5B48D9', borderRadius: scale(12), paddingHorizontal: scale(12), paddingVertical: scale(4) },
   discoveryButtonText: { color: '#FFFFFF', fontSize: scale(11), fontWeight: '700', fontFamily: 'Cairo-Bold' },
   discoveryArtwork: { width: '43%', height: '100%', position: 'relative' },
-  discoveryOrbLarge: { position: 'absolute', width: scale(92), height: scale(92), borderRadius: scale(46), backgroundColor: '#CFC4FF', right: scale(4), top: -scale(20) },
-  discoveryOrbSmall: { position: 'absolute', width: scale(46), height: scale(46), borderRadius: scale(23), backgroundColor: '#BFE9DF', left: scale(2), bottom: -scale(18) },
-  discoveryBag: { position: 'absolute', right: scale(12), bottom: scale(8), width: scale(52), height: scale(48), borderRadius: scale(12), backgroundColor: '#D7F1E9', alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '5deg' }] },
-  discoveryHeadphones: { position: 'absolute', left: scale(2), bottom: -scale(3), transform: [{ rotate: '-8deg' }] },
+  discoveryOrbLarge: { position: 'absolute', width: scale(116), height: scale(116), borderRadius: scale(58), backgroundColor: '#E9E5FB', right: -scale(14), top: -scale(18) },
+  discoveryProductBack: { position: 'absolute', width: scale(64), height: scale(64), borderRadius: scale(18), left: -scale(2), bottom: -scale(5), transform: [{ rotate: '-7deg' }] },
+  discoveryProductFront: { position: 'absolute', width: scale(70), height: scale(70), borderRadius: scale(20), right: scale(3), bottom: -scale(3), transform: [{ rotate: '5deg' }] },
   // Verified Stores section
   verifiedStoresRow: { flexDirection: 'row', paddingHorizontal: scale(16), paddingBottom: scale(2), paddingTop: 0 },
   verifiedStoreItemFlex: { alignItems: 'center', flex: 1 },
@@ -886,7 +856,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 2,
   },
-  verifiedStoreName: { fontSize: scale(9), fontWeight: '600', marginTop: scale(4), textAlign: 'center', width: VERIFIED_STORE_ITEM_W, overflow: 'hidden', lineHeight: scale(12), fontFamily: 'Cairo-SemiBold' },
+  verifiedStoreName: { fontSize: scale(10), fontWeight: '600', marginTop: scale(4), textAlign: 'center', width: VERIFIED_STORE_ITEM_W, overflow: 'hidden', lineHeight: scale(13), fontFamily: 'Cairo-SemiBold' },
 
   sectionHeader: { paddingHorizontal: scale(16), paddingTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(3), paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', width: '100%', paddingHorizontal: scale(16), paddingTop: 0, paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
