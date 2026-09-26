@@ -14,7 +14,6 @@ import {
   useApp, DEFAULT_FILTERS, CHAD_CITIES, FilterState, SortOption,
 } from '@/contexts/AppContext';
 import { categories, sellers, Product } from '@/services/mockData';
-import { formatPrice } from '@/constants/config';
 import ProductCard from '@/components/ProductCard';
 import ConnectionStateView from '@/components/ConnectionStateView';
 import { AppText, AppTextInput } from '@/components/AppText';
@@ -24,7 +23,7 @@ import { selection, notifySuccess } from '@/services/haptics';
 import {
   scale,
   CATEGORY_CIRCLE, AVATAR_SIZE, AVATAR_RADIUS, AVATAR_BORDER,
-  VERIFIED_STORE_ITEM_W, VERIFIED_BADGE, PINNED_CARD_W,
+  VERIFIED_STORE_ITEM_W, VERIFIED_BADGE,
   EMPTY_IMG,
   NOTIF_BTN, LOGO_IMG, IS_VERY_SHORT_SCREEN, PhoneLayoutMetrics,
   PRODUCT_IMAGE_RATIO, usePhoneLayout, LIST_TOP_PULL, BOTTOM_NAV_CONTENT_GAP,
@@ -68,7 +67,7 @@ MemoProductCard.displayName = 'MemoProductCard';
 // Extracted ListHeader as a proper component to avoid useMemo JSX blob
 function HomeListHeader({
   colors, t, searchQuery, activeFilterCount, language, showHeaderContent, selectedCategory,
-  setSelectedCategory, pinnedProducts, filteredProductsLength, router, verifiedSellers,
+  filteredProductsLength, router, verifiedSellers,
   layout, setShowCityDropdown, openFilters, selection, subCategories, lastCategory,
   navigateToCategory, openHomeCategory,
 }: { [key: string]: any; layout: PhoneLayoutMetrics }) {
@@ -76,15 +75,6 @@ function HomeListHeader({
   const isAr = language === 'ar';
   const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
   const getCategoryName = (cat: typeof categories[0]) => (cat?.name as Record<string, string>)?.[language] || cat?.name?.en || '';
-  const pinnedScrollRef = useRef<ScrollView>(null);
-
-  // Reset pinned scroll to start when language changes or products load
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      pinnedScrollRef.current?.scrollTo({ x: 0, y: 0, animated: false });
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [language, pinnedProducts.length]);
 
   return (
     <View>
@@ -141,6 +131,29 @@ function HomeListHeader({
           );
         })}
       </View>
+      ) : null}
+
+      {showHeaderContent ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={lb('Explore all products', 'Explorer tous les produits', 'استكشف كل المنتجات')}
+          onPress={() => router.push('/all-products' as any)}
+          style={({ pressed }) => [styles.discoveryBanner, { marginHorizontal: layout.horizontalPadding, opacity: pressed ? 0.94 : 1 }, isAr && { flexDirection: 'row-reverse' }]}
+        >
+          <View style={[styles.discoveryCopy, isAr && { alignItems: 'flex-end' }]}>
+            <Text style={[styles.discoveryTitle, { textAlign: isAr ? 'right' : 'left' }]}>{lb('Discover Sokchad', 'Découvrez Sokchad', 'اكتشف سوكتشاد')}</Text>
+            <View style={[styles.discoveryButton, isAr && { flexDirection: 'row-reverse' }]}>
+              <Text style={styles.discoveryButtonText}>{lb('Explore', 'Explorer', 'استكشف')}</Text>
+              <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(14)} color="#FFFFFF" />
+            </View>
+          </View>
+          <View style={styles.discoveryArtwork} pointerEvents="none">
+            <View style={styles.discoveryOrbLarge} />
+            <View style={styles.discoveryOrbSmall} />
+            <View style={styles.discoveryBag}><MaterialIcons name="shopping-bag" size={scale(34)} color="#5B48D9" /></View>
+            <MaterialIcons name="headphones" size={scale(50)} color="#8B7BE8" style={styles.discoveryHeadphones} />
+          </View>
+        </Pressable>
       ) : null}
 
       {/* Verified Stores — horizontal scroll (only when All category is active).
@@ -204,59 +217,6 @@ function HomeListHeader({
         </View>
       ) : null}
 
-      {/* Pinned Products */}
-      {pinnedProducts.length > 0 && showHeaderContent ? (
-        <View>
-          <Pressable onPress={() => router.push('/promoted')} style={[styles.sectionHeaderRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
-            <AppText weight={700} style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>{t('pinnedProducts')}</AppText>
-            <View style={[styles.seeAllRow, isAr && { flexDirection: 'row-reverse' }]}>
-              <Text style={[styles.seeAllText, { color: colors.primary }]}>{lb('See All', 'Voir tout', 'عرض الكل')}</Text>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(18)} color={colors.primary} />
-            </View>
-          </Pressable>
-          <ScrollView
-            key={`pinned-${language}`}
-            ref={pinnedScrollRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.pinnedScroll, { paddingHorizontal: layout.horizontalPadding, gap: layout.smallGap }]}
-            snapToInterval={layout.sponsoredCardWidth + layout.smallGap}
-            disableIntervalMomentum={true}
-            decelerationRate="fast"
-          >
-            {(isAr ? [...pinnedProducts].reverse() : pinnedProducts).map((product: any) => {
-              const title = product?.title?.[language] || product?.title?.en || '';
-              const hasDiscount = (product?.discountPercent ?? 0) > 0 && product?.discountUntil && new Date(product.discountUntil).getTime() > Date.now();
-              const discountPercent = hasDiscount ? Math.min(30, product?.discountPercent || 0) : 0;
-              const discountedPrice = hasDiscount ? Math.round((product?.price || 0) * (1 - discountPercent / 100)) : (product?.price || 0);
-              return (
-                <Pressable
-                  key={product.id}
-                  onPress={() => router.push(`/product/${product.id}`)}
-                  style={({ pressed }) => [styles.pinnedCard, { width: layout.sponsoredCardWidth, backgroundColor: colors.surface, borderColor: colors.pinnedLight, opacity: pressed ? 0.92 : 1 }, shadows.card]}
-                >
-                  <View style={{ position: 'relative' }}>
-                    <Image source={{ uri: product?.images?.[0] || '' }} style={[styles.pinnedImage, { width: layout.sponsoredCardWidth, height: layout.sponsoredImageHeight }]} contentFit="cover" />
-                    {hasDiscount ? (
-                      <View style={styles.pinnedDiscountBadge}>
-                        <Text style={styles.pinnedDiscountText}>-{discountPercent}%</Text>
-                      </View>
-                    ) : null}
-                  </View>
-                  <View style={styles.pinnedInfo}>
-                    <Text style={[styles.pinnedPrice, { color: colors.primary, textAlign: isAr ? 'right' : 'left' }]}>{formatPrice(hasDiscount ? discountedPrice : (product?.price || 0))}</Text>
-                    {hasDiscount ? (
-                      <Text style={[styles.pinnedOldPrice, { color: colors.textTertiary, textAlign: isAr ? 'right' : 'left' }]}>{formatPrice(product?.price || 0)}</Text>
-                    ) : null}
-                    <Text style={[styles.pinnedTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1} adjustsFontSizeToFit={true} minimumFontScale={0.7} ellipsizeMode="tail">{title}</Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
-      ) : null}
-
       {/* Products Grid Title — HIDDEN during active search: products appear directly under the bar */}
       {searchQuery ? null : (
       <View style={[styles.sectionHeaderRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
@@ -314,7 +274,7 @@ export default function HomeScreen() {
 
   const {
     colors, t, language, isDark, searchQuery, setSearchQuery,
-    selectedCategory, setSelectedCategory, getFilteredProducts, products, subCategories, lastCategory,
+    selectedCategory, setSelectedCategory, getFilteredProducts, subCategories, lastCategory,
     filters, setFilters, resetFilters, activeFilterCount,
     refreshProducts, productsError, productsLoading, selectedCity, setSelectedCity,
     navigateToCategory, currentCategoryPath, goBackCategory, resetCategoryNavigation,
@@ -335,11 +295,6 @@ export default function HomeScreen() {
   const [stickyHeight, setStickyHeight] = useState(0);
 
   const filteredProducts = useMemo(() => getFilteredProducts(), [getFilteredProducts]);
-  // Stable pinnedProducts — only re-creates when pinned IDs actually change (NOT on every products change)
-  // This prevents FlatList ListHeader re-render shift when seller adds a non-pinned product
-  const pinnedProducts = useMemo(() => products.filter(p => p.isPinned), [products]);
-  const stablePinnedProducts = pinnedProducts;
-
   // Verified sellers for "Verified Stores" section — only real verified sellers, no duplicates
   const verifiedSellers = useMemo(() => {
     return sellers.filter(s => s.isVerified);
@@ -433,8 +388,6 @@ export default function HomeScreen() {
       language={language}
       showHeaderContent={showHeaderContent}
       selectedCategory={selectedCategory}
-      setSelectedCategory={setSelectedCategory}
-      pinnedProducts={stablePinnedProducts}
       subCategories={subCategories}
       lastCategory={lastCategory}
       filteredProductsLength={filteredProducts.length}
@@ -448,7 +401,7 @@ export default function HomeScreen() {
       openHomeCategory={openHomeCategory}
     />
   ), [colors, t, searchQuery, activeFilterCount, language, showHeaderContent,
-      selectedCategory, setSelectedCategory, stablePinnedProducts, filteredProducts.length,
+      selectedCategory, filteredProducts.length,
       router, verifiedSellers, layout, navigateToCategory, openHomeCategory]);
 
   // FlatList footer — removed, padding is handled by contentContainerStyle
@@ -651,7 +604,7 @@ export default function HomeScreen() {
             renderItem={renderProductItem}
             numColumns={numCols}
             columnWrapperStyle={[styles.grid, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
-            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(searchQuery ? stickyHeight + 4 : (selectedCategory !== 'all' ? stickyHeight + 2 : stickyHeight - LIST_TOP_PULL), 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: layout.smallGap + BOTTOM_NAV_CONTENT_GAP }}
+            contentContainerStyle={{ paddingTop: stickyHeight > 0 ? Math.max(searchQuery ? stickyHeight + 4 : (selectedCategory !== 'all' ? stickyHeight + 2 : stickyHeight - LIST_TOP_PULL), 0) : layout.headerHeight + layout.searchHeight + layout.searchGap, paddingBottom: insets.bottom + BOTTOM_NAV_CONTENT_GAP }}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
@@ -899,6 +852,19 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   categoryCircleLabel: { fontSize: scale(10), marginTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4), textAlign: 'center', fontFamily: 'Cairo-Regular' },
+  discoveryBanner: {
+    height: scale(80), borderRadius: scale(14), marginTop: scale(6), marginBottom: scale(10),
+    backgroundColor: '#E8E1FF', overflow: 'hidden', flexDirection: 'row', alignItems: 'center',
+  },
+  discoveryCopy: { zIndex: 2, flex: 1, paddingHorizontal: scale(16), justifyContent: 'center', alignItems: 'flex-start' },
+  discoveryTitle: { color: '#21164D', fontSize: scale(18), lineHeight: scale(22), fontWeight: '800', fontFamily: 'Cairo-Bold' },
+  discoveryButton: { flexDirection: 'row', alignItems: 'center', gap: scale(2), marginTop: scale(4), backgroundColor: '#5B48D9', borderRadius: scale(12), paddingHorizontal: scale(12), paddingVertical: scale(4) },
+  discoveryButtonText: { color: '#FFFFFF', fontSize: scale(11), fontWeight: '700', fontFamily: 'Cairo-Bold' },
+  discoveryArtwork: { width: '43%', height: '100%', position: 'relative' },
+  discoveryOrbLarge: { position: 'absolute', width: scale(92), height: scale(92), borderRadius: scale(46), backgroundColor: '#CFC4FF', right: scale(4), top: -scale(20) },
+  discoveryOrbSmall: { position: 'absolute', width: scale(46), height: scale(46), borderRadius: scale(23), backgroundColor: '#BFE9DF', left: scale(2), bottom: -scale(18) },
+  discoveryBag: { position: 'absolute', right: scale(12), bottom: scale(8), width: scale(52), height: scale(48), borderRadius: scale(12), backgroundColor: '#D7F1E9', alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '5deg' }] },
+  discoveryHeadphones: { position: 'absolute', left: scale(2), bottom: -scale(3), transform: [{ rotate: '-8deg' }] },
   // Verified Stores section
   verifiedStoresRow: { flexDirection: 'row', paddingHorizontal: scale(16), paddingBottom: scale(2), paddingTop: 0 },
   verifiedStoreItemFlex: { alignItems: 'center', flex: 1 },
@@ -927,15 +893,6 @@ const styles = StyleSheet.create({
   seeAllRow: { flexDirection: 'row', alignItems: 'center', gap: scale(2) },
   seeAllText: { fontSize: scale(13), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
   sectionTitle: { fontSize: scale(15), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
-  pinnedScroll: { paddingHorizontal: scale(16), gap: scale(6), paddingBottom: 0 },
-  pinnedCard: { width: PINNED_CARD_W, borderRadius: scale(8), overflow: 'hidden', borderWidth: 1 },
-  pinnedImage: { width: PINNED_CARD_W, height: PINNED_CARD_W },
-  pinnedInfo: { padding: scale(5) },
-  pinnedPrice: { fontSize: scale(10), fontWeight: '700', fontFamily: 'Cairo-Bold' },
-  pinnedOldPrice: { fontSize: scale(9), textDecorationLine: 'line-through' as const, marginTop: -1, fontFamily: 'Cairo-Regular' },
-  pinnedTitle: { fontSize: scale(10), fontWeight: '500', marginTop: scale(1), fontFamily: 'Cairo-Regular' },
-  pinnedDiscountBadge: { position: 'absolute', top: scale(4), right: scale(4), backgroundColor: '#EF4444', paddingHorizontal: scale(5), paddingVertical: scale(2), borderRadius: scale(4) },
-  pinnedDiscountText: { color: '#FFF', fontSize: scale(9), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   grid: {
     paddingHorizontal: scale(16), justifyContent: 'space-between', alignItems: 'stretch',
     paddingBottom: scale(2),
