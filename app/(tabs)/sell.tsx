@@ -1,14 +1,14 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TextInput, Pressable, ScrollView,
-  KeyboardAvoidingView, Platform, Alert, Modal, ActivityIndicator, Switch,
+  KeyboardAvoidingView, Platform, Alert, Modal, ActivityIndicator, Switch, useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
 // categories come from AppContext (DB tree + fallback) so seller sees enabled branches
-import { formatPrice } from '@/constants/config';
 import { COUNTRY_CITIES } from '@/constants/countries';
 import { borderRadius } from '@/constants/theme';
 import LoginModal from '@/components/LoginModal';
@@ -17,67 +17,6 @@ import { scale } from '@/constants/responsive';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 
-// Extracted sub-component to replace IIFE which causes "addViewAt" view tree crashes
-function SellerDiscountSection({ products, userId, language, colors, lb, onOpenMenu }: {
-  products: any[]; userId?: string; language: string; colors: any;
-  lb: (en: string, fr: string, ar: string) => string;
-  onOpenMenu: (id: string) => void;
-}) {
-  const myProducts = products.filter(p => p.sellerId === userId);
-  if (myProducts.length === 0) return null;
-  return (
-    <View style={{ marginTop: scale(32) }}>
-      <Text style={[localStyles.label, { color: colors.textSecondary, marginTop: 0 }]}>
-        {lb('MANAGE DISCOUNTS', 'GÉRER LES REMISES', 'إدارة الخصومات')}
-      </Text>
-      {myProducts.map(prod => {
-        const hasDiscount = ((prod?.discountPercent ?? 0) > 0 || (prod?.discountedPrice ?? 0) > 0) && prod?.discountUntil && new Date(prod.discountUntil).getTime() > Date.now();
-        const salePrice = prod?.discountedPrice || Math.round((prod?.price || 0) * (1 - Math.min(30, prod?.discountPercent || 0) / 100));
-        const pTitle = prod?.title?.[language] || prod?.title?.en || '';
-        return (
-          <View key={prod.id} style={[localStyles.discountCard, { backgroundColor: colors.surface, borderColor: hasDiscount ? '#EF444440' : colors.border }]}>
-            <View style={localStyles.discountCardRow}>
-              <Image source={{ uri: prod?.images?.[0] || '' }} style={localStyles.discountThumb} contentFit="cover" />
-              <View style={{ flex: 1 }}>
-                <Text style={[localStyles.discountCardTitle, { color: colors.textPrimary }]} numberOfLines={1}>{pTitle}</Text>
-                <Text style={[localStyles.discountCardPrice, { color: hasDiscount ? colors.textTertiary : colors.primary }, hasDiscount && { textDecorationLine: 'line-through' }]}>{formatPrice(prod?.price || 0)}</Text>
-                {hasDiscount ? (
-                  <View style={localStyles.discountActiveRow}>
-                    <View style={[localStyles.discountActiveBadge, { backgroundColor: '#EF4444' }]}>
-                      <Text style={localStyles.discountActiveBadgeText}>{prod.discountedPrice ? lb('SALE', 'PROMO', 'خصم') : `-${Math.min(30, prod?.discountPercent || 0)}%`}</Text>
-                    </View>
-                    <Text style={[localStyles.discountActivePrice, { color: '#EF4444' }]}>
-                      {formatPrice(salePrice)}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-              {prod.isHidden ? <MaterialIcons name="visibility-off" size={scale(18)} color={colors.textTertiary} /> : null}
-              <Pressable accessibilityRole="button" accessibilityLabel={lb('Product options', 'Options du produit', 'خيارات المنتج')} onPress={() => onOpenMenu(prod.id)} style={[localStyles.discountAddBtn, { backgroundColor: colors.primary + '15' }]}>
-                <MaterialIcons name="more-vert" size={scale(22)} color={colors.primary} />
-              </Pressable>
-            </View>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-const localStyles = StyleSheet.create({
-  label: { fontSize: scale(13), fontWeight: '600', marginBottom: scale(6), marginTop: scale(12), textTransform: 'uppercase', letterSpacing: 0.5 },
-  discountCard: { borderRadius: scale(16), borderWidth: 1, padding: scale(10), marginBottom: scale(8) },
-  discountCardRow: { flexDirection: 'row', alignItems: 'center', gap: scale(10) },
-  discountThumb: { width: scale(48), height: scale(48), borderRadius: scale(8) },
-  discountCardTitle: { fontSize: scale(13), fontWeight: '600' },
-  discountCardPrice: { fontSize: scale(14), fontWeight: '700' },
-  discountActiveRow: { flexDirection: 'row', alignItems: 'center', gap: scale(6), marginTop: scale(2) },
-  discountActiveBadge: { paddingHorizontal: scale(5), paddingVertical: scale(1), borderRadius: scale(4) },
-  discountActiveBadgeText: { color: '#FFF', fontSize: scale(10), fontWeight: '800' },
-  discountActivePrice: { fontSize: scale(13), fontWeight: '700' },
-  discountRemoveBtn: { width: scale(34), height: scale(34), borderRadius: scale(17), alignItems: 'center', justifyContent: 'center' },
-  discountAddBtn: { width: scale(48), height: scale(48), borderRadius: scale(24), alignItems: 'center', justifyContent: 'center' },
-});
-
 const MAX_IMAGES = 5;
 const THUMB_SIZE = scale(110);
 
@@ -85,7 +24,10 @@ interface SelectedImage { id: string; uri: string; }
 
 export default function SellScreen() {
   const insets = useSafeAreaInsets();
-  const { colors, t, language, isLoggedIn, user, addProduct, updateProduct, deleteProduct, setProductHidden, enabledCountries, managedProducts, setProductDiscount, removeProductDiscount, isReady, categories: appCategories } = useApp();
+  const router = useRouter();
+  const params = useLocalSearchParams<{ editProductId?: string }>();
+  const { width: windowWidth } = useWindowDimensions();
+  const { colors, t, language, isLoggedIn, user, addProduct, updateProduct, enabledCountries, managedProducts, isReady, categories: appCategories } = useApp();
   // Enabled branches for the seller picker (from DB tree; includes children)
   const sellerCategories = (appCategories || []).filter(c => c.id !== 'all');
   const [showLogin, setShowLogin] = useState(false);
@@ -99,6 +41,11 @@ export default function SellScreen() {
   const [sameCityOnly, setSameCityOnly] = useState(true);
   const [selectedDeliveryCities, setSelectedDeliveryCities] = useState<string[]>([]);
   const [showCityPicker, setShowCityPicker] = useState(false);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [categorySearch, setCategorySearch] = useState('');
+  const [citySearch, setCitySearch] = useState('');
+  const [additionalOpen, setAdditionalOpen] = useState(true);
+  const [deliveryOpen, setDeliveryOpen] = useState(false);
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [activePreview, setActivePreview] = useState(0);
   const [pendingImages, setPendingImages] = useState<SelectedImage[]>([]);
@@ -111,18 +58,6 @@ export default function SellScreen() {
   const [variantSpec2, setVariantSpec2] = useState('');   // spec label 2 optional (e.g. Taille / RAM)
   const [variantItems, setVariantItems] = useState<{ id: string; image: string; value1: string; value2: string; price: string; stock: string }[]>([]);
   const [maxOrderQty, setMaxOrderQty] = useState('');
-  const [showDiscountModal, setShowDiscountModal] = useState(false);
-  const [deliveryCities, setDeliveryCities] = useState<string[]>([]);
-  const [discountProductId, setDiscountProductId] = useState('');
-  const [discountPercent, setDiscountPercent] = useState('');
-  const [discountDays, setDiscountDays] = useState('3');
-  const [discountMode, setDiscountMode] = useState<'percent' | 'price'>('percent');
-  const [discountedPrice, setDiscountedPrice] = useState('');
-  const [menuProductId, setMenuProductId] = useState('');
-  const [showProductMenu, setShowProductMenu] = useState(false);
-  const [showPriceModal, setShowPriceModal] = useState(false);
-  const [priceProductId, setPriceProductId] = useState('');
-  const [newPrice, setNewPrice] = useState('');
   const [editingProductId, setEditingProductId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -138,8 +73,11 @@ export default function SellScreen() {
 
   const isFr = language === 'fr';
   const isAr = language === 'ar';
-  const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
-  const selectedMenuProduct = managedProducts.find(p => p.id === menuProductId);
+  const lb = useCallback((en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en, [isAr, isFr]);
+  const selectedCategory = sellerCategories.find(cat => cat.id === selectedCat);
+  const filteredCategories = useMemo(() => sellerCategories.filter(cat => (cat.name[language] || cat.name.en).toLowerCase().includes(categorySearch.trim().toLowerCase())), [sellerCategories, categorySearch, language]);
+  const filteredCities = useMemo(() => availableCities.filter(city => city.toLowerCase().includes(citySearch.trim().toLowerCase())), [availableCities, citySearch]);
+  const previewHeight = Math.max(scale(220), Math.min(windowWidth * 1.15, scale(520)));
 
   const resetForm = useCallback(() => {
     setTitle(''); setDescription(''); setPrice(''); setSelectedCat(''); setLocation(''); setDetailedAddress('');
@@ -159,8 +97,14 @@ export default function SellScreen() {
     setWarrantyEnabled(Boolean(product.warrantyDays)); setWarrantyDays(String(product.warrantyDays || 7));
     setDeliveryType(product.deliveryType || 'none'); setDeliveryFee(String(product.deliveryFee ?? ''));
     setSameCityOnly(product.sameCityOnly !== false); setSelectedDeliveryCities(product.deliveryCities || []);
-    setShowProductMenu(false);
   }, [language, user?.id]);
+
+  useEffect(() => {
+    const editProductId = Array.isArray(params.editProductId) ? params.editProductId[0] : params.editProductId;
+    if (!editProductId || editingProductId === editProductId) return;
+    const product = managedProducts.find(item => item.id === editProductId);
+    if (product) beginEdit(product);
+  }, [beginEdit, editingProductId, managedProducts, params.editProductId]);
 
   // Determine view state - but always use single return
   const showBuyerBlock = isReady && isLoggedIn && user?.role === 'buyer';
@@ -172,20 +116,20 @@ export default function SellScreen() {
     const remaining = MAX_IMAGES - images.length;
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') { Alert.alert(lb('Permission Required', 'Permission requise', 'إذن مطلوب')); return; }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: remaining, quality: 1, exif: true });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, allowsMultipleSelection: true, selectionLimit: remaining, quality: 1, exif: true });
     if (!result.canceled && result.assets.length > 0) {
       impactLight();
       const newImages: SelectedImage[] = result.assets.slice(0, remaining).map((asset, i) => ({ id: `img_${Date.now()}_${i}`, uri: asset.uri }));
       setPendingImages(newImages);
       setPreviewIndex(0);
     }
-  }, [images.length]);
+  }, [images.length, lb]);
 
   const takePhoto = useCallback(async () => {
     if (images.length >= MAX_IMAGES) { Alert.alert(lb('Limit Reached', 'Limite atteinte', 'تم بلوغ الحد الأقصى')); return; }
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') { Alert.alert(lb('Permission Required', 'Permission requise', 'إذن مطلوب')); return; }
-    const result = await ImagePicker.launchCameraAsync({ quality: 1, exif: true });
+    const result = await ImagePicker.launchCameraAsync({ allowsEditing: false, quality: 1, exif: true });
     if (!result.canceled && result.assets.length > 0) {
       impactLight();
       const sourceUri = result.assets[0].uri;
@@ -196,7 +140,7 @@ export default function SellScreen() {
         setImages(prev => [...prev, { id: `img_${Date.now()}`, uri: sourceUri }]);
       }
     }
-  }, [images.length]);
+  }, [images.length, lb]);
   const commitImages = useCallback(async () => {
     const list: SelectedImage[] = [];
     for (const img of pendingImages) {
@@ -249,7 +193,7 @@ export default function SellScreen() {
   const pickVariantImage = useCallback(async (idx: number) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1, exif: true });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 1, exif: true });
     if (!result.canceled && result.assets.length > 0) {
       const sourceUri = result.assets[0].uri;
       let uri = sourceUri;
@@ -348,8 +292,16 @@ export default function SellScreen() {
         </View>
       ) : showSellForm ? (
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(16), paddingBottom: scale(16), paddingTop: scale(8) }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <Text style={[styles.pageTitle, { color: colors.textPrimary }]}>{editingProductId ? lb('Edit product', 'Modifier le produit', 'تعديل المنتج') : t('sellProduct')}</Text>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(16), paddingBottom: scale(96) + insets.bottom, paddingTop: scale(8) }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <View style={styles.formHeader}>
+            <Pressable accessibilityRole="button" accessibilityLabel={lb('Go back', 'Retour', 'رجوع')} onPress={() => router.back()} style={styles.headerBackBtn}>
+              <MaterialIcons name={isAr ? 'arrow-forward' : 'arrow-back'} size={scale(24)} color={colors.textPrimary} />
+            </Pressable>
+            <Image source={require('@/assets/branding/sokchad-logo-header.png')} style={styles.headerLogo} contentFit="contain" />
+            <View style={styles.headerSpacer} />
+          </View>
+          <Text style={[styles.pageTitle, { color: colors.textPrimary }]}>{editingProductId ? lb('Edit product', 'Modifier le produit', 'تعديل المنتج') : lb('Sell a product', 'Vendre un produit', 'بيع منتج')}</Text>
+          <Text style={[styles.pageSubtitle, { color: colors.textSecondary }]}>{lb('Add photos and your product details.', 'Ajouter des photos et les détails de votre produit.', 'أضف الصور وتفاصيل منتجك.')}</Text>
           {editingProductId ? (
             <Pressable accessibilityRole="button" onPress={resetForm} style={[styles.editCancelBtn, { borderColor: colors.border }]}>
               <Text style={{ color: colors.textSecondary, fontWeight: '600' }}>{lb('Cancel editing', 'Annuler la modification', 'إلغاء التعديل')}</Text>
@@ -358,7 +310,7 @@ export default function SellScreen() {
 
           {images.length > 0 ? (
             <View style={styles.imageSection}>
-              <View style={[styles.previewContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={[styles.previewContainer, { height: previewHeight, backgroundColor: '#F1F0FB', borderColor: colors.border }]}>
                 <Image source={{ uri: images[activePreview]?.uri }} style={[styles.previewImage, { backgroundColor: '#FFFFFF' }]} contentFit="contain" transition={200} />
                 {activePreview === 0 ? (
                   <View style={[styles.coverBadge, { backgroundColor: colors.primary }]}>
@@ -374,8 +326,9 @@ export default function SellScreen() {
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbScroll}>
                 {images.map((img, index) => (
                   <View key={img.id} style={styles.thumbWrapper}>
-                    <Pressable onPress={() => setActivePreview(index)} style={[styles.thumbCard, { borderColor: activePreview === index ? colors.primary : colors.border, borderWidth: activePreview === index ? 2.5 : 1 }]}>
+                    <Pressable onPress={() => setActivePreview(index)} style={[styles.thumbCard, { borderColor: activePreview === index ? '#5B48D9' : colors.border, borderWidth: activePreview === index ? 2.5 : 1 }]}>
                       <Image source={{ uri: img.uri }} style={[styles.thumbImage, { backgroundColor: '#FFFFFF' }]} contentFit="contain" />
+                      <View style={styles.thumbCounter}><Text style={styles.thumbCounterText}>{index + 1}/{images.length}</Text></View>
                       {index === 0 ? <View style={[styles.thumbCoverDot, { backgroundColor: colors.primary }]}><MaterialIcons name="star" size={scale(8)} color="#FFF" /></View> : null}
                     </Pressable>
                     <View style={styles.thumbActions}>
@@ -395,11 +348,13 @@ export default function SellScreen() {
                   <View style={styles.thumbWrapper}>
                     <Pressable onPress={pickImages} style={[styles.addMoreThumb, { borderColor: colors.border, backgroundColor: colors.surface }]}>
                       <MaterialIcons name="add" size={scale(24)} color={colors.textTertiary} />
-                      <Text style={[styles.addMoreText, { color: colors.textTertiary }]}>{images.length}/{MAX_IMAGES}</Text>
+                      <Text style={[styles.addMoreText, { color: colors.textTertiary }]}>+ {images.length}/{MAX_IMAGES}</Text>
                     </Pressable>
                   </View>
                 ) : null}
               </ScrollView>
+
+              <Text style={[styles.fullPhotoHint, { color: colors.textSecondary }]}>{lb('Complete photo · No cropping.', 'Photo entière · Sans recadrage.', 'الصورة كاملة · بلا قص.')}</Text>
 
               <View style={styles.imageActionsRow}>
                 <Pressable onPress={pickImages} style={[styles.imageActionBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} disabled={images.length >= MAX_IMAGES}>
@@ -436,19 +391,26 @@ export default function SellScreen() {
           <Text style={[styles.label, { color: colors.textSecondary }]}>{t('description')}</Text>
           <TextInput style={[styles.input, styles.textArea, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.border }]} placeholder={lb('Describe your product...', 'Décrivez votre produit...', 'وصف المنتج...')} placeholderTextColor={colors.textTertiary} value={description} onChangeText={setDescription} multiline numberOfLines={4} textAlignVertical="top" />
 
-          <Text style={[styles.label, { color: colors.textSecondary }]}>{t('price')} (FCFA) *</Text>
-          <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.border }]} placeholder="0" placeholderTextColor={colors.textTertiary} value={price} onChangeText={setPrice} keyboardType="numeric" />
-
-          <Text style={[styles.label, { color: colors.textSecondary }]}>{t('selectCategory')} *</Text>
-          <View style={styles.catGrid}>
-            {sellerCategories.map(cat => (
-              <Pressable key={cat.id} onPress={() => setSelectedCat(cat.id)} style={[styles.catChip, { backgroundColor: selectedCat === cat.id ? cat.color : colors.surface, borderColor: selectedCat === cat.id ? cat.color : colors.border }]}>
-                <MaterialIcons name={cat.icon as any} size={scale(16)} color={selectedCat === cat.id ? '#FFF' : cat.color} />
-                <Text style={[styles.catChipText, { color: selectedCat === cat.id ? '#FFF' : colors.textPrimary }]}>{cat.name[language] || cat.name.en}</Text>
+          <View style={[styles.primaryFieldsRow, windowWidth < 720 && styles.primaryFieldsStack]}>
+            <View style={styles.primaryField}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('price')} (FCFA) *</Text>
+              <TextInput accessibilityLabel={`${t('price')} (FCFA)`} style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.border }]} placeholder="0" placeholderTextColor={colors.textTertiary} value={price} onChangeText={setPrice} keyboardType="numeric" />
+            </View>
+            <View style={styles.primaryField}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('selectCategory')} *</Text>
+              <Pressable accessibilityRole="button" onPress={() => setShowCategoryPicker(true)} style={[styles.input, styles.pickerButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {selectedCategory ? <MaterialIcons name={selectedCategory.icon as any} size={scale(20)} color={selectedCategory.color || colors.primary} /> : null}
+                <Text style={[styles.pickerButtonText, { color: selectedCategory ? colors.textPrimary : colors.textTertiary }]} numberOfLines={1}>{selectedCategory ? (selectedCategory.name[language] || selectedCategory.name.en) : lb('Select category', 'Choisir la catégorie', 'اختر الفئة')}</Text>
+                <MaterialIcons name="expand-more" size={scale(22)} color={colors.textSecondary} />
               </Pressable>
-            ))}
+            </View>
           </View>
 
+          <Pressable accessibilityRole="button" accessibilityState={{ expanded: additionalOpen }} onPress={() => setAdditionalOpen(value => !value)} style={[styles.accordionHeader, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.accordionTitle, { color: colors.textPrimary }]}>{lb('Additional options', 'Options supplémentaires', 'خيارات إضافية')}</Text>
+            <MaterialIcons name={additionalOpen ? 'expand-less' : 'expand-more'} size={scale(24)} color={colors.primary} />
+          </Pressable>
+          {additionalOpen ? <View style={styles.accordionBody}>
           <Text style={[styles.label, { color: colors.textSecondary }]}>{lb('Return Guarantee (optional)', 'Garantie de retour (facultatif)', 'ضمان الاسترجاع (اختياري)')}</Text>
           <View style={[styles.conditionRow, { gap: scale(8) }]}>
             <Pressable onPress={() => setWarrantyEnabled(!warrantyEnabled)} style={[styles.condChip, { backgroundColor: warrantyEnabled ? colors.primary : colors.surface, borderColor: warrantyEnabled ? colors.primary : colors.border }]}>
@@ -465,22 +427,6 @@ export default function SellScreen() {
               />
             ) : null}
           </View>
-
-          <Text style={[styles.label, { color: colors.textSecondary }]}>{lb('Delivery (optional)', 'Livraison (facultatif)', 'التوصيل (اختياري)')}</Text>
-          <View style={[styles.conditionRow, { gap: scale(8) }]}>
-            <Pressable onPress={() => setDeliveryType('free')} style={[styles.condChip, { backgroundColor: deliveryType === 'free' ? colors.success : colors.surface, borderColor: deliveryType === 'free' ? colors.success : colors.border }]}>
-              <Text style={[styles.condText, { color: deliveryType === 'free' ? '#FFF' : colors.textPrimary }]}>{lb('Free delivery', 'Livraison gratuite', 'توصيل مجاني')}</Text>
-            </Pressable>
-            <Pressable onPress={() => setDeliveryType('paid')} style={[styles.condChip, { backgroundColor: deliveryType === 'paid' ? colors.primary : colors.surface, borderColor: deliveryType === 'paid' ? colors.primary : colors.border }]}>
-              <Text style={[styles.condText, { color: deliveryType === 'paid' ? '#FFF' : colors.textPrimary }]}>{lb('Buyer pays', 'À la charge de l’acheteur', 'على المشتري')}</Text>
-            </Pressable>
-          </View>
-          {deliveryType === 'paid' ? (
-            <>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>{lb('Delivery fee (FCFA)', 'Frais de livraison (FCFA)', 'تكلفة التوصيل (FCFA)')}</Text>
-              <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.border }]} placeholder="0" placeholderTextColor={colors.textTertiary} value={deliveryFee} onChangeText={setDeliveryFee} keyboardType="numeric" />
-            </>
-          ) : null}
 
           {!hideCondition ? (
             <>
@@ -558,34 +504,35 @@ export default function SellScreen() {
               </Pressable>
             </View>
           ) : null}
+          </View> : null}
+
+          <Pressable accessibilityRole="button" accessibilityState={{ expanded: deliveryOpen }} onPress={() => setDeliveryOpen(value => !value)} style={[styles.accordionHeader, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.accordionTitle, { color: colors.textPrimary }]}>{lb('Delivery and location', 'Livraison et emplacement', 'التوصيل والموقع')}</Text>
+            <MaterialIcons name={deliveryOpen ? 'expand-less' : 'expand-more'} size={scale(24)} color={colors.primary} />
+          </Pressable>
+          {deliveryOpen ? <View style={styles.accordionBody}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>{lb('Delivery (optional)', 'Livraison (facultatif)', 'التوصيل (اختياري)')}</Text>
+          <View style={[styles.conditionRow, { gap: scale(8) }]}>
+            <Pressable onPress={() => setDeliveryType('free')} style={[styles.condChip, { backgroundColor: deliveryType === 'free' ? colors.success : colors.surface, borderColor: deliveryType === 'free' ? colors.success : colors.border }]}>
+              <Text style={[styles.condText, { color: deliveryType === 'free' ? '#FFF' : colors.textPrimary }]}>{lb('Free delivery', 'Livraison gratuite', 'توصيل مجاني')}</Text>
+            </Pressable>
+            <Pressable onPress={() => setDeliveryType('paid')} style={[styles.condChip, { backgroundColor: deliveryType === 'paid' ? colors.primary : colors.surface, borderColor: deliveryType === 'paid' ? colors.primary : colors.border }]}>
+              <Text style={[styles.condText, { color: deliveryType === 'paid' ? '#FFF' : colors.textPrimary }]}>{lb('Buyer pays', 'À la charge de l’acheteur', 'على المشتري')}</Text>
+            </Pressable>
+          </View>
+          {deliveryType === 'paid' ? <TextInput accessibilityLabel={lb('Delivery fee (FCFA)', 'Frais de livraison (FCFA)', 'تكلفة التوصيل (FCFA)')} style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.border }]} placeholder="0" placeholderTextColor={colors.textTertiary} value={deliveryFee} onChangeText={setDeliveryFee} keyboardType="numeric" /> : null}
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>{t('location')} *</Text>
           <Pressable
-            onPress={() => setShowCityPicker(!showCityPicker)}
+            onPress={() => setShowCityPicker(true)}
             style={[styles.input, styles.cityPickerBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
             <MaterialIcons name="location-on" size={scale(20)} color={location ? colors.primary : colors.textTertiary} />
             <Text style={[styles.cityPickerText, { color: location ? colors.textPrimary : colors.textTertiary }]}>
               {location || lb('Select City', 'Choisir la ville', 'اختر المدينة')}
             </Text>
-            <MaterialIcons name={showCityPicker ? 'expand-less' : 'expand-more'} size={scale(22)} color={colors.textSecondary} />
+            <MaterialIcons name="expand-more" size={scale(22)} color={colors.textSecondary} />
           </Pressable>
-          {showCityPicker ? (
-            <View style={[styles.cityDropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <ScrollView nestedScrollEnabled style={{ maxHeight: scale(180) }} showsVerticalScrollIndicator={false}>
-                {availableCities.map(city => (
-                  <Pressable
-                    key={city}
-                    onPress={() => { selection(); setLocation(city); setShowCityPicker(false); }}
-                    style={[styles.cityOption, { backgroundColor: location === city ? colors.primary + '10' : 'transparent', borderBottomColor: colors.borderLight }]}
-                  >
-                    <Text style={[styles.cityOptionText, { color: location === city ? colors.primary : colors.textPrimary }]}>{city}</Text>
-                    {location === city ? <MaterialIcons name="check" size={scale(18)} color={colors.primary} /> : null}
-                  </Pressable>
-                ))}
-              </ScrollView>
-            </View>
-          ) : null}
 
           <Text style={[styles.label, { color: colors.textTertiary }]}>
             {lb('DETAILED ADDRESS (Optional)', 'ADRESSE DÉTAILLÉE (Optionnel)', 'العنوان التفصيلي (اختياري)')}
@@ -638,154 +585,56 @@ export default function SellScreen() {
               })}
             </View>
           ) : null}
+          </View> : null}
 
-          <Pressable onPress={handlePublish} disabled={isSaving} style={({ pressed }) => [styles.publishBtn, { backgroundColor: colors.primary, opacity: pressed || isSaving ? 0.8 : 1 }]}>
-            {isSaving ? (
-              <ActivityIndicator size="small" color="#FFF" />
-            ) : (
-              <MaterialIcons name="publish" size={scale(22)} color="#FFF" />
-            )}
-            <Text style={styles.publishBtnText}>{isSaving ? lb('Saving...', 'Enregistrement...', 'جارٍ الحفظ...') : editingProductId ? lb('Save changes', 'Enregistrer les modifications', 'حفظ التعديلات') : t('publishListing')}</Text>
-          </Pressable>
-
-          {/* Seller's Existing Products - Discount Management */}
-          {isLoggedIn && user?.isSeller ? (
-            <SellerDiscountSection
-              products={managedProducts}
-              userId={user?.id}
-              language={language}
-              colors={colors}
-              lb={lb}
-              onOpenMenu={(id) => { selection(); setMenuProductId(id); setShowProductMenu(true); }}
-            />
-          ) : null}
         </ScrollView>
+        <View style={[styles.stickySaveBar, { backgroundColor: colors.background, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, scale(8)) }]}>
+          <Pressable accessibilityRole="button" accessibilityState={{ disabled: isSaving, busy: isSaving }} onPress={handlePublish} disabled={isSaving} style={({ pressed }) => [styles.publishBtn, { backgroundColor: '#5B48D9', opacity: pressed || isSaving ? 0.8 : 1 }]}>
+            {isSaving ? <ActivityIndicator size="small" color="#FFF" /> : <MaterialIcons name="publish" size={scale(22)} color="#FFF" />}
+            <Text style={styles.publishBtnText}>{isSaving ? lb('Saving...', 'Enregistrement...', 'جارٍ الحفظ...') : editingProductId ? lb('Save changes', 'Enregistrer les modifications', 'حفظ التعديلات') : lb('Publish listing', "Publier l'annonce", 'نشر الإعلان')}</Text>
+          </Pressable>
+        </View>
       </KeyboardAvoidingView>
       ) : null}
 
-      <Modal visible={showProductMenu} transparent animationType="fade" onRequestClose={() => setShowProductMenu(false)}>
-        <Pressable style={[styles.discountOverlay, { backgroundColor: colors.overlay }]} onPress={() => setShowProductMenu(false)}>
-          <Pressable style={[styles.productMenu, { backgroundColor: colors.surface }]} onPress={() => {}}>
-            <Text style={[styles.discountModalTitle, { color: colors.textPrimary }]} numberOfLines={2}>{selectedMenuProduct?.title?.[language] || selectedMenuProduct?.title?.en || ''}</Text>
-            {[
-              { icon: 'edit', label: lb('Edit product', 'Modifier le produit', 'تعديل المنتج'), action: () => beginEdit(selectedMenuProduct) },
-              { icon: 'payments', label: lb('Edit price', 'Modifier le prix', 'تعديل السعر'), action: () => { if (!selectedMenuProduct) return; setPriceProductId(selectedMenuProduct.id); setNewPrice(String(selectedMenuProduct.price)); setShowProductMenu(false); setShowPriceModal(true); } },
-              { icon: 'local-offer', label: lb('Manage discount', 'Gérer la remise', 'إدارة الخصم'), action: () => { if (!selectedMenuProduct) return; setDiscountProductId(selectedMenuProduct.id); setDiscountPercent('10'); setDiscountedPrice(''); setDiscountMode('percent'); setDiscountDays('3'); setShowProductMenu(false); setShowDiscountModal(true); } },
-              { icon: selectedMenuProduct?.isHidden ? 'visibility' : 'visibility-off', label: selectedMenuProduct?.isHidden ? lb('Show product', 'Rendre visible', 'إعادة الإظهار') : lb('Hide product', 'Masquer', 'إخفاء المنتج'), action: async () => { if (!selectedMenuProduct) return; setShowProductMenu(false); (await setProductHidden(selectedMenuProduct.id, !selectedMenuProduct.isHidden)) ? notifySuccess() : notifyWarning(); } },
-            ].map(item => (
-              <Pressable key={item.label} accessibilityRole="button" onPress={item.action} style={styles.productMenuItem}>
-                <MaterialIcons name={item.icon as any} size={scale(22)} color={colors.primary} />
-                <Text style={[styles.productMenuText, { color: colors.textPrimary }]}>{item.label}</Text>
-              </Pressable>
-            ))}
-            <Pressable accessibilityRole="button" onPress={() => {
-              if (!selectedMenuProduct) return;
-              const product = selectedMenuProduct;
-              setShowProductMenu(false);
-              Alert.alert(lb('Delete product?', 'Supprimer le produit ?', 'حذف المنتج؟'), lb(`This cannot be undone: ${product.title?.en || ''}`, `Cette action est irréversible : ${product.title?.fr || product.title?.en || ''}`, `لا يمكن التراجع: ${product.title?.ar || product.title?.en || ''}`), [
-                { text: lb('Cancel', 'Annuler', 'إلغاء'), style: 'cancel' },
-                { text: lb('Delete', 'Supprimer', 'حذف'), style: 'destructive', onPress: async () => (await deleteProduct(product.id)) ? notifySuccess() : notifyWarning() },
-              ]);
-            }} style={styles.productMenuItem}>
-              <MaterialIcons name="delete-outline" size={scale(22)} color={colors.error} />
-              <Text style={[styles.productMenuText, { color: colors.error }]}>{lb('Delete product', 'Supprimer', 'حذف المنتج')}</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
-
-      <Modal visible={showPriceModal} transparent animationType="fade" onRequestClose={() => setShowPriceModal(false)}>
-        <View style={[styles.discountOverlay, { backgroundColor: colors.overlay }]}>
-          <View style={[styles.discountModalContent, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.discountModalTitle, { color: colors.textPrimary }]}>{lb('Edit price', 'Modifier le prix', 'تعديل السعر')}</Text>
-            <TextInput accessibilityLabel={lb('New price', 'Nouveau prix', 'السعر الجديد')} style={[styles.input, { backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]} value={newPrice} onChangeText={setNewPrice} keyboardType="numeric" />
-            <View style={styles.discountModalBtns}>
-              <Pressable onPress={() => setShowPriceModal(false)} style={[styles.discountModalCancel, { borderColor: colors.border }]}><Text style={[styles.discountModalCancelText, { color: colors.textSecondary }]}>{lb('Cancel', 'Annuler', 'إلغاء')}</Text></Pressable>
-              <Pressable onPress={async () => { const value = Number(newPrice); if (!(value > 0)) { notifyWarning(); return; } const ok = await updateProduct(priceProductId, { price: value }); ok ? notifySuccess() : notifyWarning(); if (ok) setShowPriceModal(false); }} style={[styles.discountModalApply, { backgroundColor: colors.primary }]}><Text style={styles.discountModalApplyText}>{lb('Save', 'Enregistrer', 'حفظ')}</Text></Pressable>
+      <Modal visible={showCategoryPicker} transparent animationType="slide" onRequestClose={() => setShowCategoryPicker(false)}>
+        <View style={[styles.pickerOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.pickerSheet, { backgroundColor: colors.surface, paddingBottom: insets.bottom + scale(12) }]}>
+            <View style={styles.pickerHandle} />
+            <Text style={[styles.pickerTitle, { color: colors.textPrimary }]}>{lb('Select category', 'Choisir la catégorie', 'اختر الفئة')}</Text>
+            <View style={[styles.searchBox, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
+              <MaterialIcons name="search" size={scale(20)} color={colors.textTertiary} />
+              <TextInput accessibilityLabel={lb('Search categories', 'Rechercher une catégorie', 'ابحث عن فئة')} style={[styles.searchInput, { color: colors.textPrimary }]} value={categorySearch} onChangeText={setCategorySearch} placeholder={lb('Search...', 'Rechercher...', 'بحث...')} placeholderTextColor={colors.textTertiary} returnKeyType="search" />
             </View>
+            <ScrollView keyboardShouldPersistTaps="handled" style={styles.pickerList}>
+              {filteredCategories.map(cat => <Pressable key={cat.id} onPress={() => { selection(); setSelectedCat(cat.id); setShowCategoryPicker(false); setCategorySearch(''); }} style={[styles.pickerRow, { borderBottomColor: colors.borderLight }]}>
+                <MaterialIcons name={cat.icon as any} size={scale(22)} color={cat.color || colors.primary} />
+                <Text style={[styles.pickerRowText, { color: colors.textPrimary }]}>{cat.name[language] || cat.name.en}</Text>
+                {selectedCat === cat.id ? <MaterialIcons name="check" size={scale(20)} color={colors.primary} /> : null}
+              </Pressable>)}
+              {filteredCategories.length === 0 ? <Text style={[styles.emptyPickerText, { color: colors.textSecondary }]}>{lb('No categories found', 'Aucune catégorie trouvée', 'لا توجد فئات')}</Text> : null}
+            </ScrollView>
           </View>
         </View>
       </Modal>
 
-      {/* Discount Modal */}
-      <Modal visible={showDiscountModal} transparent animationType="fade" onRequestClose={() => setShowDiscountModal(false)}>
-        <View style={[styles.discountOverlay, { backgroundColor: colors.overlay }]}>
-          <View style={[styles.discountModalContent, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.discountModalTitle, { color: colors.textPrimary }]}>
-              {lb('Set Discount', 'Définir la remise', 'تعيين الخصم')}
-            </Text>
-            <Text style={[styles.discountModalSub, { color: colors.textSecondary }]}>
-              {lb('Choose a percentage or a direct sale price.', 'Choisissez un pourcentage ou un prix remisé.', 'اختر نسبة أو سعراً مخفضاً مباشراً.')}
-            </Text>
-
-            <View style={styles.discountPresetsRow}>
-              {(['percent', 'price'] as const).map(mode => <Pressable key={mode} onPress={() => setDiscountMode(mode)} style={[styles.discountPresetChip, { backgroundColor: discountMode === mode ? colors.primary : colors.backgroundSecondary, borderColor: discountMode === mode ? colors.primary : colors.border }]}><Text style={[styles.discountPresetText, { color: discountMode === mode ? '#FFF' : colors.textPrimary }]}>{mode === 'percent' ? lb('Percentage', 'Pourcentage', 'نسبة') : lb('Sale price', 'Prix remisé', 'سعر مخفض')}</Text></Pressable>)}
+      <Modal visible={showCityPicker} transparent animationType="slide" onRequestClose={() => setShowCityPicker(false)}>
+        <View style={[styles.pickerOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.pickerSheet, { backgroundColor: colors.surface, paddingBottom: insets.bottom + scale(12) }]}>
+            <View style={styles.pickerHandle} />
+            <Text style={[styles.pickerTitle, { color: colors.textPrimary }]}>{lb('Select city', 'Choisir la ville', 'اختر المدينة')}</Text>
+            <View style={[styles.searchBox, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
+              <MaterialIcons name="search" size={scale(20)} color={colors.textTertiary} />
+              <TextInput accessibilityLabel={lb('Search cities', 'Rechercher une ville', 'ابحث عن مدينة')} style={[styles.searchInput, { color: colors.textPrimary }]} value={citySearch} onChangeText={setCitySearch} placeholder={lb('Search...', 'Rechercher...', 'بحث...')} placeholderTextColor={colors.textTertiary} returnKeyType="search" />
             </View>
-
-            {discountMode === 'percent' ? <><Text style={[styles.label, { color: colors.textSecondary, marginTop: scale(12) }]}>
-              {lb('DISCOUNT PERCENTAGE (%)', 'POURCENTAGE (%)', 'نسبة الخصم (%)')}
-            </Text>
-            <View style={styles.discountPresetsRow}>
-              {[5, 10, 15, 20, 25, 30].map(p => (
-                <Pressable
-                  key={p}
-                  onPress={() => { selection(); setDiscountPercent(String(p)); }}
-                  style={[styles.discountPresetChip, {
-                    backgroundColor: discountPercent === String(p) ? '#EF4444' : colors.backgroundSecondary,
-                    borderColor: discountPercent === String(p) ? '#EF4444' : colors.border,
-                  }]}
-                >
-                  <Text style={[styles.discountPresetText, { color: discountPercent === String(p) ? '#FFF' : colors.textPrimary }]}>{p}%</Text>
-                </Pressable>
-              ))}
-            </View></> : <><Text style={[styles.label, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('DISCOUNTED PRICE', 'PRIX REMISÉ', 'السعر المخفض')}</Text><TextInput style={[styles.input, { backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]} value={discountedPrice} onChangeText={setDiscountedPrice} keyboardType="numeric" /></>}
-
-            <Text style={[styles.label, { color: colors.textSecondary, marginTop: scale(12) }]}>
-              {lb('DURATION (DAYS)', 'DURÉE (JOURS)', 'المدة (أيام)')}
-            </Text>
-            <View style={styles.discountPresetsRow}>
-              {[1, 2, 3, 5, 7].map(d => (
-                <Pressable
-                  key={d}
-                  onPress={() => { selection(); setDiscountDays(String(d)); }}
-                  style={[styles.discountPresetChip, {
-                    backgroundColor: discountDays === String(d) ? colors.primary : colors.backgroundSecondary,
-                    borderColor: discountDays === String(d) ? colors.primary : colors.border,
-                  }]}
-                >
-                  <Text style={[styles.discountPresetText, { color: discountDays === String(d) ? '#FFF' : colors.textPrimary }]}>{d}{lb('d', 'j', 'ي')}</Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <View style={styles.discountModalBtns}>
-              <Pressable onPress={() => setShowDiscountModal(false)} style={[styles.discountModalCancel, { borderColor: colors.border }]}>
-                <Text style={[styles.discountModalCancelText, { color: colors.textSecondary }]}>{lb('Cancel', 'Annuler', 'إلغاء')}</Text>
-              </Pressable>
-              <Pressable
-                onPress={async () => {
-                  const pct = parseInt(discountPercent) || 0;
-                  const days = parseInt(discountDays) || 1;
-                  const original = managedProducts.find(p => p.id === discountProductId)?.price || 0;
-                  const direct = Number(discountedPrice);
-                  if (discountMode === 'percent' && (pct < 1 || pct > 30)) { Alert.alert(lb('Invalid', 'Invalide', 'غير صالح'), lb('Discount must be 1-30%', 'La remise doit être 1-30%', 'يجب أن يكون الخصم 1-30%')); return; }
-                  if (discountMode === 'price' && (!(direct > 0) || direct >= original)) { Alert.alert(lb('Invalid', 'Invalide', 'غير صالح'), lb('Sale price must be below the original price.', 'Le prix remisé doit être inférieur au prix original.', 'يجب أن يكون السعر المخفض أقل من الأصلي.')); return; }
-                  if (days < 1 || days > 7) { Alert.alert(lb('Invalid', 'Invalide', 'غير صالح'), lb('Duration must be 1-7 days', 'La durée doit être 1-7 jours', 'المدة يجب أن تكون 1-7 أيام')); return; }
-                  const ok = await setProductDiscount(discountProductId, pct, days, discountMode === 'price' ? direct : undefined);
-                  ok ? notifySuccess() : notifyWarning();
-                  if (ok) setShowDiscountModal(false);
-                }}
-                style={[styles.discountModalApply, { backgroundColor: '#EF4444' }]}
-              >
-                <MaterialIcons name="local-offer" size={scale(18)} color="#FFF" />
-                <Text style={styles.discountModalApplyText}>{lb('Apply Discount', 'Appliquer', 'تطبيق الخصم')}</Text>
-              </Pressable>
-            </View>
-            {(() => { const p = managedProducts.find(item => item.id === discountProductId); return p && (p.discountPercent || p.discountedPrice) ? (
-              <Pressable onPress={async () => { const ok = await removeProductDiscount(p.id); ok ? notifySuccess() : notifyWarning(); if (ok) setShowDiscountModal(false); }} style={styles.removeDiscountAction}>
-                <Text style={{ color: colors.error, fontWeight: '700' }}>{lb('Remove discount', 'Supprimer la remise', 'إلغاء الخصم')}</Text>
-              </Pressable>
-            ) : null; })()}
+            <ScrollView keyboardShouldPersistTaps="handled" style={styles.pickerList}>
+              {filteredCities.map(city => <Pressable key={city} onPress={() => { selection(); setLocation(city); setShowCityPicker(false); setCitySearch(''); }} style={[styles.pickerRow, { borderBottomColor: colors.borderLight }]}>
+                <MaterialIcons name="location-on" size={scale(22)} color={colors.primary} />
+                <Text style={[styles.pickerRowText, { color: colors.textPrimary }]}>{city}</Text>
+                {location === city ? <MaterialIcons name="check" size={scale(20)} color={colors.primary} /> : null}
+              </Pressable>)}
+              {filteredCities.length === 0 ? <Text style={[styles.emptyPickerText, { color: colors.textSecondary }]}>{lb('No cities found', 'Aucune ville trouvée', 'لا توجد مدن')}</Text> : null}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -834,6 +683,11 @@ const styles = StyleSheet.create({
   loginBtn: { paddingHorizontal: scale(40), paddingVertical: scale(14), borderRadius: borderRadius.md, marginTop: scale(8) },
   loginBtnText: { color: '#FFF', fontSize: scale(16), fontWeight: '700' },
   pageTitle: { fontSize: scale(24), fontWeight: '700', marginBottom: scale(16), marginTop: scale(8) },
+  pageSubtitle: { fontSize: scale(14), marginBottom: scale(18), marginTop: scale(-10) },
+  formHeader: { minHeight: scale(52), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerBackBtn: { width: scale(48), height: scale(48), alignItems: 'center', justifyContent: 'center' },
+  headerLogo: { width: scale(126), height: scale(38) },
+  headerSpacer: { width: scale(48) },
   photoBox: { borderRadius: borderRadius.lg, borderWidth: 2, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', paddingVertical: scale(32), paddingHorizontal: scale(24), marginBottom: scale(20), gap: scale(8) },
   photoTitle: { fontSize: scale(17), fontWeight: '700', marginTop: scale(4) },
   photoSubtitle: { fontSize: scale(13), fontWeight: '400', marginBottom: scale(8) },
@@ -843,7 +697,7 @@ const styles = StyleSheet.create({
   photoSecondaryBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(20), paddingVertical: scale(12), borderRadius: borderRadius.md, borderWidth: 1.5, gap: scale(6) },
   photoSecondaryText: { fontSize: scale(15), fontWeight: '600' },
   imageSection: { marginBottom: scale(20), gap: scale(10) },
-  previewContainer: { width: '100%', aspectRatio: 1, borderRadius: borderRadius.lg, overflow: 'hidden', borderWidth: 1, position: 'relative' },
+  previewContainer: { width: '100%', minHeight: scale(220), maxHeight: scale(520), borderRadius: scale(16), overflow: 'hidden', borderWidth: 1, position: 'relative' },
   previewImage: { width: '100%', height: '100%' },
   coverBadge: { position: 'absolute', top: scale(12), left: scale(12), flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(10), paddingVertical: scale(5), borderRadius: borderRadius.full, gap: scale(4) },
   coverBadgeText: { color: '#FFF', fontSize: scale(11), fontWeight: '700' },
@@ -854,6 +708,8 @@ const styles = StyleSheet.create({
   thumbCard: { width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: borderRadius.md, overflow: 'hidden', position: 'relative' },
   thumbImage: { width: '100%', height: '100%' },
   thumbCoverDot: { position: 'absolute', top: scale(4), left: scale(4), width: scale(16), height: scale(16), borderRadius: scale(8), alignItems: 'center', justifyContent: 'center' },
+  thumbCounter: { position: 'absolute', bottom: scale(4), right: scale(4), backgroundColor: 'rgba(0,0,0,0.62)', borderRadius: scale(8), paddingHorizontal: scale(5), paddingVertical: scale(2) },
+  thumbCounterText: { color: '#FFF', fontSize: scale(10), fontWeight: '700' },
   thumbActions: { flexDirection: 'row', gap: scale(4), alignItems: 'center', justifyContent: 'center', marginTop: scale(2) },
   thumbActionBtn: { width: scale(26), height: scale(26), borderRadius: scale(13), alignItems: 'center', justifyContent: 'center' },
   setCoverBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(8), paddingVertical: scale(3), borderRadius: borderRadius.full, gap: scale(3), marginTop: scale(2) },
@@ -863,9 +719,28 @@ const styles = StyleSheet.create({
   imageActionsRow: { flexDirection: 'row', gap: scale(8) },
   imageActionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: scale(10), borderRadius: borderRadius.md, borderWidth: 1, gap: scale(6) },
   imageActionText: { fontSize: scale(14), fontWeight: '600' },
+  fullPhotoHint: { fontSize: scale(12), textAlign: 'center' },
   label: { fontSize: scale(13), fontWeight: '600', marginBottom: scale(6), marginTop: scale(12), textTransform: 'uppercase', letterSpacing: 0.5 },
   input: { height: scale(50), borderRadius: borderRadius.md, borderWidth: 1, paddingHorizontal: scale(16), fontSize: scale(16) },
   textArea: { height: scale(100), paddingTop: scale(14) },
+  primaryFieldsRow: { flexDirection: 'row', gap: scale(12), alignItems: 'flex-end' },
+  primaryFieldsStack: { flexDirection: 'column', alignItems: 'stretch', gap: 0 },
+  primaryField: { flex: 1, minWidth: scale(220) },
+  pickerButton: { flexDirection: 'row', alignItems: 'center', gap: scale(8) },
+  pickerButtonText: { flex: 1, fontSize: scale(15) },
+  accordionHeader: { minHeight: scale(52), borderRadius: scale(12), borderWidth: 1, paddingHorizontal: scale(14), marginTop: scale(16), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  accordionTitle: { fontSize: scale(15), fontWeight: '700' },
+  accordionBody: { paddingHorizontal: scale(2), paddingBottom: scale(8) },
+  pickerOverlay: { flex: 1, justifyContent: 'flex-end' },
+  pickerSheet: { maxHeight: '78%', borderTopLeftRadius: scale(20), borderTopRightRadius: scale(20), paddingHorizontal: scale(16), paddingTop: scale(8) },
+  pickerHandle: { width: scale(44), height: scale(4), borderRadius: scale(2), backgroundColor: '#C7C3DD', alignSelf: 'center', marginBottom: scale(12) },
+  pickerTitle: { fontSize: scale(19), fontWeight: '700', marginBottom: scale(12), textAlign: 'center' },
+  searchBox: { minHeight: scale(50), flexDirection: 'row', alignItems: 'center', gap: scale(8), borderWidth: 1, borderRadius: scale(12), paddingHorizontal: scale(12), marginBottom: scale(8) },
+  searchInput: { flex: 1, fontSize: scale(15), minHeight: scale(48) },
+  pickerList: { maxHeight: scale(420) },
+  pickerRow: { minHeight: scale(52), flexDirection: 'row', alignItems: 'center', gap: scale(12), borderBottomWidth: StyleSheet.hairlineWidth },
+  pickerRowText: { flex: 1, fontSize: scale(15), fontWeight: '500' },
+  emptyPickerText: { textAlign: 'center', paddingVertical: scale(28), fontSize: scale(14) },
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: scale(8) },
   catChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(12), paddingVertical: scale(8), borderRadius: borderRadius.sm, borderWidth: 1, gap: scale(6) },
   catChipText: { fontSize: scale(13), fontWeight: '500' },
@@ -891,7 +766,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(12), paddingVertical: scale(6),
     borderRadius: scale(16), borderWidth: 1,
   },
-  publishBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: scale(54), borderRadius: borderRadius.md, marginTop: scale(24), gap: scale(8) },
+  stickySaveBar: { borderTopWidth: StyleSheet.hairlineWidth, paddingHorizontal: scale(16), paddingTop: scale(8) },
+  publishBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: scale(54), borderRadius: borderRadius.md, gap: scale(8) },
   publishBtnText: { color: '#FFF', fontSize: scale(17), fontWeight: '700' },
   editCancelBtn: { minHeight: scale(48), borderRadius: borderRadius.md, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: scale(12) },
   // Discount management

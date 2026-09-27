@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, RefreshControl,
-  ActivityIndicator, FlatList,
+  ActivityIndicator, Modal, TextInput, Alert,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -11,22 +11,24 @@ import { useApp } from '@/contexts/AppContext';
 import { formatPrice } from '@/constants/config';
 import { borderRadius, shadows } from '@/constants/theme';
 import { selection, impactLight, notifySuccess } from '@/services/haptics';
-import { scale, usePhoneLayout } from '@/constants/responsive';
+import { scale } from '@/constants/responsive';
 
 const CARD_GAP = scale(10);
 
 export default function SellerStatsScreen() {
-  const layoutS = usePhoneLayout();
-  const CARD_GAP_S = scale(10);
-  const CARD_W = Math.floor((layoutS.contentWidth - CARD_GAP) / 2);
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const {
-    colors, t, language, user, isLoggedIn, orders, products, reviews,
-    getReviewsForSeller, isReady, refreshProducts,
+    colors, language, user, isLoggedIn, orders, products,
+    getReviewsForSeller, isReady, refreshProducts, setProductDiscount, removeProductDiscount,
   } = useApp();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [discountProductId, setDiscountProductId] = useState('');
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [discountMode, setDiscountMode] = useState<'percent' | 'price'>('percent');
+  const [discountPercent, setDiscountPercent] = useState('10');
+  const [discountedPrice, setDiscountedPrice] = useState('');
+  const [discountDays, setDiscountDays] = useState('3');
 
   const isFr = language === 'fr';
   const isAr = language === 'ar';
@@ -250,6 +252,34 @@ export default function SellerStatsScreen() {
 
         {/* ═══ Recent Orders ═══ */}
         <View style={styles.sectionWrap}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{lb('Promotions', 'Promotions', 'التخفيضات')}</Text>
+          {userListings.length === 0 ? (
+            <View style={[styles.emptyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <MaterialIcons name="local-offer" size={scale(36)} color={colors.textTertiary} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{lb('Publish a product to create a promotion.', 'Publiez un produit pour créer une promotion.', 'انشر منتجًا لإنشاء تخفيض.')}</Text>
+            </View>
+          ) : userListings.map(product => {
+            const active = ((product?.discountPercent ?? 0) > 0 || (product?.discountedPrice ?? 0) > 0) && product?.discountUntil && new Date(product.discountUntil).getTime() > Date.now();
+            const salePrice = product?.discountedPrice || Math.round((product?.price || 0) * (1 - Math.min(30, product?.discountPercent || 0) / 100));
+            return <View key={product.id} style={[styles.promoCard, { backgroundColor: colors.surface, borderColor: active ? '#EF444440' : colors.border }]}>
+              <Image source={{ uri: product?.images?.[0] || '' }} style={styles.promoThumb} contentFit="cover" />
+              <View style={styles.promoInfo}>
+                <Text style={[styles.promoTitle, { color: colors.textPrimary }]} numberOfLines={1}>{product?.title?.[language] || product?.title?.en || ''}</Text>
+                <Text style={[styles.promoPrice, { color: active ? colors.textTertiary : colors.primary }, active && styles.struckPrice]}>{formatPrice(product?.price || 0)}</Text>
+                {active ? <Text style={styles.promoActive}>{product.discountedPrice ? lb('PROMO', 'PROMO', 'خصم') : `-${Math.min(30, product?.discountPercent || 0)}%`} · {formatPrice(salePrice)}</Text> : null}
+              </View>
+              <Pressable accessibilityRole="button" accessibilityLabel={lb('Manage discount', 'Gérer la remise', 'إدارة الخصم')} onPress={() => { selection(); setDiscountProductId(product.id); setDiscountPercent('10'); setDiscountedPrice(''); setDiscountMode('percent'); setDiscountDays('3'); setShowDiscountModal(true); }} style={[styles.promoAction, { backgroundColor: colors.primary + '15' }]}>
+                <MaterialIcons name="local-offer" size={scale(22)} color={colors.primary} />
+              </Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel={lb('Edit product', 'Modifier le produit', 'تعديل المنتج')} onPress={() => router.push({ pathname: '/(tabs)/sell', params: { editProductId: product.id } } as any)} style={[styles.promoAction, { backgroundColor: colors.primary + '15' }]}>
+                <MaterialIcons name="edit" size={scale(22)} color={colors.primary} />
+              </Pressable>
+            </View>;
+          })}
+        </View>
+
+        {/* ═══ Recent Orders ═══ */}
+        <View style={styles.sectionWrap}>
           <View style={styles.sectionHeaderRow}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary, flex: 1 }]}>
               {lb('Recent Orders', 'Commandes récentes', 'طلبات حديثة')}
@@ -351,6 +381,23 @@ export default function SellerStatsScreen() {
           </View>
         </View>
       </ScrollView>
+      <Modal visible={showDiscountModal} transparent animationType="fade" onRequestClose={() => setShowDiscountModal(false)}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.discountModal, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>{lb('Set Discount', 'Définir la remise', 'تعيين الخصم')}</Text>
+            <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>{lb('Choose a percentage or a direct sale price.', 'Choisissez un pourcentage ou un prix remisé.', 'اختر نسبة أو سعراً مخفضاً مباشراً.')}</Text>
+            <View style={styles.choiceRow}>{(['percent', 'price'] as const).map(mode => <Pressable key={mode} onPress={() => setDiscountMode(mode)} style={[styles.choiceChip, { backgroundColor: discountMode === mode ? colors.primary : colors.backgroundSecondary, borderColor: discountMode === mode ? colors.primary : colors.border }]}><Text style={{ color: discountMode === mode ? '#FFF' : colors.textPrimary, fontWeight: '700' }}>{mode === 'percent' ? lb('Percentage', 'Pourcentage', 'نسبة') : lb('Sale price', 'Prix remisé', 'سعر مخفض')}</Text></Pressable>)}</View>
+            {discountMode === 'percent' ? <View style={styles.choiceRow}>{[5, 10, 15, 20, 25, 30].map(value => <Pressable key={value} onPress={() => setDiscountPercent(String(value))} style={[styles.percentChip, { backgroundColor: discountPercent === String(value) ? '#EF4444' : colors.backgroundSecondary, borderColor: discountPercent === String(value) ? '#EF4444' : colors.border }]}><Text style={{ color: discountPercent === String(value) ? '#FFF' : colors.textPrimary, fontWeight: '700' }}>{value}%</Text></Pressable>)}</View> : <TextInput accessibilityLabel={lb('Discounted price', 'Prix remisé', 'السعر المخفض')} style={[styles.modalInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.backgroundSecondary }]} value={discountedPrice} onChangeText={setDiscountedPrice} keyboardType="numeric" />}
+            <Text style={[styles.durationLabel, { color: colors.textSecondary }]}>{lb('Duration (days)', 'Durée (jours)', 'المدة (أيام)')}</Text>
+            <View style={styles.choiceRow}>{[1, 2, 3, 5, 7].map(value => <Pressable key={value} onPress={() => setDiscountDays(String(value))} style={[styles.percentChip, { backgroundColor: discountDays === String(value) ? colors.primary : colors.backgroundSecondary, borderColor: discountDays === String(value) ? colors.primary : colors.border }]}><Text style={{ color: discountDays === String(value) ? '#FFF' : colors.textPrimary, fontWeight: '700' }}>{value}{lb('d', 'j', 'ي')}</Text></Pressable>)}</View>
+            <View style={styles.modalButtons}>
+              <Pressable onPress={() => setShowDiscountModal(false)} style={[styles.modalButton, { borderColor: colors.border, borderWidth: 1 }]}><Text style={{ color: colors.textSecondary, fontWeight: '700' }}>{lb('Cancel', 'Annuler', 'إلغاء')}</Text></Pressable>
+              <Pressable onPress={async () => { const product = userListings.find(item => item.id === discountProductId); const pct = Number(discountPercent); const direct = Number(discountedPrice); const days = Number(discountDays); if (!product || (discountMode === 'price' && (!(direct > 0) || direct >= product.price))) { Alert.alert(lb('Invalid', 'Invalide', 'غير صالح')); return; } const ok = await setProductDiscount(product.id, discountMode === 'percent' ? pct : 0, days, discountMode === 'price' ? direct : undefined); if (ok) notifySuccess(); if (ok) setShowDiscountModal(false); }} style={[styles.modalButton, { backgroundColor: '#EF4444' }]}><Text style={styles.applyText}>{lb('Apply Discount', 'Appliquer', 'تطبيق الخصم')}</Text></Pressable>
+            </View>
+            {userListings.find(item => item.id === discountProductId)?.discountUntil ? <Pressable onPress={async () => { const ok = await removeProductDiscount(discountProductId); if (ok) { notifySuccess(); setShowDiscountModal(false); } }} style={styles.removePromo}><Text style={{ color: colors.error, fontWeight: '700' }}>{lb('Remove discount', 'Supprimer la remise', 'إلغاء الخصم')}</Text></Pressable> : null}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -437,6 +484,27 @@ const styles = StyleSheet.create({
   stockValue: { fontSize: scale(22), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   stockLabel: { fontSize: scale(11), fontWeight: '500', fontFamily: 'Cairo-Regular' },
   stockDivider: { width: 1, height: scale(40) },
+  promoCard: { minHeight: scale(70), flexDirection: 'row', alignItems: 'center', gap: scale(10), borderRadius: scale(16), borderWidth: 1, padding: scale(10), marginBottom: scale(8) },
+  promoThumb: { width: scale(48), height: scale(48), borderRadius: scale(8) },
+  promoInfo: { flex: 1 },
+  promoTitle: { fontSize: scale(13), fontWeight: '600' },
+  promoPrice: { fontSize: scale(14), fontWeight: '700' },
+  struckPrice: { textDecorationLine: 'line-through' },
+  promoActive: { color: '#EF4444', fontSize: scale(12), fontWeight: '700' },
+  promoAction: { width: scale(48), height: scale(48), borderRadius: scale(24), alignItems: 'center', justifyContent: 'center' },
+  modalOverlay: { flex: 1, justifyContent: 'center', padding: scale(24) },
+  discountModal: { borderRadius: scale(18), padding: scale(20) },
+  modalTitle: { fontSize: scale(20), fontWeight: '700' },
+  modalSubtitle: { fontSize: scale(13), marginTop: scale(4), marginBottom: scale(12) },
+  choiceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: scale(8), marginTop: scale(8) },
+  choiceChip: { minHeight: scale(48), flex: 1, borderRadius: scale(10), borderWidth: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: scale(10) },
+  percentChip: { minWidth: scale(48), minHeight: scale(48), borderRadius: scale(10), borderWidth: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: scale(8) },
+  modalInput: { minHeight: scale(50), borderRadius: scale(10), borderWidth: 1, paddingHorizontal: scale(14), marginTop: scale(12), fontSize: scale(16) },
+  durationLabel: { fontSize: scale(13), fontWeight: '600', marginTop: scale(14) },
+  modalButtons: { flexDirection: 'row', gap: scale(10), marginTop: scale(20) },
+  modalButton: { flex: 1, minHeight: scale(48), borderRadius: scale(10), alignItems: 'center', justifyContent: 'center' },
+  applyText: { color: '#FFF', fontWeight: '700' },
+  removePromo: { minHeight: scale(48), alignItems: 'center', justifyContent: 'center', marginTop: scale(8) },
 });
 
 const sStyles = StyleSheet.create({
