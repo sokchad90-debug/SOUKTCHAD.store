@@ -10,7 +10,7 @@ import { useApp, CHAD_CITIES } from '@/contexts/AppContext';
 import { DELIVERY_METHODS } from '@/constants/config';
 import { scale } from '@/constants/responsive';
 import { shadows } from '@/constants/theme';
-import { selection, notifySuccess } from '@/services/haptics';
+import { selection, notifySuccess, notifyWarning } from '@/services/haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE = 'https://souktchad.shop/api';
@@ -319,6 +319,17 @@ export default function SellerSettingsScreen() {
         <Pressable onPress={handleSave} disabled={saving} style={({ pressed }) => [styles.mainSaveBtn, { backgroundColor: colors.primary, opacity: saving ? 0.6 : pressed ? 0.85 : 1 }]}>
           {saving ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={styles.mainSaveBtnText}>{lb('Save Changes', 'Enregistrer', 'حفظ التغييرات')}</Text>}
         </Pressable>
+
+      {user ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={lb('Log Out', 'Deconnexion', 'تسجيل الخروج')}
+          onPress={() => { notifyWarning(); logout(); }}
+          style={({ pressed }) => [{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: scale(8), marginTop: scale(16), marginBottom: scale(24), paddingVertical: scale(14), borderRadius: scale(12), backgroundColor: '#FBE3E7', opacity: pressed ? 0.88 : 1 }]}>
+          <MaterialIcons name="logout" size={scale(20)} color="#DC2626" />
+          <Text style={{ color: '#DC2626', fontSize: scale(15), fontWeight: '700', fontFamily: 'Cairo-Bold' }}>{lb('Log Out', 'Deconnexion', 'تسجيل الخروج')}</Text>
+        </Pressable>
+      ) : null}
       </ScrollView>
           </View>
 </SafeAreaView>
