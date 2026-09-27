@@ -309,7 +309,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[st.safeArea, { backgroundColor: pageBg }]}>
-      <View style={{ flex: 1 }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       {/* No header at all: settings content starts at the very top (owner request).
           Back arrow floats over the content, status bar icons dark on light bg. */}
       <Pressable onPress={() => router.back()} hitSlop={scale(14)} style={st.backBtn}
@@ -688,7 +688,7 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
-          </View>
+          </KeyboardAvoidingView>
 </SafeAreaView>
   );
 }
