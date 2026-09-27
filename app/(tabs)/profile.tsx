@@ -1361,8 +1361,15 @@ export default function ProfileScreen() {
             </View>
           ) : null}
 
-          {/* Settings - sellers see inline; buyers navigate to /settings page */}
+          {/* Settings - sellers see inline; buyers get a direct logout row (the /settings route is unreachable for now) */}
           {isSeller ? SettingsBlock : null}
+          {!isSeller && isLoggedIn ? (
+            <Pressable onPress={() => { notifyWarning(); logout(); }}
+              style={({ pressed }) => [pStyles.logoutBtnNew, { backgroundColor: colors.error + '08', borderColor: colors.error, opacity: pressed ? 0.88 : 1, marginTop: scale(4), marginBottom: scale(24) }]}>
+              <MaterialIcons name="logout" size={scale(20)} color={colors.error} />
+              <Text style={[pStyles.logoutTextNew, { color: colors.error }]}>{t('logout')}</Text>
+            </Pressable>
+          ) : null}
         </ScrollView>
       ) : null}
 
