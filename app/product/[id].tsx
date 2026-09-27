@@ -239,9 +239,9 @@ export default function ProductDetailScreen() {
   const isRealEstate = product.categoryId === 'real_estate';
 
   const topEarned = (product?.rating ?? 0) >= 4.5 && (product?.soldCount ?? 0) >= 100;
-  const hasDiscount = (product.discountPercent ?? 0) > 0 && product.discountUntil && new Date(product.discountUntil).getTime() > Date.now();
+  const hasDiscount = ((product.discountPercent ?? 0) > 0 || (product.discountedPrice ?? 0) > 0) && product.discountUntil && new Date(product.discountUntil).getTime() > Date.now();
   const discountPercent = hasDiscount ? Math.min(30, product.discountPercent || 0) : 0;
-  const discountedPrice = hasDiscount ? Math.round(product.price * (1 - discountPercent / 100)) : product.price;
+  const discountedPrice = hasDiscount ? (product.discountedPrice || Math.round(product.price * (1 - discountPercent / 100))) : product.price;
 
   // ─── Variant price/qty (AFTER hasDiscount/discountedPrice are defined) ───
   const qtyLimit = Math.max(1, Math.min(variantStock || 999, (product.maxOrderQty ?? 0) > 0 ? product.maxOrderQty! : 999));
@@ -251,6 +251,7 @@ export default function ProductDetailScreen() {
   const variantTotal = effectiveUnit * Math.max(1, Math.min(variantQty, qtyLimit));
 
   const isSeller = user?.role === 'seller';
+  const isOwner = user?.id === product.sellerId;
 
   const handleShare = async () => {
     try {
@@ -371,11 +372,17 @@ export default function ProductDetailScreen() {
         </View>
 
         <View style={styles.content}>
+          {product.isHidden ? (
+            <View style={[styles.hiddenNotice, { backgroundColor: isOwner ? colors.primary + '14' : colors.errorLight, borderColor: isOwner ? colors.primary : colors.error }]}>
+              <MaterialIcons name="visibility-off" size={scale(20)} color={isOwner ? colors.primary : colors.error} />
+              <Text style={{ flex: 1, color: isOwner ? colors.primary : colors.error, fontWeight: '700' }}>{isOwner ? lb('Hidden product', 'Produit masqué', 'منتج مخفي') : lb('Currently unavailable', 'Indisponible actuellement', 'غير متوفر حالياً')}</Text>
+            </View>
+          ) : null}
           {hasDiscount && !selectedVariant ? (
             <View style={styles.discountPriceRow}>
               <Text style={[styles.price, { color: colors.primary }]}>{formatPrice(discountedPrice)}</Text>
               <View style={[styles.discountBadgeLarge, { backgroundColor: '#EF4444' }]}>
-                <Text style={styles.discountBadgeLargeText}>-{discountPercent}%</Text>
+                <Text style={styles.discountBadgeLargeText}>{product.discountedPrice ? lb('SALE', 'PROMO', 'خصم') : `-${discountPercent}%`}</Text>
               </View>
               <TopBadge earned={topEarned} />
             </View>
@@ -814,7 +821,7 @@ export default function ProductDetailScreen() {
           <MaterialIcons name="chat" size={scale(18)} color={colors.primary} />
           <Text style={[styles.ctaSecondaryText, { color: colors.primary }]}>{lb('Chat', 'Contacter', 'تواصل')}</Text>
         </Pressable>
-        {!isSeller ? (
+        {!isSeller && !product.isHidden ? (
           <Pressable onPress={() => {
             if (!isLoggedIn) { setShowLogin(true); return; }
             if (variants.length > 0) {
@@ -1033,6 +1040,7 @@ const styles = StyleSheet.create({
   ctaSecondaryText: { fontSize: scale(14), fontWeight: '700' },
   ctaPrimary: { flex: 1.5, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: scale(50), borderRadius: borderRadius.md, gap: scale(6) },
   stockBadge: { flexDirection: 'row', alignItems: 'center', gap: scale(8), paddingHorizontal: scale(14), paddingVertical: scale(10), borderRadius: borderRadius.md, borderWidth: 1, marginBottom: scale(8) },
+  hiddenNotice: { flexDirection: 'row', alignItems: 'center', gap: scale(8), padding: scale(12), borderRadius: scale(12), borderWidth: 1, marginBottom: scale(12) },
   stockBadgeText: { fontSize: scale(14), fontWeight: '700' },
   ctaPrimaryText: { color: '#FFF', fontSize: scale(15), fontWeight: '700' },
   // Review Modal

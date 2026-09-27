@@ -57,6 +57,8 @@ export interface Product {
   views: number;
   discountPercent?: number;
   discountUntil?: string;
+  discountedPrice?: number;
+  isHidden?: boolean;
   stock?: number;
   maxOrderQty?: number;
   // Optional fields populated by the PHP API (not in mock data).

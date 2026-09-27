@@ -9,6 +9,7 @@
  *   GET  /products.php?id=xxx                   → Get single product
  *   POST /products.php                          → Create product (auth required, seller only)
  *   PUT  /products.php?id=xxx                   → Update product (auth required, owner only)
+ *   DELETE /products.php?id=xxx                 → Soft-delete product (auth required, owner only)
  *
  * QUERY PARAMS (GET list):
  *   category, search, sort (newest|cheapest|expensive|most_viewed), status, limit, page
@@ -38,6 +39,9 @@ switch ($method) {
         break;
     case 'PUT':
         handleUpdateProduct();
+        break;
+    case 'DELETE':
+        handleDeleteProduct();
         break;
     default:
         errorResponse('Method not allowed', 405);
@@ -87,6 +91,7 @@ function handleGetProducts(): void {
 
     $where  = [];
     $params = [];
+    if (columnExists('products', 'is_deleted')) $where[] = 'COALESCE(p.is_deleted, 0) = 0';
 
     if ($status && $status !== 'all') {
         $where[] = 'p.status = :status';
@@ -313,7 +318,8 @@ function handleUpdateProduct(): void {
     $allowed = [
         'title_en','title_fr','title_ar','description_en','description_fr','description_ar',
         'price','category_id','condition','location','status','is_pinned','pinned_until',
-        'is_featured','views','stock','max_order_qty','discount_percent','discount_until'
+        'is_featured','views','stock','max_order_qty','discount_percent','discount_until',
+        'discounted_price','is_hidden','is_deleted'
     ];
 
     $sets = [];
@@ -323,10 +329,14 @@ function handleUpdateProduct(): void {
         // Map app-shaped fields
         if ($k === 'categoryId') $k = 'category_id';
         if ($k === ' DiscountPercent') $k = 'discount_percent';
+        if ($k === 'is_hidden' && !columnExists('products', 'is_hidden')) {
+            $k = 'status';
+            $v = $v ? 'hidden' : 'active';
+        }
 
         if (!in_array($k, $allowed)) continue;
         // Skip columns that don't exist in DB
-        if (in_array($k, ['stock','max_order_qty','discount_percent','discount_until','is_featured']) && !columnExists('products', $k)) {
+        if (in_array($k, ['stock','max_order_qty','discount_percent','discount_until','discounted_price','is_featured','is_hidden','is_deleted']) && !columnExists('products', $k)) {
             continue;
         }
         $sets[] = "`$k` = :$k";
@@ -349,7 +359,9 @@ function handleUpdateProduct(): void {
 
     try {
         if (!empty($sets)) {
-            $sql = "UPDATE products SET " . implode(', ', $sets) . " WHERE id = :id";
+            $ownerWhere = in_array($role, ['admin','super_admin','staff']) ? '' : ' AND seller_id = :owner_id';
+            if ($ownerWhere !== '') $params[':owner_id'] = $userId;
+            $sql = "UPDATE products SET " . implode(', ', $sets) . " WHERE id = :id" . $ownerWhere;
             $db->prepare($sql)->execute($params);
         }
 
@@ -379,6 +391,24 @@ function handleUpdateProduct(): void {
     } catch (PDOException $e) {
         errorResponse('Update failed: ' . $e->getMessage(), 500);
     }
+}
+
+function handleDeleteProduct(): void {
+    $auth = authenticateUser();
+    $userId = (int)$auth['user_id'];
+    $role = $auth['role'] ?? 'buyer';
+    $productId = (int)(getQueryParam('id') ?? 0);
+    if (!$productId) errorResponse('Product ID is required.');
+    $db = getDB();
+    $isAdmin = in_array($role, ['admin','super_admin','staff']);
+    $ownerWhere = $isAdmin ? '' : ' AND seller_id = :owner_id';
+    $params = [':id' => $productId];
+    if (!$isAdmin) $params[':owner_id'] = $userId;
+    $set = columnExists('products', 'is_deleted') ? 'is_deleted = 1' : "status = 'deleted'";
+    $stmt = $db->prepare("UPDATE products SET $set WHERE id = :id" . $ownerWhere);
+    $stmt->execute($params);
+    if ($stmt->rowCount() < 1) errorResponse('Product not found or not authorized.', 403);
+    successResponse(['id' => $productId], 'Product deleted.');
 }
 
 // ============================================================
@@ -437,6 +467,8 @@ function formatProductRow(array $row): array {
         'max_order_qty'    => isset($row['max_order_qty']) ? (int)$row['max_order_qty'] : null,
         'discount_percent' => isset($row['discount_percent']) ? (int)$row['discount_percent'] : null,
         'discount_until'   => $row['discount_until'] ?? null,
+        'discounted_price' => isset($row['discounted_price']) ? (int)$row['discounted_price'] : null,
+        'is_hidden'        => (bool)($row['is_hidden'] ?? 0),
     ];
 }
 

@@ -145,7 +145,7 @@ export default function SellerStoreScreen() {
   const [coverBgFailed, setCoverBgFailed] = React.useState(false);
 
   // Search AppContext sellers (from DB) first, then fallback to mockData
-  const sellerProducts = useMemo(() => products.filter(p => p.sellerId === id), [products, id]);
+  const sellerProducts = useMemo(() => products.filter(p => !p.isHidden && p.sellerId === id), [products, id]);
   const seller = ctxGetSellerById(id) || getSellerById(id);
 
   // Load per-seller profile from AsyncStorage (shared across logins on this device)

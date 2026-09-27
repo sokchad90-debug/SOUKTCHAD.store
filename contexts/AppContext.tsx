@@ -18,7 +18,7 @@ import {
   categories as mockCategories, Category, mockSellerStats,
 } from '@/services/mockData';
 import { CATEGORY_TREE, descendantsOf } from '@/services/categoryTree';
-import { fetchProducts, createProduct as dbCreateProduct, updateProduct as dbUpdateProduct, getCategoryUUID } from '@/services/productService';
+import { fetchProducts, createProduct as dbCreateProduct, updateProduct as dbUpdateProduct, deleteProduct as dbDeleteProduct, getCategoryUUID } from '@/services/productService';
 import { fetchAllUsers, fetchSellers as dbFetchSellers, banUserInDB, unbanUserInDB, verifyUserInDB, unverifyUserInDB } from '@/services/adminService';
 import { fetchBuyerStats, fetchUserOrders, BuyerStats, OrderFromAPI } from '@/services/orderStats';
 import { ALL_COUNTRIES, DEFAULT_ENABLED_COUNTRIES, Country, COUNTRY_CITIES } from '@/constants/countries';
@@ -338,6 +338,7 @@ interface AppContextType {
   dynamicBanners: any[];
   storeLogo: string;
   products: Product[];
+  managedProducts: Product[];
   favorites: string[];
   conversations: Conversation[];
   orders: Order[];
@@ -373,8 +374,11 @@ interface AppContextType {
   setFilters: (filters: FilterState) => void;
   resetFilters: () => void;
   addProduct: (product: Omit<Product, 'id' | 'postedDate' | 'isPinned' | 'isFeatured' | 'views'>) => void;
-  setProductDiscount: (productId: string, percent: number, durationDays: number) => void;
-  removeProductDiscount: (productId: string) => void;
+  updateProduct: (productId: string, updates: Partial<Product>) => Promise<boolean>;
+  deleteProduct: (productId: string) => Promise<boolean>;
+  setProductHidden: (productId: string, hidden: boolean) => Promise<boolean>;
+  setProductDiscount: (productId: string, percent: number, durationDays: number, discountedPrice?: number) => Promise<boolean>;
+  removeProductDiscount: (productId: string) => Promise<boolean>;
   sendMessage: (conversationId: string, text: string) => void;
   startConversation: (sellerId: string, productId: string, initialMessage: string) => string;
   placeOrder: (productId: string, paymentMethodId: string, screenshotUri: string, buyerCity: string, shippingId: string, quantity?: number, variant?: { color?: string; size?: string }) => { success: boolean; error?: string };
@@ -1841,21 +1845,64 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id]);
 
-  const setProductDiscount = useCallback((productId: string, percent: number, durationDays: number) => {
+  const ownsProduct = useCallback((productId: string) =>
+    Boolean(user?.id && products.some(p => p.id === productId && p.sellerId === user.id)), [products, user?.id]);
+
+  const updateProduct = useCallback(async (productId: string, updates: Partial<Product>): Promise<boolean> => {
+    if (!ownsProduct(productId)) return false;
+    try {
+      const finalUpdates = { ...updates };
+      if (updates.images) {
+        const finalImages: string[] = [];
+        for (const uri of updates.images.slice(0, 5)) {
+          if (uri && !uri.startsWith('http')) {
+            const uploaded = await uploadImage(uri);
+            if (!uploaded) return false;
+            finalImages.push((await processProductImage(uploaded)) || uploaded);
+          } else finalImages.push(uri);
+        }
+        finalUpdates.images = finalImages;
+      }
+      const { error } = await dbUpdateProduct(productId, finalUpdates);
+      if (error) return false;
+      setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...finalUpdates } : p));
+      return true;
+    } catch { return false; }
+  }, [ownsProduct, uploadImage, processProductImage]);
+
+  const deleteProduct = useCallback(async (productId: string): Promise<boolean> => {
+    if (!ownsProduct(productId)) return false;
+    const { error } = await dbDeleteProduct(productId);
+    if (error) return false;
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    return true;
+  }, [ownsProduct]);
+
+  const setProductHidden = useCallback(async (productId: string, hidden: boolean): Promise<boolean> =>
+    updateProduct(productId, { isHidden: hidden }), [updateProduct]);
+
+  const setProductDiscount = useCallback(async (productId: string, percent: number, durationDays: number, discountedPrice?: number): Promise<boolean> => {
+    if (!ownsProduct(productId)) return false;
     const clampedPercent = Math.min(30, Math.max(0, percent));
     const clampedDays = Math.min(7, Math.max(1, durationDays));
     const until = new Date();
     until.setDate(until.getDate() + clampedDays);
-    setProducts(prev => prev.map(p =>
-      p.id === productId ? { ...p, discountPercent: clampedPercent, discountUntil: until.toISOString() } : p
-    ));
-  }, []);
+    const updates: Partial<Product> = { discountPercent: discountedPrice ? undefined : clampedPercent, discountUntil: until.toISOString(), discountedPrice };
+    const { error } = await dbUpdateProduct(productId, updates);
+    if (error) return false;
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...updates } : p));
+    return true;
+  }, [ownsProduct]);
 
-  const removeProductDiscount = useCallback((productId: string) => {
+  const removeProductDiscount = useCallback(async (productId: string): Promise<boolean> => {
+    if (!ownsProduct(productId)) return false;
+    const { error } = await dbUpdateProduct(productId, { discount_percent: null, discount_until: null, discounted_price: null });
+    if (error) return false;
     setProducts(prev => prev.map(p =>
-      p.id === productId ? { ...p, discountPercent: undefined, discountUntil: undefined } : p
+      p.id === productId ? { ...p, discountPercent: undefined, discountUntil: undefined, discountedPrice: undefined } : p
     ));
-  }, []);
+    return true;
+  }, [ownsProduct]);
 
   const sendMessage = useCallback((conversationId: string, text: string) => {
     if (!user) return;
@@ -1898,9 +1945,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return { success: false, error: 'not_logged_in' };
     const product = products.find(p => p.id === productId);
     if (!product) return { success: false, error: 'product_not_found' };
-    const hasDiscount = (product.discountPercent ?? 0) > 0 && product.discountUntil && new Date(product.discountUntil).getTime() > Date.now();
+    const hasDiscount = ((product.discountPercent ?? 0) > 0 || (product.discountedPrice ?? 0) > 0) && product.discountUntil && new Date(product.discountUntil).getTime() > Date.now();
     const discount = hasDiscount ? Math.min(30, product.discountPercent || 0) : 0;
-    const unitPrice = hasDiscount ? Math.round(product.price * (1 - discount / 100)) : product.price;
+    const unitPrice = hasDiscount ? (product.discountedPrice || Math.round(product.price * (1 - discount / 100))) : product.price;
     const finalAmount = unitPrice * Math.max(1, quantity);
     // Generate unique 20-digit random order number
     const orderNumber = generateOrderNumber();
@@ -2295,11 +2342,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [products]);
 
   const getProductsByCategory = useCallback((categoryId: string): Product[] => {
-    return products.filter(p => p.categoryId === categoryId);
+    return products.filter(p => !p.isHidden && p.categoryId === categoryId);
   }, [products]);
 
   const getProductsBySeller = useCallback((sellerId: string): Product[] => {
-    return products.filter(p => p.sellerId === sellerId);
+    return products.filter(p => !p.isHidden && p.sellerId === sellerId);
   }, [products]);
 
   const getCategoryById = useCallback((id: string): Category | undefined => {
@@ -2339,7 +2386,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const resetFilters = useCallback(() => { setFiltersState(DEFAULT_FILTERS); }, []);
 
   const getFilteredProducts = useCallback(() => {
-    let filtered = products;
+    let filtered = products.filter(p => !p.isHidden);
     if (selectedCategory !== 'all') {
       // Parent selection = itself + all descendants (no duplicates: each ad has exactly one leaf)
       const scope = [selectedCategory, ...descendantsOf(CATEGORY_TREE, selectedCategory)];
@@ -2432,16 +2479,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setEnabledCountriesState(codes);
   }, []);
 
+  const visibleProducts = useMemo(() => products.filter(p => !p.isHidden), [products]);
+  const managedProducts = useMemo(() => products.filter(p => p.sellerId === user?.id), [products, user?.id]);
+
   return (
     <AppContext.Provider value={{
       language, isDark, colors, user, isLoggedIn: !!user, isReady, authLoading, userChecked, dynamicBanners: appBanners, storeLogo: appStoreLogo,
-      products, favorites, conversations, orders, sellers, reviews,
+      products: visibleProducts, managedProducts, favorites, conversations, orders, sellers, reviews,
       searchQuery, selectedCategory, filters, activeFilterCount, registeredUsernames, usedReferenceIds, blacklist, staffMembers,
       t, setLanguage, enabledLanguages, toggleLanguageEnabled, toggleDarkMode, themePref, setThemePref: setThemePrefPersist, logout,
       isUsernameTaken, isReferenceIdUsed, updateUserAvatar, updateUserCover,
       toggleFavorite, isFavorite, setSearchQuery, setSelectedCategory,
       setFilters, resetFilters,
-      addProduct, setProductDiscount, removeProductDiscount, sendMessage, startConversation, placeOrder, updateOrderStatus, permanentBanUser, confirmOrderReceived,
+      addProduct, updateProduct, deleteProduct, setProductHidden, setProductDiscount, removeProductDiscount, sendMessage, startConversation, placeOrder, updateOrderStatus, permanentBanUser, confirmOrderReceived,
       categories,
       subCategories, lastCategory, currentCategoryPath, loadSubCategories, navigateToCategory, goBackCategory, resetCategoryNavigation,
       followingList, followStats, followedSellers, followedProducts, fetchFollowStatus, toggleFollow, toggleFollowNotifications, fetchSellerStats, fetchFollowedSellers, fetchFollowedProducts,

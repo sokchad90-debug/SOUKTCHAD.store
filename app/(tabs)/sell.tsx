@@ -18,12 +18,10 @@ import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 
 // Extracted sub-component to replace IIFE which causes "addViewAt" view tree crashes
-function SellerDiscountSection({ products, userId, language, colors, lb, removeProductDiscount, setDiscountProductId, setDiscountPercent, setDiscountDays, setShowDiscountModal }: {
+function SellerDiscountSection({ products, userId, language, colors, lb, onOpenMenu }: {
   products: any[]; userId?: string; language: string; colors: any;
   lb: (en: string, fr: string, ar: string) => string;
-  removeProductDiscount: (id: string) => void;
-  setDiscountProductId: (id: string) => void; setDiscountPercent: (v: string) => void;
-  setDiscountDays: (v: string) => void; setShowDiscountModal: (v: boolean) => void;
+  onOpenMenu: (id: string) => void;
 }) {
   const myProducts = products.filter(p => p.sellerId === userId);
   if (myProducts.length === 0) return null;
@@ -33,7 +31,8 @@ function SellerDiscountSection({ products, userId, language, colors, lb, removeP
         {lb('MANAGE DISCOUNTS', 'GÉRER LES REMISES', 'إدارة الخصومات')}
       </Text>
       {myProducts.map(prod => {
-        const hasDiscount = (prod?.discountPercent ?? 0) > 0 && prod?.discountUntil && new Date(prod.discountUntil).getTime() > Date.now();
+        const hasDiscount = ((prod?.discountPercent ?? 0) > 0 || (prod?.discountedPrice ?? 0) > 0) && prod?.discountUntil && new Date(prod.discountUntil).getTime() > Date.now();
+        const salePrice = prod?.discountedPrice || Math.round((prod?.price || 0) * (1 - Math.min(30, prod?.discountPercent || 0) / 100));
         const pTitle = prod?.title?.[language] || prod?.title?.en || '';
         return (
           <View key={prod.id} style={[localStyles.discountCard, { backgroundColor: colors.surface, borderColor: hasDiscount ? '#EF444440' : colors.border }]}>
@@ -41,33 +40,22 @@ function SellerDiscountSection({ products, userId, language, colors, lb, removeP
               <Image source={{ uri: prod?.images?.[0] || '' }} style={localStyles.discountThumb} contentFit="cover" />
               <View style={{ flex: 1 }}>
                 <Text style={[localStyles.discountCardTitle, { color: colors.textPrimary }]} numberOfLines={1}>{pTitle}</Text>
-                <Text style={[localStyles.discountCardPrice, { color: colors.primary }]}>{formatPrice(prod?.price || 0)}</Text>
+                <Text style={[localStyles.discountCardPrice, { color: hasDiscount ? colors.textTertiary : colors.primary }, hasDiscount && { textDecorationLine: 'line-through' }]}>{formatPrice(prod?.price || 0)}</Text>
                 {hasDiscount ? (
                   <View style={localStyles.discountActiveRow}>
                     <View style={[localStyles.discountActiveBadge, { backgroundColor: '#EF4444' }]}>
-                      <Text style={localStyles.discountActiveBadgeText}>-{Math.min(30, prod?.discountPercent || 0)}%</Text>
+                      <Text style={localStyles.discountActiveBadgeText}>{prod.discountedPrice ? lb('SALE', 'PROMO', 'خصم') : `-${Math.min(30, prod?.discountPercent || 0)}%`}</Text>
                     </View>
                     <Text style={[localStyles.discountActivePrice, { color: '#EF4444' }]}>
-                      {formatPrice(Math.round((prod?.price || 0) * (1 - Math.min(30, prod?.discountPercent || 0) / 100)))}
+                      {formatPrice(salePrice)}
                     </Text>
                   </View>
                 ) : null}
               </View>
-              {hasDiscount ? (
-                <Pressable
-                  onPress={() => { notifyWarning(); removeProductDiscount(prod.id); }}
-                  style={[localStyles.discountRemoveBtn, { backgroundColor: colors.errorLight }]}
-                >
-                  <MaterialIcons name="close" size={scale(16)} color={colors.error} />
-                </Pressable>
-              ) : (
-                <Pressable
-                  onPress={() => { selection(); setDiscountProductId(prod.id); setDiscountPercent('10'); setDiscountDays('3'); setShowDiscountModal(true); }}
-                  style={[localStyles.discountAddBtn, { backgroundColor: colors.primary + '15' }]}
-                >
-                  <MaterialIcons name="local-offer" size={scale(16)} color={colors.primary} />
-                </Pressable>
-              )}
+              {prod.isHidden ? <MaterialIcons name="visibility-off" size={scale(18)} color={colors.textTertiary} /> : null}
+              <Pressable accessibilityRole="button" accessibilityLabel={lb('Product options', 'Options du produit', 'خيارات المنتج')} onPress={() => onOpenMenu(prod.id)} style={[localStyles.discountAddBtn, { backgroundColor: colors.primary + '15' }]}>
+                <MaterialIcons name="more-vert" size={scale(22)} color={colors.primary} />
+              </Pressable>
             </View>
           </View>
         );
@@ -77,7 +65,7 @@ function SellerDiscountSection({ products, userId, language, colors, lb, removeP
 }
 const localStyles = StyleSheet.create({
   label: { fontSize: scale(13), fontWeight: '600', marginBottom: scale(6), marginTop: scale(12), textTransform: 'uppercase', letterSpacing: 0.5 },
-  discountCard: { borderRadius: scale(10), borderWidth: 1, padding: scale(10), marginBottom: scale(8) },
+  discountCard: { borderRadius: scale(16), borderWidth: 1, padding: scale(10), marginBottom: scale(8) },
   discountCardRow: { flexDirection: 'row', alignItems: 'center', gap: scale(10) },
   discountThumb: { width: scale(48), height: scale(48), borderRadius: scale(8) },
   discountCardTitle: { fontSize: scale(13), fontWeight: '600' },
@@ -87,7 +75,7 @@ const localStyles = StyleSheet.create({
   discountActiveBadgeText: { color: '#FFF', fontSize: scale(10), fontWeight: '800' },
   discountActivePrice: { fontSize: scale(13), fontWeight: '700' },
   discountRemoveBtn: { width: scale(34), height: scale(34), borderRadius: scale(17), alignItems: 'center', justifyContent: 'center' },
-  discountAddBtn: { width: scale(34), height: scale(34), borderRadius: scale(17), alignItems: 'center', justifyContent: 'center' },
+  discountAddBtn: { width: scale(48), height: scale(48), borderRadius: scale(24), alignItems: 'center', justifyContent: 'center' },
 });
 
 const MAX_IMAGES = 5;
@@ -97,7 +85,7 @@ interface SelectedImage { id: string; uri: string; }
 
 export default function SellScreen() {
   const insets = useSafeAreaInsets();
-  const { colors, t, language, isLoggedIn, user, addProduct, enabledCountries, products, setProductDiscount, removeProductDiscount, isReady, categories: appCategories } = useApp();
+  const { colors, t, language, isLoggedIn, user, addProduct, updateProduct, deleteProduct, setProductHidden, enabledCountries, managedProducts, setProductDiscount, removeProductDiscount, isReady, categories: appCategories } = useApp();
   // Enabled branches for the seller picker (from DB tree; includes children)
   const sellerCategories = (appCategories || []).filter(c => c.id !== 'all');
   const [showLogin, setShowLogin] = useState(false);
@@ -128,6 +116,14 @@ export default function SellScreen() {
   const [discountProductId, setDiscountProductId] = useState('');
   const [discountPercent, setDiscountPercent] = useState('');
   const [discountDays, setDiscountDays] = useState('3');
+  const [discountMode, setDiscountMode] = useState<'percent' | 'price'>('percent');
+  const [discountedPrice, setDiscountedPrice] = useState('');
+  const [menuProductId, setMenuProductId] = useState('');
+  const [showProductMenu, setShowProductMenu] = useState(false);
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [priceProductId, setPriceProductId] = useState('');
+  const [newPrice, setNewPrice] = useState('');
+  const [editingProductId, setEditingProductId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   // Get cities from all enabled countries
@@ -143,6 +139,28 @@ export default function SellScreen() {
   const isFr = language === 'fr';
   const isAr = language === 'ar';
   const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
+  const selectedMenuProduct = managedProducts.find(p => p.id === menuProductId);
+
+  const resetForm = useCallback(() => {
+    setTitle(''); setDescription(''); setPrice(''); setSelectedCat(''); setLocation(''); setDetailedAddress('');
+    setStock(''); setMaxOrderQty(''); setImages([]); setActivePreview(0); setVariantsOn(false);
+    setVariantSpec1(''); setVariantSpec2(''); setVariantItems([]); setEditingProductId('');
+    setSameCityOnly(true); setSelectedDeliveryCities([]); setDeliveryType('none'); setDeliveryFee('');
+  }, []);
+
+  const beginEdit = useCallback((product: any) => {
+    if (!product || product.sellerId !== user?.id) { notifyWarning(); return; }
+    setEditingProductId(product.id);
+    setTitle(product.title?.[language] || product.title?.en || '');
+    setDescription(product.description?.[language] || product.description?.en || '');
+    setPrice(String(product.price || '')); setStock(String(product.stock ?? '')); setMaxOrderQty(String(product.maxOrderQty ?? ''));
+    setSelectedCat(product.categoryId || ''); setCondition(product.condition || 'new'); setLocation(product.location || '');
+    setImages((product.images || []).slice(0, 5).map((uri: string, i: number) => ({ id: `existing_${i}`, uri })));
+    setWarrantyEnabled(Boolean(product.warrantyDays)); setWarrantyDays(String(product.warrantyDays || 7));
+    setDeliveryType(product.deliveryType || 'none'); setDeliveryFee(String(product.deliveryFee ?? ''));
+    setSameCityOnly(product.sameCityOnly !== false); setSelectedDeliveryCities(product.deliveryCities || []);
+    setShowProductMenu(false);
+  }, [language, user?.id]);
 
   // Determine view state - but always use single return
   const showBuyerBlock = isReady && isLoggedIn && user?.role === 'buyer';
@@ -262,7 +280,7 @@ export default function SellScreen() {
     }
     setIsSaving(true);
     try {
-      await addProduct({ title: { en: title, fr: title, ar: title }, description: { en: description, fr: description, ar: description }, price: parseInt(price) || 0, images: images.map(img => img.uri), categoryId: selectedCat, sellerId: user?.id || 'user1', condition: hideCondition ? 'new' : condition, location, stock: parseInt(stock) || 0, maxOrderQty: parseInt(maxOrderQty) || undefined, warrantyDays: warrantyEnabled ? (parseInt(warrantyDays) || 7) : undefined,
+      const payload = { title: { en: title, fr: title, ar: title }, description: { en: description, fr: description, ar: description }, price: parseInt(price) || 0, images: images.map(img => img.uri), categoryId: selectedCat, sellerId: user?.id || 'user1', condition: hideCondition ? 'new' : condition, location, stock: parseInt(stock) || 0, maxOrderQty: parseInt(maxOrderQty) || undefined, warrantyDays: warrantyEnabled ? (parseInt(warrantyDays) || 7) : undefined,
         ...(variantsOn && variantItems.length > 0 ? {
           variants: variantItems.filter(v => v.price.trim()).map((v, i) => ({
             id: 'v' + Date.now() + '_' + i,
@@ -274,10 +292,18 @@ export default function SellScreen() {
             price: parseInt(v.price) || 0,
             stock: parseInt(v.stock) || 0,
           })),
-        } : {}), deliveryType: deliveryType !== 'none' ? deliveryType : undefined, deliveryFee: deliveryType === 'paid' ? (parseInt(deliveryFee) || 0) : undefined, sameCityOnly, deliveryCities: sameCityOnly ? [location] : selectedDeliveryCities, deliveryMethods: ['motorcycle', 'taxi'] } as any);
+        } : {}), deliveryType: deliveryType !== 'none' ? deliveryType : undefined, deliveryFee: deliveryType === 'paid' ? (parseInt(deliveryFee) || 0) : undefined, sameCityOnly, deliveryCities: sameCityOnly ? [location] : selectedDeliveryCities, deliveryMethods: ['motorcycle', 'taxi'] } as any;
+      if (editingProductId) {
+        if (!(await updateProduct(editingProductId, payload))) throw new Error('update failed');
+      } else {
+        await addProduct(payload);
+      }
       notifySuccess();
-      Alert.alert(lb('Published!', 'Publié!', 'تم النشر!'), lb('Your listing is now live.', 'Votre annonce est en ligne.', 'إعلانك متاح الآن.'));
-      setTitle(''); setDescription(''); setPrice(''); setSelectedCat(''); setLocation(''); setDetailedAddress(''); setStock(''); setMaxOrderQty(''); setImages([]); setActivePreview(0); setVariantsOn(false); setVariantSpec1(''); setVariantSpec2(''); setVariantItems([]);
+      Alert.alert(editingProductId ? lb('Saved', 'Modifications enregistrées', 'تم حفظ التعديلات') : lb('Published!', 'Publié!', 'تم النشر!'));
+      resetForm();
+    } catch {
+      notifyWarning();
+      Alert.alert(lb('Unable to save', 'Enregistrement impossible', 'تعذر الحفظ'));
     } finally {
       setIsSaving(false);
     }
@@ -323,7 +349,12 @@ export default function SellScreen() {
       ) : showSellForm ? (
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: scale(16), paddingBottom: scale(16), paddingTop: scale(8) }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <Text style={[styles.pageTitle, { color: colors.textPrimary }]}>{t('sellProduct')}</Text>
+          <Text style={[styles.pageTitle, { color: colors.textPrimary }]}>{editingProductId ? lb('Edit product', 'Modifier le produit', 'تعديل المنتج') : t('sellProduct')}</Text>
+          {editingProductId ? (
+            <Pressable accessibilityRole="button" onPress={resetForm} style={[styles.editCancelBtn, { borderColor: colors.border }]}>
+              <Text style={{ color: colors.textSecondary, fontWeight: '600' }}>{lb('Cancel editing', 'Annuler la modification', 'إلغاء التعديل')}</Text>
+            </Pressable>
+          ) : null}
 
           {images.length > 0 ? (
             <View style={styles.imageSection}>
@@ -614,27 +645,67 @@ export default function SellScreen() {
             ) : (
               <MaterialIcons name="publish" size={scale(22)} color="#FFF" />
             )}
-            <Text style={styles.publishBtnText}>{isSaving ? lb('Publishing...', 'Publication...', 'جارٍ النشر...') : t('publishListing')}</Text>
+            <Text style={styles.publishBtnText}>{isSaving ? lb('Saving...', 'Enregistrement...', 'جارٍ الحفظ...') : editingProductId ? lb('Save changes', 'Enregistrer les modifications', 'حفظ التعديلات') : t('publishListing')}</Text>
           </Pressable>
 
           {/* Seller's Existing Products - Discount Management */}
           {isLoggedIn && user?.isSeller ? (
             <SellerDiscountSection
-              products={products}
+              products={managedProducts}
               userId={user?.id}
               language={language}
               colors={colors}
               lb={lb}
-              removeProductDiscount={removeProductDiscount}
-              setDiscountProductId={setDiscountProductId}
-              setDiscountPercent={setDiscountPercent}
-              setDiscountDays={setDiscountDays}
-              setShowDiscountModal={setShowDiscountModal}
+              onOpenMenu={(id) => { selection(); setMenuProductId(id); setShowProductMenu(true); }}
             />
           ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
       ) : null}
+
+      <Modal visible={showProductMenu} transparent animationType="fade" onRequestClose={() => setShowProductMenu(false)}>
+        <Pressable style={[styles.discountOverlay, { backgroundColor: colors.overlay }]} onPress={() => setShowProductMenu(false)}>
+          <Pressable style={[styles.productMenu, { backgroundColor: colors.surface }]} onPress={() => {}}>
+            <Text style={[styles.discountModalTitle, { color: colors.textPrimary }]} numberOfLines={2}>{selectedMenuProduct?.title?.[language] || selectedMenuProduct?.title?.en || ''}</Text>
+            {[
+              { icon: 'edit', label: lb('Edit product', 'Modifier le produit', 'تعديل المنتج'), action: () => beginEdit(selectedMenuProduct) },
+              { icon: 'payments', label: lb('Edit price', 'Modifier le prix', 'تعديل السعر'), action: () => { if (!selectedMenuProduct) return; setPriceProductId(selectedMenuProduct.id); setNewPrice(String(selectedMenuProduct.price)); setShowProductMenu(false); setShowPriceModal(true); } },
+              { icon: 'local-offer', label: lb('Manage discount', 'Gérer la remise', 'إدارة الخصم'), action: () => { if (!selectedMenuProduct) return; setDiscountProductId(selectedMenuProduct.id); setDiscountPercent('10'); setDiscountedPrice(''); setDiscountMode('percent'); setDiscountDays('3'); setShowProductMenu(false); setShowDiscountModal(true); } },
+              { icon: selectedMenuProduct?.isHidden ? 'visibility' : 'visibility-off', label: selectedMenuProduct?.isHidden ? lb('Show product', 'Rendre visible', 'إعادة الإظهار') : lb('Hide product', 'Masquer', 'إخفاء المنتج'), action: async () => { if (!selectedMenuProduct) return; setShowProductMenu(false); (await setProductHidden(selectedMenuProduct.id, !selectedMenuProduct.isHidden)) ? notifySuccess() : notifyWarning(); } },
+            ].map(item => (
+              <Pressable key={item.label} accessibilityRole="button" onPress={item.action} style={styles.productMenuItem}>
+                <MaterialIcons name={item.icon as any} size={scale(22)} color={colors.primary} />
+                <Text style={[styles.productMenuText, { color: colors.textPrimary }]}>{item.label}</Text>
+              </Pressable>
+            ))}
+            <Pressable accessibilityRole="button" onPress={() => {
+              if (!selectedMenuProduct) return;
+              const product = selectedMenuProduct;
+              setShowProductMenu(false);
+              Alert.alert(lb('Delete product?', 'Supprimer le produit ?', 'حذف المنتج؟'), lb(`This cannot be undone: ${product.title?.en || ''}`, `Cette action est irréversible : ${product.title?.fr || product.title?.en || ''}`, `لا يمكن التراجع: ${product.title?.ar || product.title?.en || ''}`), [
+                { text: lb('Cancel', 'Annuler', 'إلغاء'), style: 'cancel' },
+                { text: lb('Delete', 'Supprimer', 'حذف'), style: 'destructive', onPress: async () => (await deleteProduct(product.id)) ? notifySuccess() : notifyWarning() },
+              ]);
+            }} style={styles.productMenuItem}>
+              <MaterialIcons name="delete-outline" size={scale(22)} color={colors.error} />
+              <Text style={[styles.productMenuText, { color: colors.error }]}>{lb('Delete product', 'Supprimer', 'حذف المنتج')}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={showPriceModal} transparent animationType="fade" onRequestClose={() => setShowPriceModal(false)}>
+        <View style={[styles.discountOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.discountModalContent, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.discountModalTitle, { color: colors.textPrimary }]}>{lb('Edit price', 'Modifier le prix', 'تعديل السعر')}</Text>
+            <TextInput accessibilityLabel={lb('New price', 'Nouveau prix', 'السعر الجديد')} style={[styles.input, { backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]} value={newPrice} onChangeText={setNewPrice} keyboardType="numeric" />
+            <View style={styles.discountModalBtns}>
+              <Pressable onPress={() => setShowPriceModal(false)} style={[styles.discountModalCancel, { borderColor: colors.border }]}><Text style={[styles.discountModalCancelText, { color: colors.textSecondary }]}>{lb('Cancel', 'Annuler', 'إلغاء')}</Text></Pressable>
+              <Pressable onPress={async () => { const value = Number(newPrice); if (!(value > 0)) { notifyWarning(); return; } const ok = await updateProduct(priceProductId, { price: value }); ok ? notifySuccess() : notifyWarning(); if (ok) setShowPriceModal(false); }} style={[styles.discountModalApply, { backgroundColor: colors.primary }]}><Text style={styles.discountModalApplyText}>{lb('Save', 'Enregistrer', 'حفظ')}</Text></Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Discount Modal */}
       <Modal visible={showDiscountModal} transparent animationType="fade" onRequestClose={() => setShowDiscountModal(false)}>
@@ -644,10 +715,14 @@ export default function SellScreen() {
               {lb('Set Discount', 'Définir la remise', 'تعيين الخصم')}
             </Text>
             <Text style={[styles.discountModalSub, { color: colors.textSecondary }]}>
-              {lb('Max 30% off, up to 7 days.', 'Max 30% de remise, jusqu\'à 7 jours.', 'حد أقصى 30% خصم، حتى 7 أيام.')}
+              {lb('Choose a percentage or a direct sale price.', 'Choisissez un pourcentage ou un prix remisé.', 'اختر نسبة أو سعراً مخفضاً مباشراً.')}
             </Text>
 
-            <Text style={[styles.label, { color: colors.textSecondary, marginTop: scale(12) }]}>
+            <View style={styles.discountPresetsRow}>
+              {(['percent', 'price'] as const).map(mode => <Pressable key={mode} onPress={() => setDiscountMode(mode)} style={[styles.discountPresetChip, { backgroundColor: discountMode === mode ? colors.primary : colors.backgroundSecondary, borderColor: discountMode === mode ? colors.primary : colors.border }]}><Text style={[styles.discountPresetText, { color: discountMode === mode ? '#FFF' : colors.textPrimary }]}>{mode === 'percent' ? lb('Percentage', 'Pourcentage', 'نسبة') : lb('Sale price', 'Prix remisé', 'سعر مخفض')}</Text></Pressable>)}
+            </View>
+
+            {discountMode === 'percent' ? <><Text style={[styles.label, { color: colors.textSecondary, marginTop: scale(12) }]}>
               {lb('DISCOUNT PERCENTAGE (%)', 'POURCENTAGE (%)', 'نسبة الخصم (%)')}
             </Text>
             <View style={styles.discountPresetsRow}>
@@ -663,7 +738,7 @@ export default function SellScreen() {
                   <Text style={[styles.discountPresetText, { color: discountPercent === String(p) ? '#FFF' : colors.textPrimary }]}>{p}%</Text>
                 </Pressable>
               ))}
-            </View>
+            </View></> : <><Text style={[styles.label, { color: colors.textSecondary, marginTop: scale(12) }]}>{lb('DISCOUNTED PRICE', 'PRIX REMISÉ', 'السعر المخفض')}</Text><TextInput style={[styles.input, { backgroundColor: colors.backgroundSecondary, color: colors.textPrimary, borderColor: colors.border }]} value={discountedPrice} onChangeText={setDiscountedPrice} keyboardType="numeric" /></>}
 
             <Text style={[styles.label, { color: colors.textSecondary, marginTop: scale(12) }]}>
               {lb('DURATION (DAYS)', 'DURÉE (JOURS)', 'المدة (أيام)')}
@@ -688,14 +763,17 @@ export default function SellScreen() {
                 <Text style={[styles.discountModalCancelText, { color: colors.textSecondary }]}>{lb('Cancel', 'Annuler', 'إلغاء')}</Text>
               </Pressable>
               <Pressable
-                onPress={() => {
+                onPress={async () => {
                   const pct = parseInt(discountPercent) || 0;
                   const days = parseInt(discountDays) || 1;
-                  if (pct < 1 || pct > 30) { Alert.alert(lb('Invalid', 'Invalide', 'غير صالح'), lb('Discount must be 1-30%', 'La remise doit être 1-30%', 'يجب أن يكون الخصم 1-30%')); return; }
+                  const original = managedProducts.find(p => p.id === discountProductId)?.price || 0;
+                  const direct = Number(discountedPrice);
+                  if (discountMode === 'percent' && (pct < 1 || pct > 30)) { Alert.alert(lb('Invalid', 'Invalide', 'غير صالح'), lb('Discount must be 1-30%', 'La remise doit être 1-30%', 'يجب أن يكون الخصم 1-30%')); return; }
+                  if (discountMode === 'price' && (!(direct > 0) || direct >= original)) { Alert.alert(lb('Invalid', 'Invalide', 'غير صالح'), lb('Sale price must be below the original price.', 'Le prix remisé doit être inférieur au prix original.', 'يجب أن يكون السعر المخفض أقل من الأصلي.')); return; }
                   if (days < 1 || days > 7) { Alert.alert(lb('Invalid', 'Invalide', 'غير صالح'), lb('Duration must be 1-7 days', 'La durée doit être 1-7 jours', 'المدة يجب أن تكون 1-7 أيام')); return; }
-                  notifySuccess();
-                  setProductDiscount(discountProductId, pct, days);
-                  setShowDiscountModal(false);
+                  const ok = await setProductDiscount(discountProductId, pct, days, discountMode === 'price' ? direct : undefined);
+                  ok ? notifySuccess() : notifyWarning();
+                  if (ok) setShowDiscountModal(false);
                 }}
                 style={[styles.discountModalApply, { backgroundColor: '#EF4444' }]}
               >
@@ -703,6 +781,11 @@ export default function SellScreen() {
                 <Text style={styles.discountModalApplyText}>{lb('Apply Discount', 'Appliquer', 'تطبيق الخصم')}</Text>
               </Pressable>
             </View>
+            {(() => { const p = managedProducts.find(item => item.id === discountProductId); return p && (p.discountPercent || p.discountedPrice) ? (
+              <Pressable onPress={async () => { const ok = await removeProductDiscount(p.id); ok ? notifySuccess() : notifyWarning(); if (ok) setShowDiscountModal(false); }} style={styles.removeDiscountAction}>
+                <Text style={{ color: colors.error, fontWeight: '700' }}>{lb('Remove discount', 'Supprimer la remise', 'إلغاء الخصم')}</Text>
+              </Pressable>
+            ) : null; })()}
           </View>
         </View>
       </Modal>
@@ -810,6 +893,7 @@ const styles = StyleSheet.create({
   },
   publishBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: scale(54), borderRadius: borderRadius.md, marginTop: scale(24), gap: scale(8) },
   publishBtnText: { color: '#FFF', fontSize: scale(17), fontWeight: '700' },
+  editCancelBtn: { minHeight: scale(48), borderRadius: borderRadius.md, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: scale(12) },
   // Discount management
   discountCard: { borderRadius: borderRadius.md, borderWidth: 1, padding: scale(10), marginBottom: scale(8) },
   discountCardRow: { flexDirection: 'row', alignItems: 'center', gap: scale(10) },
@@ -835,4 +919,8 @@ const styles = StyleSheet.create({
   discountModalCancelText: { fontSize: scale(15), fontWeight: '600' },
   discountModalApply: { flex: 1, height: scale(48), borderRadius: borderRadius.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: scale(6) },
   discountModalApplyText: { color: '#FFF', fontSize: scale(15), fontWeight: '700' },
+  productMenu: { width: '100%', borderRadius: scale(16), padding: scale(16) },
+  productMenuItem: { minHeight: scale(48), flexDirection: 'row', alignItems: 'center', gap: scale(12), paddingHorizontal: scale(8) },
+  productMenuText: { flex: 1, fontSize: scale(15), fontWeight: '600' },
+  removeDiscountAction: { minHeight: scale(48), alignItems: 'center', justifyContent: 'center', marginTop: scale(8) },
 });

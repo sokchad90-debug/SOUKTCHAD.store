@@ -133,6 +133,8 @@ function dbRowToProduct(row: any): Product {
     sellerVerified: row.seller_verified === 1 || row.seller_verified === true,
     discountPercent: row.discount_percent != null ? Number(row.discount_percent) : undefined,
     discountUntil: row.discount_until || undefined,
+    discountedPrice: row.discounted_price != null ? Number(row.discounted_price) : undefined,
+    isHidden: row.is_hidden === 1 || row.is_hidden === true || row.status === 'hidden',
     stock: row.stock != null ? Number(row.stock) : undefined,
     maxOrderQty: row.max_order_qty != null ? Number(row.max_order_qty) : undefined,
     soldCount: row.sold_count != null ? Number(row.sold_count) : undefined,
@@ -312,8 +314,11 @@ export async function updateProduct(
     if (Array.isArray(updates.images)) {
       body.image = updates.images[0];
       body.images = updates.images.join(',');
-      delete body.images;
     }
+    if ('isHidden' in updates) { body.is_hidden = updates.isHidden ? 1 : 0; delete body.isHidden; }
+    if ('discountPercent' in updates) { body.discount_percent = updates.discountPercent ?? null; delete body.discountPercent; }
+    if ('discountUntil' in updates) { body.discount_until = updates.discountUntil ?? null; delete body.discountUntil; }
+    if ('discountedPrice' in updates) { body.discounted_price = updates.discountedPrice ?? null; delete body.discountedPrice; }
 
     const response = await fetch(`${API_BASE}/products.php?id=${encodeURIComponent(id)}`, {
       method: 'PUT',
@@ -331,5 +336,16 @@ export async function updateProduct(
   } catch (e: any) {
     console.error('updateProduct error:', e?.message);
     return { data: null, error: e?.message || 'Network error' };
+  }
+}
+
+export async function deleteProduct(id: string): Promise<{ error: string | null }> {
+  try {
+    const headers = await authHeaders();
+    const response = await fetch(`${API_BASE}/products.php?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers });
+    const result = await response.json();
+    return { error: result.success ? null : (result.error || result.message || 'Delete failed') };
+  } catch (e: any) {
+    return { error: e?.message || 'Network error' };
   }
 }
