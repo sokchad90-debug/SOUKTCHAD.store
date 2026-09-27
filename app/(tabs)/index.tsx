@@ -191,10 +191,10 @@ function HomeListHeader({
             key={'stores-' + language}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[{ paddingHorizontal: layout.horizontalPadding, gap: scale(8) }, isAr && { flexDirection: 'row-reverse' }]}
+            contentContainerStyle={[{ paddingHorizontal: layout.horizontalPadding, gap: scale(8) }]}
             testID="home-verified-stores"
           >
-            {verifiedSellers.map((seller: any) => (
+            {(isAr ? [...verifiedSellers].reverse() : verifiedSellers).map((seller: any) => (
               <Pressable
                 key={seller.id}
                 onPress={() => router.push(`/seller/${seller.id}` as any)}
