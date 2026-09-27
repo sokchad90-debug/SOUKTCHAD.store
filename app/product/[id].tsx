@@ -10,7 +10,6 @@ import { getSellerById } from '@/services/mockData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatPrice } from '@/constants/config';
 import { borderRadius, shadows } from '@/constants/theme';
-import DisclaimerBanner from '@/components/DisclaimerBanner';
 import { setPendingVariantSelection, peekPendingVariantSelection, specValue } from '@/services/mockData';
 import type { ProductVariant } from '@/services/mockData';
 import LoginModal from '@/components/LoginModal';
@@ -64,7 +63,7 @@ function SimilarProductCard({ product, language, colors, onPress }: SimilarCardP
           <Image
             source={{ uri: sourceUri }}
             style={{ width: '100%', height: '100%' }}
-            contentFit="cover"
+            contentFit="contain"
             transition={200}
             onLoad={() => setImgState('ok')}
             onError={() => setImgState('error')}
@@ -116,13 +115,29 @@ export default function ProductDetailScreen() {
     setVariantQty(1);
   }, [id, getProductById]);
   const selectedVariant = variants.find(v => v.id === selectedVariantId) || null;
-  const heroUri = selectedVariant ? selectedVariant.image : product?.images?.[0] || '';
   // Full-screen zoomable viewer (tap hero to open)
   const [viewerUri, setViewerUri] = useState<string | null>(null);
   // Balanced responsive hero height: aspect measured on load, then CLAMPED into a fixed
   // window so portrait images (trousers/fridge) never double the card height.
   // Card width = heroW - 2*margin; height = clamp(width/aspect, min, width*1.25)
   const [heroAspect, setHeroAspect] = useState(1.35);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const galleryRef = React.useRef<ScrollView>(null);
+  const galleryWidth = heroW - scale(32);
+  const galleryImages = useMemo(() => {
+    const candidates = selectedVariant
+      ? [selectedVariant.image, ...(product?.images || [])]
+      : (product?.images || []);
+    return candidates.filter((uri, index) => Boolean(uri) && candidates.indexOf(uri) === index).slice(0, 5);
+  }, [product?.images, selectedVariant]);
+  const galleryHeight = Math.min(
+    Math.max(galleryWidth / heroAspect, scale(220)),
+    galleryWidth * 1.25,
+  );
+  React.useEffect(() => {
+    setActiveImageIndex(0);
+    galleryRef.current?.scrollTo({ x: 0, animated: false });
+  }, [product?.id, selectedVariantId]);
   const variantStock = selectedVariant ? selectedVariant.stock : (product?.stock ?? 0);
   const wholesale: { minQty: number; unitPrice: number; unitLabel?: { en: string; fr: string; ar: string } } | null = (product as any)?.wholesale || null;
   const productReviews = useMemo(() => product ? getReviewsForProduct(id) : [], [id, product, getReviewsForProduct]);
@@ -280,33 +295,51 @@ export default function ProductDetailScreen() {
             </Pressable>
           </View>
         </View>
-        {/* Hero Image — full original photo, contain, centered in a light rounded card with side margins */}
+        {/* Swipeable gallery — complete uncropped photos in a bounded white frame. */}
         <View style={{ paddingHorizontal: scale(16) }}>
-          <Pressable
-            onPress={() => heroUri ? setViewerUri(heroUri) : null}
-            style={[styles.imageContainer, {
-              width: '100%',
-              height: Math.min(
-                Math.max((heroW - scale(32)) / heroAspect, scale(220)),
-                Math.min(scale(460), (heroW - scale(32)) * 1.25),
-              ),
-              borderRadius: scale(16),
-              overflow: 'hidden',
-            }]}
+          <View style={[styles.imageContainer, { width: galleryWidth, height: galleryHeight, borderRadius: scale(16), overflow: 'hidden' }]}
           >
-            <Image
-              source={{ uri: heroUri }}
-              style={styles.heroImage}
-              contentFit="contain"
-              transition={200}
-              onLoad={(e) => {
-                const src: any = (e as any)?.source;
-                if (src && src.width > 0 && src.height > 0) {
-                  const a = src.width / src.height;
-                  if (a > 0.2 && a < 6) setHeroAspect(a);
-                }
+            <ScrollView
+              ref={galleryRef}
+              horizontal
+              pagingEnabled
+              bounces={false}
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(event) => {
+                const nextIndex = Math.round(event.nativeEvent.contentOffset.x / galleryWidth);
+                setActiveImageIndex(Math.max(0, Math.min(nextIndex, galleryImages.length - 1)));
               }}
-            />
+            >
+              {galleryImages.map((uri, index) => (
+                <Pressable
+                  key={`${uri}-${index}`}
+                  accessibilityRole="imagebutton"
+                  accessibilityLabel={lb(`Open image ${index + 1} of ${galleryImages.length}`, `Ouvrir l’image ${index + 1} sur ${galleryImages.length}`, `فتح الصورة ${index + 1} من ${galleryImages.length}`)}
+                  onPress={() => setViewerUri(uri)}
+                  style={{ width: galleryWidth, height: galleryHeight, backgroundColor: '#FFFFFF' }}
+                >
+                  <Image
+                    source={{ uri }}
+                    style={styles.heroImage}
+                    contentFit="contain"
+                    transition={200}
+                    onLoad={(e) => {
+                      if (index !== activeImageIndex) return;
+                      const src: any = (e as any)?.source;
+                      if (src && src.width > 0 && src.height > 0) {
+                        const aspect = src.width / src.height;
+                        if (aspect > 0.2 && aspect < 6) setHeroAspect(aspect);
+                      }
+                    }}
+                  />
+                </Pressable>
+              ))}
+            </ScrollView>
+            {galleryImages.length > 1 ? (
+              <View style={styles.galleryCounter}>
+                <Text style={styles.galleryCounterText}>{activeImageIndex + 1}/{galleryImages.length}</Text>
+              </View>
+            ) : null}
             <View style={[styles.badges, { bottom: scale(12) }]}>
               {product.isPinned ? (
                 <View style={[styles.badge, { backgroundColor: '#8B5CF6' }]}>
@@ -315,7 +348,26 @@ export default function ProductDetailScreen() {
                 </View>
               ) : null}
             </View>
-          </Pressable>
+          </View>
+          {galleryImages.length > 1 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbnailRow}>
+              {galleryImages.map((uri, index) => (
+                <Pressable
+                  key={`thumb-${uri}-${index}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: activeImageIndex === index }}
+                  accessibilityLabel={lb(`Show image ${index + 1}`, `Afficher l’image ${index + 1}`, `عرض الصورة ${index + 1}`)}
+                  onPress={() => {
+                    setActiveImageIndex(index);
+                    galleryRef.current?.scrollTo({ x: index * galleryWidth, animated: true });
+                  }}
+                  style={[styles.thumbnailButton, { borderColor: activeImageIndex === index ? '#5B48D9' : colors.border }]}
+                >
+                  <Image source={{ uri }} style={styles.thumbnailImage} contentFit="contain" />
+                </Pressable>
+              ))}
+            </ScrollView>
+          ) : null}
         </View>
 
         <View style={styles.content}>
@@ -347,12 +399,12 @@ export default function ProductDetailScreen() {
               <MaterialIcons
                 name={productReviews.length > 0 ? 'star' : 'star-border'}
                 size={scale(14)}
-                color={productReviews.length > 0 ? '#F59E0B' : colors.textTertiary}
+                color={(productReviews.length > 0 || ((product.reviewsCount ?? 0) > 0 && (product.rating ?? 0) > 0)) ? '#F59E0B' : colors.textTertiary}
               />
-              <Text style={[styles.metaText, { color: (productReviews.length > 0 || (product.rating ?? 0) > 0) ? '#F59E0B' : colors.textTertiary, fontWeight: '600' }]}>
-                {(productReviews.length > 0 || (product.rating ?? 0) > 0)
+              <Text style={[styles.metaText, { color: (productReviews.length > 0 || ((product.reviewsCount ?? 0) > 0 && (product.rating ?? 0) > 0)) ? '#F59E0B' : colors.textTertiary, fontWeight: '600' }]}>
+                {(productReviews.length > 0 || ((product.reviewsCount ?? 0) > 0 && (product.rating ?? 0) > 0))
                   ? `${(productReviews.length > 0 ? avgRating : (product.rating ?? 0)).toFixed(1)} (${productReviews.length > 0 ? productReviews.length : (product.reviewsCount ?? 0)})`
-                  : lb('No reviews', 'Aucun avis', 'لا تقييمات')}
+                  : lb('No reviews yet', "Pas d'avis pour le moment", 'لا توجد تقييمات بعد')}
               </Text>
             </Pressable>
             {(product.soldCount ?? 0) > 0 ? (
@@ -414,6 +466,17 @@ export default function ProductDetailScreen() {
               </Text>
             </View>
           ) : null}
+
+          {description && description.trim() ? (
+            <>
+              <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>{t('description')}</Text>
+              <Text style={[styles.description, { color: colors.textPrimary }]} numberOfLines={8}>{description}</Text>
+            </>
+          ) : (
+            <Text style={{ fontSize: scale(13), color: colors.textTertiary, fontStyle: 'italic', marginBottom: scale(4), textAlign: isAr ? 'right' : 'left' }}>
+              {lb('No description available', 'Aucune description disponible', 'لا يوجد وصف متاح')}
+            </Text>
+          )}
 
           {/* Warranty (seller-declared, when present) */}
           {(product.warrantyDays ?? 0) > 0 ? (
@@ -541,19 +604,6 @@ export default function ProductDetailScreen() {
               ) : null}
             </>
           ) : null}
-
-          <DisclaimerBanner compact />
-
-          {description && description.trim() ? (
-            <>
-              <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>{t('description')}</Text>
-              <Text style={[styles.description, { color: colors.textPrimary }]} numberOfLines={8}>{description}</Text>
-            </>
-          ) : (
-            <Text style={{ fontSize: scale(13), color: colors.textTertiary, fontStyle: 'italic', marginTop: scale(12), marginBottom: scale(4), textAlign: isAr ? 'right' : 'left' }}>
-              {lb('No description available', 'Aucune description disponible', 'لا يوجد وصف متاح')}
-            </Text>
-          )}
 
           {seller ? (
             <>
@@ -894,10 +944,15 @@ export default function ProductDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  imageContainer: { position: 'relative', backgroundColor: '#F1F0FB', borderWidth: 1, borderColor: 'rgba(91,72,217,0.08)' },
+  imageContainer: { position: 'relative', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: 'rgba(91,72,217,0.08)' },
   heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(16), paddingBottom: scale(10) },
   heroTopBtn: { width: scale(42), height: scale(42), borderRadius: scale(21), backgroundColor: '#EFEDFA', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E2DEFA' },
-  heroImage: { width: '100%', height: '100%', backgroundColor: '#F1F0FB' },
+  heroImage: { width: '100%', height: '100%', backgroundColor: '#FFFFFF' },
+  galleryCounter: { position: 'absolute', top: scale(12), right: scale(12), minWidth: scale(48), height: scale(32), paddingHorizontal: scale(10), borderRadius: scale(16), backgroundColor: 'rgba(15,12,40,0.72)', alignItems: 'center', justifyContent: 'center' },
+  galleryCounterText: { color: '#FFFFFF', fontSize: scale(13), fontWeight: '700' },
+  thumbnailRow: { gap: scale(8), paddingTop: scale(10), paddingBottom: scale(2) },
+  thumbnailButton: { width: scale(64), height: scale(64), borderRadius: scale(10), borderWidth: 2, overflow: 'hidden', backgroundColor: '#FFFFFF', padding: scale(2) },
+  thumbnailImage: { width: '100%', height: '100%', backgroundColor: '#FFFFFF' },
   backBtn: { position: 'absolute', left: scale(16), width: scale(40), height: scale(40), borderRadius: scale(20), backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' },
   topRightBtns: { position: 'absolute', right: scale(16), flexDirection: 'row', gap: scale(8) },
   topRightBtn: { width: scale(40), height: scale(40), borderRadius: scale(20), backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' },

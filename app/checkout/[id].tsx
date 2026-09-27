@@ -304,8 +304,6 @@ export default function CheckoutScreen() {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: scale(16), paddingBottom: insets.bottom + scale(320) }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <DisclaimerBanner />
-
         {/* Delivery summary with Edit (step 2 — mockup) */}
         {step === 'payment' ? (
           <View style={[styles.deliverySummaryCard, { backgroundColor: colors.surface, borderColor: colors.border, marginBottom: scale(10) }]}>
@@ -543,6 +541,10 @@ export default function CheckoutScreen() {
         ) : null}
 
         {/* STEP 3: Transfer / Justificatif */}
+        {step === 'transfer' ? (
+          <DisclaimerBanner />
+        ) : null}
+
         {step === 'transfer' ? (
           <View>
             <Text style={{ fontSize: scale(22), fontWeight: '800', color: colors.textPrimary, marginBottom: scale(6), textAlign: isAr ? 'right' : 'left' }}>

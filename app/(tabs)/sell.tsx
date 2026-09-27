@@ -115,7 +115,6 @@ export default function SellScreen() {
   const [activePreview, setActivePreview] = useState(0);
   const [pendingImages, setPendingImages] = useState<SelectedImage[]>([]);
   const [previewIndex, setPreviewIndex] = useState(0);
-  const [cropMode, setCropMode] = useState<'full' | 'square'>('full');
 
   const [stock, setStock] = useState('');
   // ─── Variants editor (optional per product) ───
@@ -155,7 +154,7 @@ export default function SellScreen() {
     const remaining = MAX_IMAGES - images.length;
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') { Alert.alert(lb('Permission Required', 'Permission requise', 'إذن مطلوب')); return; }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: remaining, quality: 0.9 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: remaining, quality: 1, exif: true });
     if (!result.canceled && result.assets.length > 0) {
       impactLight();
       const newImages: SelectedImage[] = result.assets.slice(0, remaining).map((asset, i) => ({ id: `img_${Date.now()}_${i}`, uri: asset.uri }));
@@ -168,25 +167,27 @@ export default function SellScreen() {
     if (images.length >= MAX_IMAGES) { Alert.alert(lb('Limit Reached', 'Limite atteinte', 'تم بلوغ الحد الأقصى')); return; }
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') { Alert.alert(lb('Permission Required', 'Permission requise', 'إذن مطلوب')); return; }
-    const result = await ImagePicker.launchCameraAsync({ quality: 0.9 });
+    const result = await ImagePicker.launchCameraAsync({ quality: 1, exif: true });
     if (!result.canceled && result.assets.length > 0) {
       impactLight();
-      setImages(prev => [...prev, { id: `img_${Date.now()}`, uri: result.assets[0].uri }]);
+      const sourceUri = result.assets[0].uri;
+      try {
+        const normalized = await ImageManipulator.manipulateAsync(sourceUri, [], { compress: 0.85 });
+        setImages(prev => [...prev, { id: `img_${Date.now()}`, uri: normalized.uri }]);
+      } catch {
+        setImages(prev => [...prev, { id: `img_${Date.now()}`, uri: sourceUri }]);
+      }
     }
   }, [images.length]);
-  const commitImages = useCallback(async (mode: 'full' | 'square') => {
+  const commitImages = useCallback(async () => {
     const list: SelectedImage[] = [];
     for (const img of pendingImages) {
-      if (mode === 'square') {
-        try {
-          // center-crop to square preserving max area (optional — original still shown full in feed via contain)
-          const ctx = await (ImageManipulator as any).manipulateAsync(img.uri, [{ resize: { width: 1080 } }], { compress: 0.9 });
-          const w = (ctx as any).width || 1080; const h = (ctx as any).height || 1080;
-          const side = Math.min(w, h);
-          const cx = (await (ImageManipulator as any).manipulateAsync(ctx.uri, [{ crop: { originX: Math.round((w - side) / 2), originY: Math.round((h - side) / 2), width: side, height: side } }], { compress: 0.9 }));
-          list.push({ ...img, uri: cx.uri });
-        } catch { list.push(img); }
-      } else list.push(img);
+      try {
+        // Empty transforms normalize EXIF orientation; compression preserves the
+        // complete source frame and aspect ratio without a forced square crop.
+        const normalized = await ImageManipulator.manipulateAsync(img.uri, [], { compress: 0.85 });
+        list.push({ ...img, uri: normalized.uri });
+      } catch { list.push(img); }
     }
     setImages(prev => [...prev, ...list].slice(0, MAX_IMAGES));
     setPendingImages([]);
@@ -230,9 +231,14 @@ export default function SellScreen() {
   const pickVariantImage = useCallback(async (idx: number) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85, aspect: [1, 1] });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1, exif: true });
     if (!result.canceled && result.assets.length > 0) {
-      const uri = result.assets[0].uri;
+      const sourceUri = result.assets[0].uri;
+      let uri = sourceUri;
+      try {
+        const normalized = await ImageManipulator.manipulateAsync(sourceUri, [], { compress: 0.85 });
+        uri = normalized.uri;
+      } catch {}
       setVariantItems(prev => prev.map((x, i) => i === idx ? { ...x, image: uri } : x));
     }
   }, []);
@@ -322,7 +328,7 @@ export default function SellScreen() {
           {images.length > 0 ? (
             <View style={styles.imageSection}>
               <View style={[styles.previewContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <Image source={{ uri: images[activePreview]?.uri }} style={styles.previewImage} contentFit="cover" transition={200} />
+                <Image source={{ uri: images[activePreview]?.uri }} style={[styles.previewImage, { backgroundColor: '#FFFFFF' }]} contentFit="contain" transition={200} />
                 {activePreview === 0 ? (
                   <View style={[styles.coverBadge, { backgroundColor: colors.primary }]}>
                     <MaterialIcons name="star" size={scale(12)} color="#FFF" />
@@ -338,7 +344,7 @@ export default function SellScreen() {
                 {images.map((img, index) => (
                   <View key={img.id} style={styles.thumbWrapper}>
                     <Pressable onPress={() => setActivePreview(index)} style={[styles.thumbCard, { borderColor: activePreview === index ? colors.primary : colors.border, borderWidth: activePreview === index ? 2.5 : 1 }]}>
-                      <Image source={{ uri: img.uri }} style={styles.thumbImage} contentFit="cover" />
+                      <Image source={{ uri: img.uri }} style={[styles.thumbImage, { backgroundColor: '#FFFFFF' }]} contentFit="contain" />
                       {index === 0 ? <View style={[styles.thumbCoverDot, { backgroundColor: colors.primary }]}><MaterialIcons name="star" size={scale(8)} color="#FFF" /></View> : null}
                     </Pressable>
                     <View style={styles.thumbActions}>
@@ -703,7 +709,7 @@ export default function SellScreen() {
 
       <LoginModal visible={showLogin} onClose={() => setShowLogin(false)} />
 
-      {/* Optional image preview: keep full (default) or optional square crop — original always preserved */}
+      {/* Preview the complete frame before compression/orientation normalization. */}
       <Modal visible={pendingImages.length > 0} transparent animationType="fade" onRequestClose={() => setPendingImages([])}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: scale(20) }}>
           <View style={{ backgroundColor: '#FFFFFF', borderRadius: scale(16), padding: scale(14), alignItems: 'center' }}>
@@ -716,14 +722,11 @@ export default function SellScreen() {
               {lb('Product image preview', 'Aperçu de l\'image', 'معاينة صورة المنتج')}
             </Text>
             <Text style={{ marginTop: scale(4), fontSize: scale(12), color: '#64748B', textAlign: 'center', fontFamily: 'Cairo-Regular' }}>
-              {lb('Full view (recommended) or optional square crop — original is kept either way.', 'Vue complète (recommandée) ou recadrage carré optionnel — l\'original est conservé.', 'عرض كامل (موصى به) أو قصّ مربع اختياري — الأصل يُحفظ في الحالتين.')}
+              {lb('The complete photo will be kept and compressed without cropping.', 'La photo complète sera conservée et compressée sans recadrage.', 'ستُحفظ الصورة كاملة وتُضغط من دون قص.')}
             </Text>
             <View style={{ flexDirection: 'row', gap: scale(10), marginTop: scale(12) }}>
-              <Pressable onPress={() => commitImages('full')} style={{ paddingVertical: scale(10), paddingHorizontal: scale(16), borderRadius: scale(10), backgroundColor: '#10B981' }}>
-                <Text style={{ color: '#FFF', fontWeight: '700', fontFamily: 'Cairo-Bold' }}>{lb('Use full', 'Vue complète', 'استخدام كاملة')}</Text>
-              </Pressable>
-              <Pressable onPress={() => commitImages('square')} style={{ paddingVertical: scale(10), paddingHorizontal: scale(16), borderRadius: scale(10), backgroundColor: '#4C1CEA' }}>
-                <Text style={{ color: '#FFF', fontWeight: '700', fontFamily: 'Cairo-Bold' }}>{lb('Square crop', 'Recadrage carré', 'قصّ مربع')}</Text>
+              <Pressable onPress={commitImages} style={{ paddingVertical: scale(10), paddingHorizontal: scale(16), borderRadius: scale(10), backgroundColor: '#5B48D9' }}>
+                <Text style={{ color: '#FFF', fontWeight: '700', fontFamily: 'Cairo-Bold' }}>{lb('Use photos', 'Utiliser les photos', 'استخدام الصور')}</Text>
               </Pressable>
             </View>
             {pendingImages.length > 1 ? (

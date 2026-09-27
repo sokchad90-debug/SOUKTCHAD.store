@@ -128,7 +128,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           uri={product?.images?.[0]}
           frameWidth={CARD_WIDTH}
           frameRatio={CARD_WIDTH / IMAGE_HEIGHT}
-          neutralBg={colors.borderLight}
+          neutralBg="#FFFFFF"
           accessibilityLabel={title}
           failedText={language === 'fr' ? 'Image indisponible' : language === 'ar' ? 'الصورة غير متوفرة' : 'Image unavailable'}
         />
@@ -190,24 +190,21 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
         <AppText weight={600} style={[styles.title, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(12), lineHeight: cardScale(17) }]} numberOfLines={2}>
           {title}
         </AppText>
-        {/* Row 3: rating + sold count in one row */}
-        {(product?.soldCount != null || product?.rating != null) ? (
+        {/* Row 3: real review state only; never imply sales/reviews that do not exist. */}
+        {((product?.reviewsCount ?? 0) > 0 && (product?.rating ?? 0) > 0) ? (
           <View style={[styles.metaRow, isAr && { flexDirection: 'row-reverse' }]}>
-            {product?.rating != null ? (
-              <View style={[styles.ratingInline, isAr && { flexDirection: 'row-reverse' }]}>
-                <MaterialIcons name="star" size={cardScale(11)} color="#FFB400" />
-                <Text style={{ color: colors.textTertiary, fontSize: cardScale(10) }}>
-                  {product.rating}{product?.reviewsCount != null ? ` (${product.reviewsCount})` : ''}
-                </Text>
-              </View>
-            ) : null}
-            {product?.soldCount != null ? (
-              <Text style={[styles.soldText, { color: colors.textTertiary, fontSize: cardScale(10) }]} numberOfLines={1}>
-                {product?.rating != null ? ' · ' : ''}{product.soldCount >= 1000 ? `${(product.soldCount / 1000).toFixed(0)}K+` : product.soldCount} {language === 'fr' ? 'vendus' : language === 'ar' ? 'مبيع' : 'sold'}
+            <View style={[styles.ratingInline, isAr && { flexDirection: 'row-reverse' }]}>
+              <MaterialIcons name="star" size={cardScale(11)} color="#FFB400" />
+              <Text style={{ color: colors.textTertiary, fontSize: cardScale(10) }}>
+                {product.rating} ({product.reviewsCount})
               </Text>
-            ) : null}
+            </View>
           </View>
-        ) : null}
+        ) : (
+          <Text style={[styles.soldText, { color: colors.textTertiary, textAlign: isAr ? 'right' : 'left', fontSize: cardScale(10) }]} numberOfLines={2}>
+            {language === 'fr' ? "Pas d'avis pour le moment" : language === 'ar' ? 'لا توجد تقييمات بعد' : 'No reviews yet'}
+          </Text>
+        )}
         {/* Row 4: location */}
         {product?.location ? (
           <View style={[styles.meta, isAr && { flexDirection: 'row-reverse' }]}>
