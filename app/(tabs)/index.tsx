@@ -191,7 +191,7 @@ function HomeListHeader({
             key={'stores-' + language}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[{ paddingHorizontal: layout.horizontalPadding, gap: scale(8) }]}
+            contentContainerStyle={[{ paddingHorizontal: layout.horizontalPadding, gap: scale(8) }, isAr && { flexDirection: 'row-reverse' }]}
             testID="home-verified-stores"
           >
             {verifiedSellers.map((seller: any) => (
