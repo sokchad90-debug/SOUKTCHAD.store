@@ -189,7 +189,7 @@ function HomeListHeader({
           </View>
           <ScrollView
             key={'stores-' + language}
-            ref={(el) => { if (el && isAr) { setTimeout(() => { try { el.scrollToEnd({ animated: false }); } catch {} }, 350); } }}
+            ref={(el) => { if (el && isAr) { const go = () => { try { el.scrollToEnd({ animated: false }); } catch {} }; setTimeout(go, 350); setTimeout(go, 900); setTimeout(go, 1800); } }}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={[{ paddingHorizontal: layout.horizontalPadding, gap: scale(8) }]}
