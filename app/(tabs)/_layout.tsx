@@ -270,7 +270,6 @@ export default function TabLayout() {
 
       {/* HIDDEN ROUTES */}
       <Tabs.Screen name="favorites" options={{ href: HIDDEN, headerShown: false }} />
-      <Tabs.Screen name="settings" options={{ href: HIDDEN, headerShown: false }} />
     </Tabs>
   );
 }
