@@ -189,10 +189,9 @@ function HomeListHeader({
           </View>
           <ScrollView
             key={'stores-' + language}
-            ref={(el) => { if (el && isAr) { requestAnimationFrame(() => el.scrollToEnd({ animated: false })); } }}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[{ paddingHorizontal: layout.horizontalPadding, gap: scale(8) }]}
+            contentContainerStyle={[{ paddingHorizontal: layout.horizontalPadding, gap: scale(8) }, isAr && { flexDirection: 'row-reverse' }]}
             testID="home-verified-stores"
           >
             {verifiedSellers.map((seller: any) => (
