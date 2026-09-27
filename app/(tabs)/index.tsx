@@ -5,6 +5,7 @@ import {
   Animated, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -134,26 +135,43 @@ function HomeListHeader({
       ) : null}
 
       {showHeaderContent ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={lb('Explore all products', 'Explorer tous les produits', 'استكشف كل المنتجات')}
-          onPress={() => router.push('/all-products' as any)}
-          style={({ pressed }) => [styles.discoveryBanner, { marginHorizontal: layout.horizontalPadding, opacity: pressed ? 0.94 : 1 }, isAr && { flexDirection: 'row-reverse' }]}
+        <LinearGradient
+          colors={isAr ? ['#F3EFEA', '#E4DCFF'] : ['#E4DCFF', '#F3EFEA']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={[styles.discoveryBanner, { marginHorizontal: layout.horizontalPadding }]}
         >
-          <View style={[styles.discoveryCopy, isAr && { alignItems: 'flex-end' }]}>
-            <Text style={[styles.discoveryTitle, { textAlign: isAr ? 'right' : 'left' }]}>{lb('Discover Sokchad', 'Découvrez Sokchad', 'اكتشف سوكتشاد')}</Text>
-            <View style={[styles.discoveryButton, isAr && { flexDirection: 'row-reverse' }]}>
-              <Text style={styles.discoveryButtonText}>{lb('Explore', 'Explorer', 'استكشف')}</Text>
-              <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(14)} color="#FFFFFF" />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={lb('Explore all products', 'Découvrir tous les produits', 'تسوّق كل المنتجات الآن')}
+            onPress={() => router.push('/all-products' as any)}
+            style={({ pressed }) => [styles.discoveryContent, { opacity: pressed ? 0.94 : 1 }, isAr && { flexDirection: 'row-reverse' }]}
+          >
+            <View style={[styles.discoveryCopy, isAr && { alignItems: 'flex-end' }]}>
+              <Text style={[styles.discoveryTitle, { textAlign: isAr ? 'right' : 'left' }]}>{lb('Everything you need,\nin one place', "Tout ce qu'il vous faut,\nau même endroit", 'كل ما تحتاجه،\nفي مكان واحد')}</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={lb('Explore', 'Découvrir', 'تسوّق الآن')}
+                hitSlop={scale(12)}
+                onPress={() => router.push('/all-products' as any)}
+                style={({ pressed }) => [styles.discoveryButton, isAr && { flexDirection: 'row-reverse' }, pressed && styles.discoveryButtonPressed]}
+              >
+                <Text style={styles.discoveryButtonText}>{lb('Explore', 'Découvrir', 'تسوّق الآن')}</Text>
+                <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(14)} color="#FFFFFF" />
+              </Pressable>
             </View>
-          </View>
-          <View style={styles.discoveryArtwork} pointerEvents="none">
-            <View style={styles.discoveryOrbLarge} />
-            <View style={styles.discoveryOrbSmall} />
-            <View style={styles.discoveryBag}><MaterialIcons name="shopping-bag" size={scale(34)} color="#5B48D9" /></View>
-            <MaterialIcons name="headphones" size={scale(50)} color="#8B7BE8" style={styles.discoveryHeadphones} />
-          </View>
-        </Pressable>
+            <View style={styles.discoveryArtwork} pointerEvents="none">
+              <View style={styles.discoveryOrbLarge} />
+              <Image
+                accessible={false}
+                source={{ uri: 'https://souktchad.shop/dl/products/photo-1608043152269-423dbba4e7e1.jpg' }}
+                style={styles.discoveryProductImage}
+                contentFit="contain"
+                transition={150}
+              />
+            </View>
+          </Pressable>
+        </LinearGradient>
       ) : null}
 
       {/* Verified Stores — horizontal scroll (only when All category is active).
@@ -854,17 +872,17 @@ const styles = StyleSheet.create({
   categoryCircleLabel: { fontSize: scale(10), marginTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4), textAlign: 'center', fontFamily: 'Cairo-Regular' },
   discoveryBanner: {
     height: scale(80), borderRadius: scale(14), marginTop: scale(6), marginBottom: scale(10),
-    backgroundColor: '#E8E1FF', overflow: 'hidden', flexDirection: 'row', alignItems: 'center',
+    overflow: 'hidden',
   },
-  discoveryCopy: { zIndex: 2, flex: 1, paddingHorizontal: scale(16), justifyContent: 'center', alignItems: 'flex-start' },
-  discoveryTitle: { color: '#21164D', fontSize: scale(18), lineHeight: scale(22), fontWeight: '800', fontFamily: 'Cairo-Bold' },
-  discoveryButton: { flexDirection: 'row', alignItems: 'center', gap: scale(2), marginTop: scale(4), backgroundColor: '#5B48D9', borderRadius: scale(12), paddingHorizontal: scale(12), paddingVertical: scale(4) },
+  discoveryContent: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  discoveryCopy: { zIndex: 2, flex: 1, paddingHorizontal: scale(14), justifyContent: 'center', alignItems: 'flex-start' },
+  discoveryTitle: { color: '#3D2C8D', fontSize: scale(15), lineHeight: scale(18), fontWeight: '800', fontFamily: 'Cairo-Bold' },
+  discoveryButton: { flexDirection: 'row', alignItems: 'center', gap: scale(2), marginTop: scale(3), backgroundColor: '#5B48D9', borderRadius: scale(999), paddingHorizontal: scale(11), paddingVertical: scale(2) },
+  discoveryButtonPressed: { opacity: 0.86 },
   discoveryButtonText: { color: '#FFFFFF', fontSize: scale(11), fontWeight: '700', fontFamily: 'Cairo-Bold' },
   discoveryArtwork: { width: '43%', height: '100%', position: 'relative' },
   discoveryOrbLarge: { position: 'absolute', width: scale(92), height: scale(92), borderRadius: scale(46), backgroundColor: '#CFC4FF', right: scale(4), top: -scale(20) },
-  discoveryOrbSmall: { position: 'absolute', width: scale(46), height: scale(46), borderRadius: scale(23), backgroundColor: '#BFE9DF', left: scale(2), bottom: -scale(18) },
-  discoveryBag: { position: 'absolute', right: scale(12), bottom: scale(8), width: scale(52), height: scale(48), borderRadius: scale(12), backgroundColor: '#D7F1E9', alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '5deg' }] },
-  discoveryHeadphones: { position: 'absolute', left: scale(2), bottom: -scale(3), transform: [{ rotate: '-8deg' }] },
+  discoveryProductImage: { width: '100%', height: '100%' },
   // Verified Stores section
   verifiedStoresRow: { flexDirection: 'row', paddingHorizontal: scale(16), paddingBottom: scale(2), paddingTop: 0 },
   verifiedStoreItemFlex: { alignItems: 'center', flex: 1 },
