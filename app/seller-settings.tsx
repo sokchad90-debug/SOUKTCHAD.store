@@ -164,7 +164,7 @@ export default function SellerSettingsScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.background }]}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View style={{ flex: 1 }}>
       <View style={[styles.header, isAr && { flexDirection: 'row-reverse' }, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <Pressable onPress={() => router.back()} hitSlop={scale(8)} style={styles.backBtn}>
           <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={scale(22)} color={colors.textPrimary} />
@@ -320,7 +320,7 @@ export default function SellerSettingsScreen() {
           {saving ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={styles.mainSaveBtnText}>{lb('Save Changes', 'Enregistrer', 'حفظ التغييرات')}</Text>}
         </Pressable>
       </ScrollView>
-          </KeyboardAvoidingView>
+          </View>
 </SafeAreaView>
   );
 }
