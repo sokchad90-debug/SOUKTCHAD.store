@@ -1,15 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, FlatList, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
 import { selection } from '@/services/haptics';
 import { shadows } from '@/constants/theme';
 import { BOTTOM_NAV_CONTENT_GAP, scale, usePhoneLayout } from '@/constants/responsive';
-import { AppText } from '@/components/AppText';
-import { DS } from '@/ui/designSystem';
 import { CATEGORY_TREE, descendantsOf, CATEGORY_IMAGE_BY_ID } from '@/services/categoryTree';
 
 // Static per-category images (managed data source) — mapped by category id family.
@@ -52,12 +50,19 @@ const CATEGORY_IMAGES: Record<string, any> = {
 const BRAND_PURPLE = '#5B48D9';
 const BRAND_PURPLE_TINT = '#5B48D91A';
 
+// Short labels are presentation-only; the category tree keeps the canonical names.
+const DISPLAY_NAME: Record<string, Record<string, string>> = {
+  electromenager: { en: 'Appliances', fr: 'Électroménager', ar: 'الأجهزة المنزلية' },
+  beauty: { en: 'Beauty & care', fr: 'Beauté & soins', ar: 'التجميل والعناية' },
+  agriculture: { en: 'Agriculture & garden', fr: 'Agriculture & jardin', ar: 'الزراعة والبستنة' },
+  grocery: { en: 'Groceries & drinks', fr: 'Alimentation', ar: 'البقالة والمشروبات' },
+};
+
 export default function CategoriesScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const layout = usePhoneLayout();
   const { width: winW } = useWindowDimensions();
-  const { colors, language, products, setSelectedCategory, categories, navigateToCategory, subCategories, currentCategoryPath, goBackCategory, resetCategoryNavigation } = useApp();
+  const { colors, language, products, setSelectedCategory, categories, navigateToCategory, subCategories, currentCategoryPath, goBackCategory } = useApp();
 
   const isFr = language === 'fr';
   const isAr = language === 'ar';
@@ -126,7 +131,8 @@ export default function CategoriesScreen() {
 
   const renderCategory = ({ item: cat }: { item: any }) => {
     const count = getCategoryCount(cat.id);
-    const name = (cat.name as Record<string, string>)?.[language] || (cat.name as Record<string, string>)?.en || cat.id;
+    const canonicalName = (cat.name as Record<string, string>)?.[language] || (cat.name as Record<string, string>)?.en || cat.id;
+    const name = DISPLAY_NAME[cat.id]?.[language] || canonicalName;
     const icon = (cat.icon || 'category') as any;
     const color = cat.color || '#FF7A00';
     const image = CATEGORY_IMAGES[cat.id] || CATEGORY_IMAGE_BY_ID[cat.id];
@@ -153,9 +159,11 @@ export default function CategoriesScreen() {
             <MaterialIcons name={icon} size={scale(30)} color={color} />
           )}
         </View>
-        <Text style={[styles.categoryName, { color: colors.textPrimary }]} numberOfLines={2}>
-          {name}
-        </Text>
+        <View style={styles.categoryNameWrap}>
+          <Text style={[styles.categoryName, { color: colors.textPrimary }]}>
+            {name}
+          </Text>
+        </View>
         <View style={styles.categoryCountWrap}>
           {count != null && count > 0 ? (
             <View style={styles.categoryCount}>
@@ -171,18 +179,8 @@ export default function CategoriesScreen() {
   };
 
   const categoryNameOf = (c: { id: string; name: any }) => (c.name as Record<string, string>)?.[language] || c.name?.en || c.id;
-  const inSubMode = subCategories.length > 0;
-
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.headerRow, isAr && styles.rowReverse]}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}>
-          {lb('Categories', 'Catégories', 'الفئات')}
-        </Text>
-        <View style={styles.headerCountBadge}>
-          <Text style={styles.headerCountText}>{displayCategories.length}</Text>
-        </View>
-      </View>
       {/* Breadcrumb path + back — restores level and scroll state (path kept in context) */}
       {currentCategoryPath.length > 0 && (
         <View style={[styles.crumbRow, isAr && { flexDirection: 'row-reverse' }]}>
@@ -211,7 +209,7 @@ export default function CategoriesScreen() {
         keyExtractor={(item) => item.id}
         numColumns={3}
         columnWrapperStyle={[styles.row, isAr && { flexDirection: 'row-reverse' }]}
-        contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(16), paddingBottom: layout.safeBottom + BOTTOM_NAV_CONTENT_GAP + layout.smallGap }}
+        contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(8), paddingBottom: layout.safeBottom + BOTTOM_NAV_CONTENT_GAP + layout.smallGap }}
         onLayout={(e) => setGridW(e.nativeEvent.layout.width)}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
@@ -229,16 +227,12 @@ export default function CategoriesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  rowReverse: { flexDirection: 'row-reverse' },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: scale(10), paddingHorizontal: scale(16), paddingTop: scale(12), paddingBottom: scale(4) },
-  headerTitle: { fontSize: scale(28), lineHeight: scale(34), fontWeight: '800' },
-  headerCountBadge: { minWidth: scale(32), height: scale(26), paddingHorizontal: scale(9), borderRadius: scale(13), alignItems: 'center', justifyContent: 'center', backgroundColor: '#5B48D918' },
-  headerCountText: { fontSize: scale(13), fontWeight: '800', color: BRAND_PURPLE },
-  row: { gap: scale(12), marginBottom: scale(16) },
+  row: { alignItems: 'stretch', gap: scale(12), marginBottom: scale(16) },
   categoryCard: { borderRadius: scale(16), borderWidth: 1, borderColor: '#EEF2F7', padding: scale(8), alignItems: 'center', gap: scale(6) },
   categoryIconWrap: { width: '100%', borderRadius: scale(16), borderWidth: 1, borderColor: '#E8E8EE', backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   categoryImage: { width: '100%', height: '100%' },
-  categoryName: { fontSize: scale(14), fontWeight: '600', textAlign: 'center', minHeight: scale(34), lineHeight: scale(17) },
+  categoryNameWrap: { width: '100%', minHeight: scale(34), flexGrow: 1, justifyContent: 'center' },
+  categoryName: { fontSize: scale(14), fontWeight: '600', textAlign: 'center', lineHeight: scale(17) },
   crumbRow: { flexDirection: 'row', alignItems: 'center', gap: scale(8), paddingHorizontal: scale(16), paddingTop: scale(12), paddingBottom: scale(4) },
   crumbText: { fontSize: scale(13), fontWeight: '600', flex: 1 },
   seeAllBtn: { borderWidth: 1, borderRadius: scale(14), paddingHorizontal: scale(12), paddingVertical: scale(6) },
