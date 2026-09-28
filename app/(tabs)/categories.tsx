@@ -15,30 +15,32 @@ import { CATEGORY_TREE, descendantsOf, CATEGORY_IMAGE_BY_ID } from '@/services/c
 // Static per-category images (managed data source) — mapped by category id family.
 const CATEGORY_IMAGES: Record<string, any> = {
   electronics: require('@/assets/images/categories/electronics.png'),
-  electronics_phones: require('@/assets/images/categories/electronics.png'),
-  electronics_laptops: require('@/assets/images/categories/electronics.png'),
-  electronics_audio: require('@/assets/images/categories/electronics.png'),
-  electronics_tv: require('@/assets/images/categories/electronics.png'),
   fashion: require('@/assets/images/categories/fashion.png'),
-  fashion_men: require('@/assets/images/categories/fashion.png'),
-  fashion_women: require('@/assets/images/categories/fashion.png'),
-  fashion_kids: require('@/assets/images/categories/fashion.png'),
   shoes: require('@/assets/images/categories/shoes.png'),
-  shoes_sneakers: require('@/assets/images/categories/shoes.png'),
-  shoes_formal: require('@/assets/images/categories/shoes.png'),
-  home: require('@/assets/images/categories/home_garden.png'),
+  bags_accessories: require('@/assets/images/categories/bags_accessories.png'),
+  beauty: require('@/assets/images/categories/beauty.png'),
+  baby: require('@/assets/images/categories/baby.png'),
+  home_kitchen: require('@/assets/images/categories/home_kitchen.png'),
+  furniture: require('@/assets/images/categories/furniture.png'),
+  electromenager: require('@/assets/images/categories/electromenager.png'),
+  energy: require('@/assets/images/categories/energy.png'),
+  construction: require('@/assets/images/categories/construction.png'),
   home_garden: require('@/assets/images/categories/home_garden.png'),
   vehicles: require('@/assets/images/categories/vehicles.png'),
-  vehicles_sedans: require('@/assets/images/categories/vehicles.png'),
-  vehicles_suvs: require('@/assets/images/categories/vehicles.png'),
   agriculture: require('@/assets/images/categories/agriculture.png'),
+  grocery: require('@/assets/images/categories/grocery.png'),
+  office_school: require('@/assets/images/categories/office_school.png'),
+  sports: require('@/assets/images/categories/sports.png'),
+  toys: require('@/assets/images/categories/toys.png'),
+  books_music: require('@/assets/images/categories/books_music.png'),
+  pets: require('@/assets/images/categories/pets.png'),
+  trade_equipment: require('@/assets/images/categories/trade_equipment.png'),
   services: require('@/assets/images/categories/services.png'),
   real_estate: require('@/assets/images/categories/real_estate.png'),
-  immobilier: require('@/assets/images/categories/real_estate.png'),
 };
 
-// Pastel frame background per category color (light tint of the brand color)
-const pastel = (color?: string) => `${color || '#E2E8F0'}1A`;
+const BRAND_PURPLE = '#5B48D9';
+const BRAND_PURPLE_TINT = '#5B48D91A';
 
 export default function CategoriesScreen() {
   const router = useRouter();
@@ -58,7 +60,7 @@ export default function CategoriesScreen() {
   const GAP = scale(12);
   const ROW_GAP = scale(16);
   const CARD_W = Math.floor((gridW - SIDE * 2 - GAP * (COLS - 1)) / COLS);
-  const IMG_H = Math.round(CARD_W * 0.86); // square-ish pastel frame per reference
+  const IMG_H = Math.round(CARD_W * 0.9);
 
   // Show subcategories when navigating into one, otherwise root categories.
   // Buyer-side: hide categories with no products AND no children (empty branches);
@@ -128,7 +130,7 @@ export default function CategoriesScreen() {
           shadows.card,
         ]}
       >
-        <View style={[styles.categoryIconWrap, { height: IMG_H, backgroundColor: pastel(color) }]}>
+        <View style={[styles.categoryIconWrap, { height: IMG_H }]}>
           {image ? (
             <Image
               source={image}
@@ -146,8 +148,8 @@ export default function CategoriesScreen() {
         </Text>
         <View style={styles.categoryCountWrap}>
           {count != null && count > 0 ? (
-            <View style={[styles.categoryCount, { backgroundColor: pastel(color) }]}>
-              <Text style={[styles.categoryCountText, { color }]}>{count}</Text>
+            <View style={styles.categoryCount}>
+              <Text style={styles.categoryCountText}>{count}</Text>
             </View>
           ) : count == null ? (
             // products not loaded yet — show nothing rather than a fake 0
@@ -163,6 +165,14 @@ export default function CategoriesScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.headerRow, isAr && styles.rowReverse]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}>
+          {lb('Categories', 'Catégories', 'الفئات')}
+        </Text>
+        <View style={styles.headerCountBadge}>
+          <Text style={styles.headerCountText}>{displayCategories.length}</Text>
+        </View>
+      </View>
       {/* Breadcrumb path + back — restores level and scroll state (path kept in context) */}
       {currentCategoryPath.length > 0 && (
         <View style={[styles.crumbRow, isAr && { flexDirection: 'row-reverse' }]}>
@@ -209,16 +219,21 @@ export default function CategoriesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  rowReverse: { flexDirection: 'row-reverse' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: scale(10), paddingHorizontal: scale(16), paddingTop: scale(12), paddingBottom: scale(4) },
+  headerTitle: { fontSize: scale(28), lineHeight: scale(34), fontWeight: '800' },
+  headerCountBadge: { minWidth: scale(32), height: scale(26), paddingHorizontal: scale(9), borderRadius: scale(13), alignItems: 'center', justifyContent: 'center', backgroundColor: '#5B48D918' },
+  headerCountText: { fontSize: scale(13), fontWeight: '800', color: BRAND_PURPLE },
   row: { gap: scale(12), marginBottom: scale(16) },
   categoryCard: { borderRadius: scale(16), borderWidth: 1, borderColor: '#EEF2F7', padding: scale(8), alignItems: 'center', gap: scale(6) },
-  categoryIconWrap: { width: '100%', borderRadius: scale(14), alignItems: 'center', justifyContent: 'center' },
+  categoryIconWrap: { width: '100%', borderRadius: scale(16), borderWidth: 1, borderColor: '#E8E8EE', backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   categoryImage: { width: '100%', height: '100%' },
-  categoryName: { fontSize: scale(13), fontWeight: '600', textAlign: 'center', minHeight: scale(32), lineHeight: scale(16) },
+  categoryName: { fontSize: scale(14), fontWeight: '600', textAlign: 'center', minHeight: scale(34), lineHeight: scale(17) },
   crumbRow: { flexDirection: 'row', alignItems: 'center', gap: scale(8), paddingHorizontal: scale(16), paddingTop: scale(12), paddingBottom: scale(4) },
   crumbText: { fontSize: scale(13), fontWeight: '600', flex: 1 },
   seeAllBtn: { borderWidth: 1, borderRadius: scale(14), paddingHorizontal: scale(12), paddingVertical: scale(6) },
   seeAllText: { fontSize: scale(12), fontWeight: '700' },
   categoryCountWrap: { height: scale(20), justifyContent: 'center' },
-  categoryCount: { paddingHorizontal: scale(10), paddingVertical: scale(2), borderRadius: scale(10) },
-  categoryCountText: { fontSize: scale(11), fontWeight: '700' },
+  categoryCount: { paddingHorizontal: scale(10), paddingVertical: scale(2), borderRadius: scale(10), backgroundColor: BRAND_PURPLE_TINT },
+  categoryCountText: { fontSize: scale(11), fontWeight: '700', color: BRAND_PURPLE },
 });
