@@ -142,7 +142,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
             </View>
           </Pressable>
           {isSellerVerificationActive(seller) ? (
-            <View style={[styles.verifiedBadge, isAr ? { left: TOP_ICON_SECOND_OFFSET } : { right: TOP_ICON_SECOND_OFFSET }, { backgroundColor: isDark ? DT.dark.verified : DT.color.verified }]}>
+            <View style={[styles.verifiedBadge, isAr ? { right: TOP_ICON_EDGE } : { left: TOP_ICON_EDGE }, { backgroundColor: isDark ? DT.dark.verified : DT.color.verified }]}>
               <MaterialIcons name="verified" size={scale(12)} color="#FFF" />
             </View>
           ) : null}
