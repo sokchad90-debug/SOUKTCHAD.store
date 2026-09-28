@@ -1,3 +1,5 @@
+// Vector-icons font trim: ONLY MaterialIcons is used app-wide (609 refs) — skip other 23 ttf (~2.3MB APK)
+project.ext.vectoricons = [ iconFontNames: [ 'MaterialIcons.ttf' ] ]
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
@@ -96,7 +98,10 @@ android {
         versionName "8.9.140"
 
         ndk {
-            abiFilters 'arm64-v8a', 'x86_64'
+            // Delivery APK = arm64-v8a only (APK<=30MB owner law).
+            // Emulator/CI build: ./gradlew :app:assembleRelease -Pabis=arm64-v8a,x86_64
+            def requestedAbis = (project.findProperty('abis') ?: 'arm64-v8a').toString().split(',').collect { it.trim() }
+            abiFilters(*requestedAbis)
         }
         multiDexEnabled true
     }
