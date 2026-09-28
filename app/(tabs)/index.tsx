@@ -136,7 +136,7 @@ function HomeListHeader({
 
       {showHeaderContent ? (
         <LinearGradient
-          colors={isAr ? ['#F3EFEA', '#E4DCFF'] : ['#E4DCFF', '#F3EFEA']}
+          colors={isAr ? ['#6D4DE0', '#DCD5F7'] : ['#DCD5F7', '#6D4DE0']}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={[styles.discoveryBanner, { marginHorizontal: layout.horizontalPadding }]}
@@ -148,20 +148,27 @@ function HomeListHeader({
             style={({ pressed }) => [styles.discoveryContent, { opacity: pressed ? 0.94 : 1 }, isAr && { flexDirection: 'row-reverse' }]}
           >
             <View style={[styles.discoveryCopy, isAr && { alignItems: 'flex-end' }]}>
-              <Text style={[styles.discoveryTitle, { textAlign: isAr ? 'right' : 'left' }]}>{lb('Everything you need,\nin one place', "Tout ce qu'il vous faut,\nau même endroit", 'كل ما تحتاجه،\nفي مكان واحد')}</Text>
+              <Text style={[styles.discoveryTitle, { textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1} adjustsFontSizeToFit>
+                {lb('Wide selection', 'Grand choix', 'تشكيلة واسعة')}
+              </Text>
+              <Text style={[styles.discoveryTitleSecond, { textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1} adjustsFontSizeToFit>
+                {lb('at the best price', 'au meilleur prix', 'بأفضل سعر')}
+              </Text>
+              <Text style={[styles.discoverySubtitle, { textAlign: isAr ? 'right' : 'left' }]} numberOfLines={1} adjustsFontSizeToFit>
+                {lb('Electronics • Fashion • Home • and more', 'Électronique • Mode • Maison • et plus', 'إلكترونيات • ملابس • منزل • والمزيد')}
+              </Text>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={lb('Explore', 'Découvrir', 'تسوّق الآن')}
+                accessibilityLabel={lb('Discover', 'Découvrir', 'اكتشف')}
                 hitSlop={scale(12)}
                 onPress={() => router.push('/all-products' as any)}
-                style={({ pressed }) => [styles.discoveryButton, isAr && { flexDirection: 'row-reverse' }, pressed && styles.discoveryButtonPressed]}
+                style={({ pressed }) => [styles.discoveryButton, pressed && styles.discoveryButtonPressed]}
               >
-                <Text style={styles.discoveryButtonText}>{lb('Explore', 'Découvrir', 'تسوّق الآن')}</Text>
-                <MaterialIcons name={isAr ? 'chevron-left' : 'chevron-right'} size={scale(14)} color="#FFFFFF" />
+                <Text style={styles.discoveryButtonText}>{lb('Discover', 'Découvrir', 'اكتشف')}</Text>
+                <MaterialIcons name="chevron-right" size={scale(14)} color="#FFFFFF" />
               </Pressable>
             </View>
             <View style={styles.discoveryArtwork} pointerEvents="none">
-              <View style={styles.discoveryOrbLarge} />
               <Image
                 accessible={false}
                 source={{ uri: 'https://souktchad.shop/dl/products/photo-1608043152269-423dbba4e7e1.jpg' }}
@@ -169,6 +176,19 @@ function HomeListHeader({
                 contentFit="contain"
                 transition={150}
               />
+              <View style={[styles.discoveryDiscountBadge, isAr && styles.discoveryDiscountBadgeRtl]}>
+                <Text style={styles.discoveryDiscountLabel}>{lb('Up to', "Jusqu'à", 'حتى')}</Text>
+                <Text style={styles.discoveryDiscountValue}>{isAr ? '\u200E-50%' : '-50%'}</Text>
+              </View>
+            </View>
+            <View pointerEvents="none" style={styles.discoveryConfettiYellow} />
+            <View pointerEvents="none" style={styles.discoveryConfettiWhite} />
+            <View pointerEvents="none" style={styles.discoveryConfettiSmall} />
+            <View pointerEvents="none" style={styles.discoveryDots}>
+              <View style={[styles.discoveryDot, styles.discoveryDotActive]} />
+              <View style={styles.discoveryDot} />
+              <View style={styles.discoveryDot} />
+              <View style={styles.discoveryDot} />
             </View>
           </Pressable>
         </LinearGradient>
@@ -918,18 +938,33 @@ const styles = StyleSheet.create({
   },
   categoryCircleLabel: { fontSize: scale(10), marginTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(4), textAlign: 'center', fontFamily: 'Cairo-Regular' },
   discoveryBanner: {
-    height: scale(80), borderRadius: scale(14), marginTop: scale(6), marginBottom: scale(10),
+    height: scale(80), borderRadius: scale(20), marginTop: scale(6), marginBottom: scale(10),
     overflow: 'hidden',
   },
-  discoveryContent: { flex: 1, flexDirection: 'row', alignItems: 'center' },
-  discoveryCopy: { zIndex: 2, flex: 1, paddingHorizontal: scale(14), justifyContent: 'center', alignItems: 'flex-start' },
-  discoveryTitle: { color: '#3D2C8D', fontSize: scale(15), lineHeight: scale(18), fontWeight: '800', fontFamily: 'Cairo-Bold' },
-  discoveryButton: { flexDirection: 'row', alignItems: 'center', gap: scale(2), marginTop: scale(3), backgroundColor: '#5B48D9', borderRadius: scale(999), paddingHorizontal: scale(11), paddingVertical: scale(2) },
+  discoveryContent: { flex: 1, flexDirection: 'row', alignItems: 'center', position: 'relative' },
+  discoveryCopy: { zIndex: 3, width: '57%', paddingHorizontal: scale(12), justifyContent: 'center', alignItems: 'flex-start' },
+  discoveryTitle: { color: '#5B48D9', fontSize: scale(16), lineHeight: scale(17), fontWeight: '800', fontFamily: 'Cairo-Bold' },
+  discoveryTitleSecond: { color: '#172030', fontSize: scale(14), lineHeight: scale(15), fontWeight: '800', fontFamily: 'Cairo-Bold' },
+  discoverySubtitle: { color: '#475569', fontSize: scale(7), lineHeight: scale(9), fontWeight: '600', fontFamily: 'Cairo-SemiBold' },
+  discoveryButton: { minHeight: scale(24), flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: scale(1), marginTop: scale(2), backgroundColor: '#5B48D9', borderRadius: scale(999), paddingHorizontal: scale(10) },
   discoveryButtonPressed: { opacity: 0.86 },
-  discoveryButtonText: { color: '#FFFFFF', fontSize: scale(11), fontWeight: '700', fontFamily: 'Cairo-Bold' },
+  discoveryButtonText: { color: '#FFFFFF', fontSize: scale(9), fontWeight: '700', fontFamily: 'Cairo-Bold' },
   discoveryArtwork: { width: '43%', height: '100%', position: 'relative' },
-  discoveryOrbLarge: { position: 'absolute', width: scale(92), height: scale(92), borderRadius: scale(46), backgroundColor: '#CFC4FF', right: scale(4), top: -scale(20) },
   discoveryProductImage: { width: '100%', height: '100%' },
+  discoveryDiscountBadge: {
+    position: 'absolute', width: scale(44), height: scale(44), borderRadius: scale(22),
+    top: scale(3), right: scale(3), backgroundColor: '#FFC933', alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#172030', shadowOffset: { width: 0, height: scale(2) }, shadowOpacity: 0.18, shadowRadius: scale(3), elevation: 3,
+  },
+  discoveryDiscountBadgeRtl: { right: undefined, left: scale(3) },
+  discoveryDiscountLabel: { color: '#172030', fontSize: scale(7), lineHeight: scale(9), fontWeight: '700', fontFamily: 'Cairo-Bold', textAlign: 'center' },
+  discoveryDiscountValue: { color: '#172030', fontSize: scale(12), lineHeight: scale(14), fontWeight: '800', fontFamily: 'Cairo-Bold', textAlign: 'center', writingDirection: 'ltr' },
+  discoveryConfettiYellow: { position: 'absolute', top: scale(9), left: '48%', width: 0, height: 0, borderLeftWidth: scale(4), borderRightWidth: scale(4), borderBottomWidth: scale(7), borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: '#FFC933', transform: [{ rotate: '24deg' }] },
+  discoveryConfettiWhite: { position: 'absolute', bottom: scale(12), right: '34%', width: 0, height: 0, borderLeftWidth: scale(3), borderRightWidth: scale(3), borderBottomWidth: scale(6), borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: 'rgba(255,255,255,0.88)', transform: [{ rotate: '-32deg' }] },
+  discoveryConfettiSmall: { position: 'absolute', top: scale(14), right: scale(10), width: 0, height: 0, borderLeftWidth: scale(2), borderRightWidth: scale(2), borderBottomWidth: scale(4), borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: '#FFC933', transform: [{ rotate: '62deg' }] },
+  discoveryDots: { position: 'absolute', bottom: scale(3), left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: scale(4), zIndex: 4 },
+  discoveryDot: { width: scale(8), height: scale(8), borderRadius: scale(4), backgroundColor: 'rgba(255,255,255,0.45)' },
+  discoveryDotActive: { backgroundColor: '#FFFFFF' },
   // Verified Stores section
   verifiedStoresRow: { flexDirection: 'row', paddingHorizontal: scale(16), paddingBottom: scale(2), paddingTop: 0 },
   verifiedStoreItemFlex: { alignItems: 'center', flex: 1 },
