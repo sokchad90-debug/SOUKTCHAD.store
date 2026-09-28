@@ -122,26 +122,22 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           accessibilityLabel={title}
           failedText={language === 'fr' ? 'Image indisponible' : language === 'ar' ? 'الصورة غير متوفرة' : 'Image unavailable'}
         />
-        <View pointerEvents="box-none" style={[styles.topIconOverlay, isAr && styles.topIconOverlayRTL]}>
-          <Pressable
-            onPress={handleFavorite}
-            accessibilityRole="button"
-            accessibilityLabel={favoriteLabel}
-            accessibilityState={{ checked: favorite }}
-            style={[styles.favoriteHitArea, isAr ? { left: TOP_ICON_EDGE } : { right: TOP_ICON_EDGE }]}
-            hitSlop={scale(5)}
-          >
-            <View style={[styles.favoriteBtn, { backgroundColor: colors.overlay }]}>
-              <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                <MaterialIcons
-                  name={favorite ? 'favorite' : 'favorite-border'}
-                  size={scale(20)}
-                  color={favorite ? DT.color.danger : '#FFF'}
-                />
-              </Animated.View>
-            </View>
-          </Pressable>
-        </View>
+        <Pressable
+          onPress={handleFavorite}
+          accessibilityRole="button"
+          accessibilityLabel={favoriteLabel}
+          accessibilityState={{ checked: favorite }}
+          style={[styles.favoriteBtn, isAr ? { left: TOP_ICON_EDGE } : { right: TOP_ICON_EDGE }, { backgroundColor: colors.overlay }]}
+          hitSlop={scale(5)}
+        >
+          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+            <MaterialIcons
+              name={favorite ? 'favorite' : 'favorite-border'}
+              size={scale(20)}
+              color={favorite ? DT.color.danger : '#FFF'}
+            />
+          </Animated.View>
+        </Pressable>
         {isSellerVerificationActive(seller) ? (
           <View style={[styles.verifiedBadge, isAr ? { right: TOP_ICON_EDGE } : { left: TOP_ICON_EDGE }, { backgroundColor: isDark ? DT.dark.verified : DT.color.verified }]}>
             <MaterialIcons name="verified" size={scale(12)} color="#FFF" />
@@ -287,16 +283,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  topIconOverlay: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: TOP_ICON_SECOND_OFFSET + TOP_ICON_SIZE,
-    height: TOP_ICON_EDGE + TOP_ICON_SIZE,
-    flexDirection: 'row',
-    overflow: 'visible',
-  },
-  topIconOverlayRTL: { right: undefined, left: 0 },
   verifiedBadge: {
     position: 'absolute',
     top: TOP_ICON_EDGE,
@@ -306,15 +292,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  favoriteHitArea: {
+  favoriteBtn: {
     position: 'absolute',
     top: TOP_ICON_EDGE,
-    width: TOP_ICON_SIZE,
-    height: TOP_ICON_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  favoriteBtn: {
     width: TOP_ICON_SIZE,
     height: TOP_ICON_SIZE,
     borderRadius: TOP_ICON_SIZE / 2,
