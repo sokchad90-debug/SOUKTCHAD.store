@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import {
   useApp, DEFAULT_FILTERS, CHAD_CITIES, FilterState, SortOption,
 } from '@/contexts/AppContext';
-import { categories, sellers, Product } from '@/services/mockData';
+import { categories, Product } from '@/services/mockData';
 import ProductCard from '@/components/ProductCard';
 import ConnectionStateView from '@/components/ConnectionStateView';
 import { AppText, AppTextInput } from '@/components/AppText';
@@ -68,7 +68,7 @@ MemoProductCard.displayName = 'MemoProductCard';
 // Extracted ListHeader as a proper component to avoid useMemo JSX blob
 function HomeListHeader({
   colors, t, searchQuery, activeFilterCount, language, showHeaderContent, selectedCategory,
-  filteredProductsLength, router, verifiedSellers,
+  filteredProductsLength, router, verifiedSellers, matchingSellers,
   layout, setShowCityDropdown, openFilters, selection, subCategories, lastCategory,
   navigateToCategory, openHomeCategory,
 }: { [key: string]: any; layout: PhoneLayoutMetrics }) {
@@ -237,6 +237,43 @@ function HomeListHeader({
         </View>
       ) : null}
 
+      {searchQuery.trim() ? (
+        <View style={styles.searchStoresSection}>
+          <View style={[styles.sectionHeaderRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
+            <AppText weight={700} style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left', flex: 1 }]}>
+              {lb('Stores', 'Boutiques', 'المتاجر')}
+            </AppText>
+          </View>
+          {matchingSellers.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={[styles.searchStoresRow, { paddingHorizontal: layout.horizontalPadding }]}
+            >
+              {(isAr ? [...matchingSellers].reverse() : matchingSellers).map((seller: any) => (
+                <Pressable
+                  key={seller.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={seller.name}
+                  onPress={() => router.push(`/seller/${seller.id}` as any)}
+                  style={({ pressed }) => [styles.searchStoreChip, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }, isAr && { flexDirection: 'row-reverse' }]}
+                >
+                  {seller.avatar ? (
+                    <Image source={{ uri: seller.avatar }} style={styles.searchStoreAvatar} contentFit="cover" transition={150} />
+                  ) : (
+                    <View style={[styles.searchStoreAvatar, styles.searchStorePlaceholder, { backgroundColor: colors.verified }]}>
+                      <Text style={styles.searchStoreInitial}>{seller.name.charAt(0).toUpperCase()}</Text>
+                    </View>
+                  )}
+                  <Text style={[styles.searchStoreName, { color: colors.textPrimary }]} numberOfLines={1}>{seller.name}</Text>
+                  {seller.isVerified ? <MaterialIcons name="verified" size={scale(16)} color={colors.verified} /> : null}
+                </Pressable>
+              ))}
+            </ScrollView>
+          ) : null}
+        </View>
+      ) : null}
+
       {/* Products Grid Title — HIDDEN during active search: products appear directly under the bar */}
       {searchQuery ? null : (
       <View style={[styles.sectionHeaderRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}>
@@ -297,7 +334,7 @@ export default function HomeScreen() {
     selectedCategory, setSelectedCategory, getFilteredProducts, subCategories, lastCategory,
     filters, setFilters, resetFilters, activeFilterCount,
     refreshProducts, productsError, productsLoading, selectedCity, setSelectedCity,
-    navigateToCategory, currentCategoryPath, goBackCategory, resetCategoryNavigation,
+    navigateToCategory, currentCategoryPath, goBackCategory, resetCategoryNavigation, sellers,
   } = useApp();
 
   // Scroll position is retained for smooth native list updates.
@@ -318,7 +355,14 @@ export default function HomeScreen() {
   // Verified sellers for "Verified Stores" section — only real verified sellers, no duplicates
   const verifiedSellers = useMemo(() => {
     return sellers.filter(s => s.isVerified);
-  }, []);
+  }, [sellers]);
+  const matchingSellers = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase();
+    if (!query) return [];
+    return sellers.filter(seller =>
+      [seller.name, seller.sellerId, seller.location].some(value => String(value ?? '').toLocaleLowerCase().includes(query))
+    );
+  }, [searchQuery, sellers]);
 
   // Paginated products
   const paginatedProducts = useMemo(() =>
@@ -413,6 +457,7 @@ export default function HomeScreen() {
       filteredProductsLength={filteredProducts.length}
       router={router}
       verifiedSellers={verifiedSellers}
+      matchingSellers={matchingSellers}
       layout={layout}
       setShowCityDropdown={setShowCityDropdown}
       openFilters={openFilters}
@@ -422,7 +467,7 @@ export default function HomeScreen() {
     />
   ), [colors, t, searchQuery, activeFilterCount, language, showHeaderContent,
       selectedCategory, filteredProducts.length,
-      router, verifiedSellers, layout, navigateToCategory, openHomeCategory]);
+      router, verifiedSellers, matchingSellers, layout, navigateToCategory, openHomeCategory]);
 
   // FlatList footer — removed, padding is handled by contentContainerStyle
   const ListFooter = useMemo(() => null, []);
@@ -431,7 +476,7 @@ export default function HomeScreen() {
   const ListEmpty = useMemo(() => (
     activeFilterCount === 0 && !searchQuery ? (
       <ConnectionStateView state={productsError ? 'error' : 'empty'} onRetry={productsError ? refreshProducts : undefined} retrying={productsLoading} />
-    ) : (
+    ) : matchingSellers.length > 0 ? null : (
     <View style={styles.emptyState}>
       <Image
         source={require('@/assets/images/empty-products.png')}
@@ -452,7 +497,7 @@ export default function HomeScreen() {
       ) : null}
     </View>
     )
-  ), [colors, lb, activeFilterCount, resetFilters, searchQuery, productsError, productsLoading, refreshProducts]);
+  ), [colors, lb, activeFilterCount, resetFilters, searchQuery, productsError, productsLoading, refreshProducts, matchingSellers.length]);
 
   // ---- isReady check: show loading screen while data loads ----
   if (!isReady) {
@@ -907,6 +952,16 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   verifiedStoreName: { fontSize: scale(9), fontWeight: '600', marginTop: scale(4), textAlign: 'center', width: VERIFIED_STORE_ITEM_W, overflow: 'hidden', lineHeight: scale(12), fontFamily: 'Cairo-SemiBold' },
+  searchStoresSection: { marginBottom: scale(8) },
+  searchStoresRow: { gap: scale(8), paddingBottom: scale(4) },
+  searchStoreChip: {
+    minHeight: scale(48), maxWidth: scale(190), flexDirection: 'row', alignItems: 'center',
+    gap: scale(7), paddingHorizontal: scale(10), borderRadius: scale(14), borderWidth: 1,
+  },
+  searchStoreAvatar: { width: scale(34), height: scale(34), borderRadius: scale(17) },
+  searchStorePlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  searchStoreInitial: { color: '#FFF', fontSize: scale(14), fontWeight: '800', fontFamily: 'Cairo-Bold' },
+  searchStoreName: { flexShrink: 1, fontSize: scale(12), fontWeight: '700', fontFamily: 'Cairo-SemiBold' },
 
   sectionHeader: { paddingHorizontal: scale(16), paddingTop: IS_VERY_SHORT_SCREEN ? scale(1) : scale(3), paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', width: '100%', paddingHorizontal: scale(16), paddingTop: 0, paddingBottom: IS_VERY_SHORT_SCREEN ? scale(1) : scale(2) },

@@ -1,14 +1,14 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, FlatList } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, FlatList, TextInput, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
-import { sellers } from '@/services/mockData';
 import { borderRadius, shadows } from '@/constants/theme';
 import { impactMedium } from '@/services/haptics';
-import { scale, usePhoneLayout } from '@/constants/responsive';
+import { BOTTOM_NAV_CONTENT_GAP, scale, usePhoneLayout } from '@/constants/responsive';
+import StackBottomNav, { getStackBottomNavHeight } from '@/components/StackBottomNav';
 
 
 export default function VerifiedStoresScreen() {
@@ -16,13 +16,23 @@ export default function VerifiedStoresScreen() {
   const CARD_WIDTH = Math.floor((layoutP.contentWidth - scale(24)) / 2);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors, language, isDark } = useApp();
+  const { fontScale } = useWindowDimensions();
+  const { colors, language, sellers } = useApp();
+  const [search, setSearch] = useState('');
 
   const isFr = language === 'fr';
   const isAr = language === 'ar';
   const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
 
-  const verifiedSellers = sellers.filter(s => s.isVerified);
+  const verifiedSellers = useMemo(() => sellers.filter(s => s.isVerified), [sellers]);
+  const filteredSellers = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase();
+    if (!query) return verifiedSellers;
+    return verifiedSellers.filter(seller =>
+      [seller.name, seller.sellerId, seller.location].some(value => String(value ?? '').toLocaleLowerCase().includes(query))
+    );
+  }, [search, verifiedSellers]);
+  const bottomNavHeight = getStackBottomNavHeight(insets.bottom, fontScale);
 
   const renderStore = ({ item: seller }: { item: typeof sellers[0] }) => (
     <Pressable
@@ -34,6 +44,11 @@ export default function VerifiedStoresScreen() {
         shadows.card,
       ]}
     >
+      {seller.storeBg ? (
+        <Image source={{ uri: seller.storeBg }} style={styles.storeCover} contentFit="cover" transition={200} />
+      ) : (
+        <View style={[styles.storeCover, { backgroundColor: colors.primaryLight || '#F1F0FB' }]} />
+      )}
       <View style={styles.storeAvatarWrap}>
         {seller.avatar ? (
           <Image
@@ -71,14 +86,12 @@ export default function VerifiedStoresScreen() {
             {seller.rating.toFixed(1)} • {seller.totalSales} {lb('sales', 'ventes', 'مبيعات')}
           </Text>
         </View>
-        {seller.isOnline ? (
-          <View style={styles.onlineRow}>
-            <View style={[styles.onlineDot, { backgroundColor: colors.success }]} />
-            <Text style={[styles.onlineText, { color: colors.success }]}>
-              {lb('Online', 'En ligne', 'متصل')}
-            </Text>
-          </View>
-        ) : null}
+        <View style={styles.onlineRow}>
+          <View style={[styles.onlineDot, { backgroundColor: seller.isOnline ? colors.success : colors.textSecondary }]} />
+          <Text style={[styles.onlineText, { color: seller.isOnline ? colors.success : colors.textSecondary }]}>
+            {seller.isOnline ? lb('Online', 'En ligne', 'متصل') : lb('Offline', 'Hors ligne', 'غير متصل')}
+          </Text>
+        </View>
       </View>
     </Pressable>
   );
@@ -96,23 +109,41 @@ export default function VerifiedStoresScreen() {
           <MaterialIcons name="verified" size={scale(22)} color={colors.verified} />
         </View>
       </View>
+      <View style={[styles.searchWrap, { backgroundColor: colors.surface, borderBottomColor: colors.borderLight }]}>
+        <View style={[styles.searchBar, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }, isAr && { flexDirection: 'row-reverse' }]}>
+          <MaterialIcons name="search" size={scale(20)} color={colors.textSecondary} />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder={lb('Search a store…', 'Rechercher une boutique…', 'ابحث عن متجر…')}
+            placeholderTextColor={colors.textTertiary}
+            style={[styles.searchInput, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}
+          />
+          {search.length > 0 ? (
+            <Pressable accessibilityRole="button" accessibilityLabel={lb('Clear search', 'Effacer la recherche', 'مسح البحث')} onPress={() => setSearch('')} style={styles.clearButton}>
+              <MaterialIcons name="close" size={scale(18)} color={colors.textSecondary} />
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
       <FlatList
-        data={verifiedSellers}
+        data={filteredSellers}
         keyExtractor={(item) => item.id}
         renderItem={renderStore}
         numColumns={2}
         columnWrapperStyle={[styles.grid, isAr && { flexDirection: 'row-reverse' }]}
-        contentContainerStyle={{ paddingBottom: insets.bottom + scale(16) }}
+        contentContainerStyle={{ paddingTop: scale(12), paddingBottom: bottomNavHeight + BOTTOM_NAV_CONTENT_GAP + scale(16) }}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <MaterialIcons name="storefront" size={scale(48)} color={colors.textTertiary} />
+            <MaterialIcons name={search.trim() ? 'search-off' : 'storefront'} size={scale(48)} color={colors.textTertiary} />
             <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-              {lb('No verified stores yet', 'Aucune boutique vérifiée', 'لا توجد متاجر موثقة بعد')}
+              {search.trim() ? lb('No store found', 'Aucune boutique trouvée', 'لا يوجد متجر') : lb('No verified stores yet', 'Aucune boutique vérifiée', 'لا توجد متاجر موثقة بعد')}
             </Text>
           </View>
         }
       />
+      <StackBottomNav />
     </SafeAreaView>
   );
 }
@@ -123,14 +154,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: scale(16), paddingVertical: scale(12), borderBottomWidth: 1,
   },
-  backBtn: { width: scale(40), height: scale(40), alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: scale(48), height: scale(48), alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: scale(18), fontWeight: '800' },
+  searchWrap: { paddingHorizontal: scale(16), paddingBottom: scale(12), borderBottomWidth: 1 },
+  searchBar: { minHeight: scale(48), flexDirection: 'row', alignItems: 'center', gap: scale(8), borderWidth: 1, borderRadius: scale(24), paddingHorizontal: scale(14) },
+  searchInput: { flex: 1, fontSize: scale(14), fontFamily: 'Cairo-Regular', paddingVertical: 0 },
+  clearButton: { width: scale(48), height: scale(48), marginEnd: scale(-14), alignItems: 'center', justifyContent: 'center' },
   grid: { paddingHorizontal: scale(16), justifyContent: 'space-between' },
   storeCard: {
     borderRadius: borderRadius.lg, borderWidth: 1,
-    padding: scale(16), marginBottom: scale(12), alignItems: 'center',
+    marginBottom: scale(12), alignItems: 'center',
   },
-  storeAvatarWrap: { position: 'relative', marginBottom: scale(12) },
+  storeCover: { width: '100%', height: scale(96), borderTopLeftRadius: borderRadius.lg, borderTopRightRadius: borderRadius.lg },
+  storeAvatarWrap: {
+    position: 'relative', marginTop: scale(-38), marginBottom: scale(8), padding: scale(2),
+    borderRadius: scale(40), backgroundColor: '#FFF',
+  },
   storeAvatar: {
     width: scale(72), height: scale(72), borderRadius: scale(36), borderWidth: 3,
   },
@@ -144,7 +183,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 3,
   },
-  storeInfo: { alignItems: 'center', gap: scale(4), width: '100%' },
+  storeInfo: { alignItems: 'center', gap: scale(4), width: '100%', paddingHorizontal: scale(10), paddingBottom: scale(14) },
   storeName: { fontSize: scale(14), fontWeight: '700', textAlign: 'center' },
   storeMeta: { flexDirection: 'row', alignItems: 'center', gap: scale(4) },
   storeLocation: { fontSize: scale(12), fontWeight: '500' },

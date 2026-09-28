@@ -228,7 +228,7 @@ export default function CategoriesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   row: { alignItems: 'stretch', gap: scale(12), marginBottom: scale(16) },
-  categoryCard: { borderRadius: scale(16), borderWidth: 1, borderColor: '#EEF2F7', padding: scale(8), alignItems: 'center', gap: scale(6) },
+  categoryCard: { alignSelf: 'stretch', height: 'auto', borderRadius: scale(16), borderWidth: 1, borderColor: '#EEF2F7', padding: scale(8), alignItems: 'center', gap: scale(6) },
   categoryIconWrap: { width: '100%', borderRadius: scale(16), borderWidth: 1, borderColor: '#E8E8EE', backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   categoryImage: { width: '100%', height: '100%' },
   categoryNameWrap: { width: '100%', minHeight: scale(34), flexGrow: 1, justifyContent: 'center' },

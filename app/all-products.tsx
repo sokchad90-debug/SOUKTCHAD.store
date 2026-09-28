@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, Pressable, KeyboardAvoidingView, Platform, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -7,18 +7,21 @@ import { useApp } from '@/contexts/AppContext';
 import { BOTTOM_NAV_CONTENT_GAP, scale, usePhoneLayout } from '@/constants/responsive';
 import ProductCard from '@/components/ProductCard';
 import ConnectionStateView from '@/components/ConnectionStateView';
+import StackBottomNav, { getStackBottomNavHeight } from '@/components/StackBottomNav';
 
 const PAGE_SIZE = 10;
 
 export default function AllProductsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
   const layout = usePhoneLayout();
   const { colors, language, products, productsError, productsLoading, refreshProducts } = useApp();
   const isAr = language === 'ar';
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+  const bottomNavHeight = getStackBottomNavHeight(insets.bottom, fontScale);
 
   const all = useMemo(() => {
     // Newest first: postedDate desc (ISO strings compare lexicographically)
@@ -68,13 +71,13 @@ export default function AllProductsScreen() {
       <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       {/* Header: back + title + search (identity-consistent — purple like home) */}
       <View style={[styles.header, { width: layout.surfaceWidth }, isAr && { flexDirection: 'row-reverse' }]}>
-        <Pressable hitSlop={scale(10)} onPress={() => router.back()}>
+        <Pressable accessibilityRole="button" style={styles.headerButton} onPress={() => router.back()}>
           <MaterialIcons name={isAr ? 'chevron-right' : 'chevron-left'} size={scale(28)} color="#FFF" />
         </Pressable>
         <Text style={[styles.headerTitle, isAr && { textAlign: 'right' }]}>
           {language === 'fr' ? 'Tous les produits' : language === 'ar' ? 'جميع المنتجات' : 'All Products'}
         </Text>
-        <View style={{ width: scale(28) }} />
+        <View style={styles.headerButton} />
       </View>
       <View style={[styles.searchWrap, { width: layout.surfaceWidth }]}>
         <View style={[styles.searchBar, isAr && { flexDirection: 'row-reverse' }]}>
@@ -87,7 +90,7 @@ export default function AllProductsScreen() {
             onChangeText={(t) => { setSearch(t); setPage(1); }}
           />
           {search.length > 0 ? (
-            <Pressable hitSlop={scale(8)} onPress={() => { setSearch(''); setPage(1); }}>
+            <Pressable accessibilityRole="button" style={styles.searchClearButton} onPress={() => { setSearch(''); setPage(1); }}>
               <MaterialIcons name="close" size={scale(18)} color="#94A3B8" />
             </Pressable>
           ) : null}
@@ -108,7 +111,7 @@ export default function AllProductsScreen() {
         keyExtractor={keyExtractor}
         numColumns={2}
         columnWrapperStyle={[styles.gridRow, { paddingHorizontal: layout.horizontalPadding }, isAr && { flexDirection: 'row-reverse' }]}
-        contentContainerStyle={[styles.gridContent, { paddingBottom: insets.bottom + BOTTOM_NAV_CONTENT_GAP + layout.smallGap }]}
+        contentContainerStyle={[styles.gridContent, { paddingBottom: bottomNavHeight + BOTTOM_NAV_CONTENT_GAP + layout.smallGap }]}
         showsVerticalScrollIndicator={false}
         refreshing={refreshing}
         onRefresh={onRefresh}
@@ -122,6 +125,7 @@ export default function AllProductsScreen() {
       />
       </View>
       </KeyboardAvoidingView>
+      <StackBottomNav />
     </SafeAreaView>
   );
 }
@@ -130,9 +134,11 @@ const styles = StyleSheet.create({
   safe: { flex: 1, alignItems: 'center', backgroundColor: '#F8FAFC' },
   keyboard: { flex: 1, width: '100%', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: scale(48), paddingHorizontal: scale(12) },
+  headerButton: { width: scale(48), height: scale(48), alignItems: 'center', justifyContent: 'center' },
   headerTitle: { color: '#FFFFFF', fontSize: scale(16), fontWeight: '800', fontFamily: 'Cairo-Bold' },
   searchWrap: { paddingHorizontal: scale(12), paddingBottom: scale(8) },
-  searchBar: { flexDirection: 'row', alignItems: 'center', gap: scale(8), backgroundColor: '#FFFFFF', height: scale(44), borderRadius: scale(999), paddingHorizontal: scale(14) },
+  searchBar: { flexDirection: 'row', alignItems: 'center', gap: scale(8), backgroundColor: '#FFFFFF', height: scale(48), borderRadius: scale(999), paddingStart: scale(14) },
+  searchClearButton: { width: scale(48), height: scale(48), alignItems: 'center', justifyContent: 'center' },
   searchInput: { flex: 1, fontSize: scale(14), color: '#0F172A', fontFamily: 'Cairo-Regular' },
   countText: { fontSize: scale(13), fontWeight: '700', paddingHorizontal: scale(16), marginBottom: scale(6), fontFamily: 'Cairo-Bold' },
   gridRow: { paddingHorizontal: scale(16), justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: scale(2) },
