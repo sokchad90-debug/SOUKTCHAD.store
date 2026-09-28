@@ -199,7 +199,6 @@ export default function ProfileScreen() {
     isLoggedIn, user, logout, orders, favorites, products, reviews, sellers, followedSellers, fetchFollowedSellers, toggleFollowNotifications, toggleFollow,
     updateUserAvatar, updateUserCover, getReviewsForSeller,
     canSellerRequestVerification, shippingCompanies, confirmOrderReceived,
-    enabledLanguages,
     verificationPlans, verificationSubscriptions, submitVerificationSubscription,
     canUserRequestVerification, adminPaymentNumber, isReady, getProductById,
     categories: appCategories,
@@ -584,7 +583,6 @@ export default function ProfileScreen() {
       <Text style={[pStyles.settingsGroupTitle, { color: colors.textTertiary }]}>{lb('General Settings', 'Paramètres généraux', 'الإعدادات العامة')}</Text>
 
       {/* Appearance card: language + dark mode */}
-      {enabledLanguages && enabledLanguages.length > 1 ? (
       <View style={[pStyles.settingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Pressable onPress={() => { selection(); setShowLangModal(true); }} style={pStyles.settingRow}>
           <MaterialIcons name="language" size={scale(22)} color={colors.primary} />
@@ -595,7 +593,6 @@ export default function ProfileScreen() {
           <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={scale(22)} color={colors.textTertiary} />
         </Pressable>
       </View>
-      ) : null}
       <View style={[pStyles.settingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={pStyles.settingRowFull}>
           <MaterialIcons name={isDark ? 'dark-mode' : 'light-mode'} size={scale(22)} color={colors.primary} />
@@ -1562,7 +1559,7 @@ export default function ProfileScreen() {
             <Text style={{ fontSize: scale(18), fontWeight: '700', color: colors.textPrimary, textAlign: 'center', marginBottom: scale(16) }}>
               {lb('Select Language', 'Choisir la langue', 'اختر اللغة')}
             </Text>
-            {SUPPORTED_LANGUAGES.filter(lang => enabledLanguages.includes(lang.id)).map(lang => (
+            {SUPPORTED_LANGUAGES.map(lang => (
               <Pressable key={lang.id} onPress={() => { selection(); setLanguage(lang.id); setShowLangModal(false); }}
                 style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', paddingVertical: scale(14), paddingHorizontal: scale(12), borderRadius: scale(10), marginBottom: scale(4), backgroundColor: language === lang.id ? colors.primary + '20' : 'transparent', opacity: pressed ? 0.88 : 1 })}>
                 <Text style={{ fontSize: scale(22), marginRight: scale(12) }}>{lang.flag || '🌐'}</Text>

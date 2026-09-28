@@ -508,7 +508,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [appBanners, setAppBanners] = useState<any[]>([]);
   const [appStoreLogo, setAppStoreLogo] = useState("");
   const [language, setLanguageState] = useState<Language>('fr');
-  const [enabledLanguages, setEnabledLanguages] = useState<string[]>(['fr', 'ar']);
+  const [enabledLanguages, setEnabledLanguages] = useState<string[]>(['en', 'fr', 'ar']);
   const [themePref, setThemePref] = useState<'light' | 'dark' | 'system'>('light');
   const [systemDark, setSystemDark] = useState(Appearance.getColorScheme() === 'dark');
   useEffect(() => {

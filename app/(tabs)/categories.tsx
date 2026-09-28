@@ -55,7 +55,7 @@ const DISPLAY_NAME: Record<string, Record<string, string>> = {
   electromenager: { en: 'Appliances', fr: 'Électroménager', ar: 'الأجهزة المنزلية' },
   beauty: { en: 'Beauty & care', fr: 'Beauté & soins', ar: 'التجميل والعناية' },
   agriculture: { en: 'Agriculture & garden', fr: 'Agriculture & jardin', ar: 'الزراعة والبستنة' },
-  grocery: { en: 'Groceries & drinks', fr: 'Alimentation', ar: 'البقالة والمشروبات' },
+  grocery: { en: 'Food & drinks', fr: 'Alimentation', ar: 'البقالة والمشروبات' },
 };
 
 export default function CategoriesScreen() {

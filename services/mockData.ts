@@ -183,7 +183,7 @@ export const categories: Category[] = [
     id: n.id,
     parentId: n.parentId,
     hasChildren: CATEGORY_TREE.some(x => x.parentId === n.id),
-    name: { en: n.nameFr, fr: n.nameFr, ar: n.nameAr },
+    name: { en: n.nameEn, fr: n.nameFr, ar: n.nameAr },
     icon: n.icon || 'category',
     color: n.color || '#6366F1',
     image: CATEGORY_IMAGE_BY_ID[n.id],
