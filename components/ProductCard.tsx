@@ -141,12 +141,12 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
               </Animated.View>
             </View>
           </Pressable>
-          {isSellerVerificationActive(seller) ? (
-            <View style={[styles.verifiedBadge, isAr ? { right: TOP_ICON_EDGE } : { left: TOP_ICON_EDGE }, { backgroundColor: isDark ? DT.dark.verified : DT.color.verified }]}>
-              <MaterialIcons name="verified" size={scale(12)} color="#FFF" />
-            </View>
-          ) : null}
         </View>
+        {isSellerVerificationActive(seller) ? (
+          <View style={[styles.verifiedBadge, isAr ? { right: TOP_ICON_EDGE } : { left: TOP_ICON_EDGE }, { backgroundColor: isDark ? DT.dark.verified : DT.color.verified }]}>
+            <MaterialIcons name="verified" size={scale(12)} color="#FFF" />
+          </View>
+        ) : null}
       </View>
 
       <View style={[styles.info, { paddingVertical: cardScale(5), paddingHorizontal: cardScale(8), gap: cardScale(3) }]} testID="product-card-info">
