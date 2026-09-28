@@ -336,8 +336,13 @@ export default function ProductDetailScreen() {
                 </Pressable>
               ))}
             </ScrollView>
+            {effectiveSeller?.isVerified ? (
+              <View style={[styles.heroVerifiedBadge, isAr && styles.heroVerifiedBadgeRTL, { backgroundColor: colors.verified }]} pointerEvents="none">
+                <MaterialIcons name="verified" size={scale(12)} color="#FFF" />
+              </View>
+            ) : null}
             {galleryImages.length > 1 ? (
-              <View style={styles.galleryCounter}>
+              <View style={[styles.galleryCounter, isAr && styles.galleryCounterRTL]}>
                 <Text style={styles.galleryCounterText}>{activeImageIndex + 1}/{galleryImages.length}</Text>
               </View>
             ) : null}
@@ -955,7 +960,10 @@ const styles = StyleSheet.create({
   heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: scale(16), paddingBottom: scale(10) },
   heroTopBtn: { width: scale(42), height: scale(42), borderRadius: scale(21), backgroundColor: '#EFEDFA', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E2DEFA' },
   heroImage: { width: '100%', height: '100%', backgroundColor: '#FFFFFF' },
+  heroVerifiedBadge: { position: 'absolute', top: scale(8), left: scale(8), width: scale(28), height: scale(28), borderRadius: 999, alignItems: 'center', justifyContent: 'center', zIndex: 2 },
+  heroVerifiedBadgeRTL: { left: undefined, right: scale(8) },
   galleryCounter: { position: 'absolute', top: scale(12), right: scale(12), minWidth: scale(48), height: scale(32), paddingHorizontal: scale(10), borderRadius: scale(16), backgroundColor: 'rgba(15,12,40,0.72)', alignItems: 'center', justifyContent: 'center' },
+  galleryCounterRTL: { right: undefined, left: scale(12) },
   galleryCounterText: { color: '#FFFFFF', fontSize: scale(13), fontWeight: '700' },
   thumbnailRow: { gap: scale(8), paddingTop: scale(10), paddingBottom: scale(2) },
   thumbnailButton: { width: scale(64), height: scale(64), borderRadius: scale(10), borderWidth: 2, overflow: 'hidden', backgroundColor: '#FFFFFF', padding: scale(2) },
