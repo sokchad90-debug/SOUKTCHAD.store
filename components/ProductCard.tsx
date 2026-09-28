@@ -16,6 +16,12 @@ import { AppText } from '@/components/AppText';
 import TopBadge from '@/components/TopBadge';
 
 const SHIELD_ICON = require('@/assets/images/icons/shield.png');
+const TOP_ICON_SIZE = scale(28);
+const TOP_ICON_GAP = scale(6);
+const TOP_ICON_EDGE = scale(6);
+const TOP_ICON_SECOND_OFFSET = TOP_ICON_EDGE + TOP_ICON_SIZE + TOP_ICON_GAP;
+const TOP_ICON_THIRD_OFFSET = TOP_ICON_EDGE + 2 * (TOP_ICON_SIZE + TOP_ICON_GAP);
+const NEW_PRODUCT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 function isDiscountActive(product: Product): boolean {
   if (!product.discountPercent || product.discountPercent <= 0) return false;
@@ -45,6 +51,19 @@ function getDiscountedPrice(product: Product): number {
   if (!isDiscountActive(product)) return product.price;
   const discount = Math.min(30, product.discountPercent || 0);
   return Math.round(product.price * (1 - discount / 100));
+}
+
+function isNewlyPublished(product: Product): boolean {
+  const productWithFreshness = product as Product & {
+    isFirstPartyNew?: boolean;
+    isNew?: boolean;
+    createdAt?: string;
+  };
+  if (productWithFreshness.isFirstPartyNew || productWithFreshness.isNew) return true;
+
+  const publishedAt = new Date(productWithFreshness.createdAt || product.postedDate).getTime();
+  const age = Date.now() - publishedAt;
+  return Number.isFinite(publishedAt) && age >= 0 && age < NEW_PRODUCT_WINDOW_MS;
 }
 
 /**
@@ -85,6 +104,8 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
 
   const title = product?.title?.[language] || product?.title?.en || '';
   const favorite = isFavorite(product.id);
+  const showDeliveryBadge = isNewlyPublished(product) || seller?.isVerified === true || product.sellerVerified === true;
+  const deliveryLabel = language === 'fr' ? 'Livraison' : isAr ? 'توصيل' : 'Delivery';
   const openLabel = language === 'fr' ? `Ouvrir ${title}` : isAr ? `فتح ${title}` : `Open ${title}`;
   const favoriteLabel = language === 'fr' ? `Ajouter ${title} aux favoris` : isAr ? `إضافة ${title} إلى المفضلة` : `Add ${title} to favorites`;
 
@@ -111,14 +132,12 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
       accessibilityLabel={openLabel}
       accessibilityState={{ disabled: false }}
       testID={`product-card-${product.id}`}
-      style={({ pressed }) => [
+      style={[
         styles.container,
         {
           width: CARD_WIDTH,
           backgroundColor: colors.surface,
           borderColor: colors.borderLight,
-          opacity: pressed ? 0.92 : 1,
-          transform: [{ scale: pressed && !reduceMotion ? 0.98 : 1 }],
         },
         shadows.card,
       ]}
@@ -132,32 +151,42 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           accessibilityLabel={title}
           failedText={language === 'fr' ? 'Image indisponible' : language === 'ar' ? 'الصورة غير متوفرة' : 'Image unavailable'}
         />
-        {isPinActive(product) ? (
-          <View style={[styles.pinnedBadge, isAr && styles.pinnedBadgeRTL, { backgroundColor: colors.pinned }]}>
-            <MaterialIcons name="push-pin" size={scale(9)} color="#FFF" />
+        <View pointerEvents="box-none" style={[styles.topIconOverlay, isAr && styles.topIconOverlayRTL]}>
+          <Pressable
+            onPress={handleFavorite}
+            accessibilityRole="button"
+            accessibilityLabel={favoriteLabel}
+            accessibilityState={{ checked: favorite }}
+            style={[styles.favoriteHitArea, isAr ? { left: TOP_ICON_EDGE } : { right: TOP_ICON_EDGE }]}
+            hitSlop={scale(5)}
+          >
+            <View style={[styles.favoriteBtn, { backgroundColor: colors.overlay }]}>
+              <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                <MaterialIcons
+                  name={favorite ? 'favorite' : 'favorite-border'}
+                  size={scale(20)}
+                  color={favorite ? DT.color.danger : '#FFF'}
+                />
+              </Animated.View>
+            </View>
+          </Pressable>
+          {isSellerVerificationActive(seller) ? (
+            <View style={[styles.verifiedBadge, isAr ? { left: TOP_ICON_SECOND_OFFSET } : { right: TOP_ICON_SECOND_OFFSET }, { backgroundColor: isDark ? DT.dark.verified : DT.color.verified }]}>
+              <MaterialIcons name="verified" size={scale(12)} color="#FFF" />
+            </View>
+          ) : null}
+          {isPinActive(product) ? (
+            <View style={[styles.pinnedBadge, isAr ? { left: TOP_ICON_THIRD_OFFSET } : { right: TOP_ICON_THIRD_OFFSET }, { backgroundColor: colors.pinned }]}>
+              <MaterialIcons name="push-pin" size={scale(12)} color="#FFF" />
+            </View>
+          ) : null}
+        </View>
+        {showDeliveryBadge ? (
+          <View style={[styles.deliveryBadge, isAr ? styles.deliveryBadgeRTL : styles.deliveryBadgeLTR]}>
+            <MaterialIcons name="local-shipping" size={scale(12)} color="#FFF" />
+            <Text style={styles.deliveryBadgeText}>{deliveryLabel}</Text>
           </View>
         ) : null}
-        {isSellerVerificationActive(seller) ? (
-          <View style={[styles.verifiedBadge, isAr && styles.verifiedBadgeRTL, { backgroundColor: isDark ? DT.dark.verified : DT.color.verified }]}>
-            <MaterialIcons name="verified" size={scale(9)} color="#FFF" />
-          </View>
-        ) : null}
-        <Pressable
-          onPress={handleFavorite}
-          accessibilityRole="button"
-          accessibilityLabel={favoriteLabel}
-          accessibilityState={{ checked: favorite }}
-          style={[styles.favoriteBtn, isAr && styles.favoriteBtnRTL, { backgroundColor: colors.overlay, width: Math.round(30 * (CARD_WIDTH / 195)), height: Math.round(30 * (CARD_WIDTH / 195)), borderRadius: Math.round(16 * (CARD_WIDTH / 195)) }]}
-          hitSlop={9}
-        >
-          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-            <MaterialIcons
-              name={favorite ? 'favorite' : 'favorite-border'}
-              size={scale(16)}
-              color={favorite ? DT.color.danger : '#FFF'}
-            />
-          </Animated.View>
-        </Pressable>
       </View>
 
       <View style={[styles.info, { paddingVertical: cardScale(5), paddingHorizontal: cardScale(8), gap: cardScale(3) }]} testID="product-card-info">
@@ -298,39 +327,65 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  topIconOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: TOP_ICON_THIRD_OFFSET + TOP_ICON_SIZE,
+    height: TOP_ICON_EDGE + TOP_ICON_SIZE,
+    flexDirection: 'row',
+    overflow: 'visible',
+  },
+  topIconOverlayRTL: { right: undefined, left: 0 },
   pinnedBadge: {
     position: 'absolute',
-    top: scale(6),
-    left: scale(6),
-    width: scale(20),
-    height: scale(20),
-    borderRadius: scale(16),
+    top: TOP_ICON_EDGE,
+    width: TOP_ICON_SIZE,
+    height: TOP_ICON_SIZE,
+    borderRadius: TOP_ICON_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pinnedBadgeRTL: { left: undefined, right: scale(6) },
   verifiedBadge: {
     position: 'absolute',
-    top: scale(6),
-    right: scale(34),
-    width: scale(20),
-    height: scale(20),
-    borderRadius: scale(16),
+    top: TOP_ICON_EDGE,
+    width: TOP_ICON_SIZE,
+    height: TOP_ICON_SIZE,
+    borderRadius: TOP_ICON_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  verifiedBadgeRTL: { right: undefined, left: scale(34) },
-  favoriteBtn: {
+  favoriteHitArea: {
     position: 'absolute',
-    top: scale(6),
-    right: scale(6),
-    width: scale(26),
-    height: scale(26),
-    borderRadius: scale(13),
+    top: TOP_ICON_EDGE,
+    width: TOP_ICON_SIZE,
+    height: TOP_ICON_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  favoriteBtnRTL: { right: undefined, left: scale(6) },
+  favoriteBtn: {
+    width: TOP_ICON_SIZE,
+    height: TOP_ICON_SIZE,
+    borderRadius: TOP_ICON_SIZE / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deliveryBadge: {
+    position: 'absolute',
+    top: scale(42),
+    minWidth: scale(48),
+    height: scale(22),
+    paddingHorizontal: scale(7),
+    borderRadius: 999,
+    backgroundColor: '#5B18D9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: scale(3),
+  },
+  deliveryBadgeLTR: { left: scale(8) },
+  deliveryBadgeRTL: { right: scale(8) },
+  deliveryBadgeText: { color: '#FFF', fontSize: scale(12), fontFamily: 'Cairo-SemiBold' },
   info: {
     paddingVertical: scale(5),
     paddingHorizontal: scale(8),

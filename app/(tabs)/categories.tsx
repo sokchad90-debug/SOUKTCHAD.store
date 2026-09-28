@@ -140,9 +140,9 @@ export default function CategoriesScreen() {
       <Pressable
         onPress={() => handleCategoryPress(cat)}
         testID={`category-card-${cat.id}`}
-        style={({ pressed }) => [
+        style={[
           styles.categoryCard,
-          { width: CARD_W, backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.92 : 1 },
+          { width: CARD_W, backgroundColor: colors.surface, borderColor: colors.borderLight },
           shadows.card,
         ]}
       >
