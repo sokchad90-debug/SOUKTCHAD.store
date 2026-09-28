@@ -24,8 +24,34 @@ interface Props {
 function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.product, neutralBg = '#FFFFFF', failedText, accessibilityLabel }: Props) {
   const [failed, setFailed] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
+  const [retryCount, setRetryCount] = React.useState(0);
+  const retryTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const height = Math.round(frameWidth / frameRatio);
-  React.useEffect(() => { setFailed(false); setLoading(true); }, [uri]);
+  React.useEffect(() => {
+    setFailed(false);
+    setLoading(true);
+    setRetryCount(0);
+    return () => {
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+    };
+  }, [uri]);
+
+  const retryUri = uri && retryCount > 0
+    ? `${uri}${uri.includes('?') ? '&' : '?'}r=${retryCount}`
+    : uri;
+
+  const handleError = () => {
+    if (retryCount < 2) {
+      setLoading(true);
+      retryTimer.current = setTimeout(() => {
+        setRetryCount((count) => count + 1);
+        retryTimer.current = null;
+      }, 1200);
+      return;
+    }
+    setFailed(true);
+    setLoading(false);
+  };
 
   const innerPad = Math.min(Math.max(Math.round(frameWidth * 0.04), 6), 12);
   return (
@@ -34,14 +60,16 @@ function ProductImageInner({ uri, frameWidth, frameRatio = 1 / DS.imageRatios.pr
     >
       {uri && !failed ? (
         <Image
-          source={{ uri }}
+          key={retryCount}
+          source={{ uri: retryUri }}
           style={styles.image}
           contentFit="contain"
           transition={150}
+          cachePolicy="disk"
           recyclingKey={uri}
           accessibilityLabel={accessibilityLabel}
           onLoadEnd={() => setLoading(false)}
-          onError={() => { setFailed(true); setLoading(false); }}
+          onError={handleError}
         />
       ) : (
         <View style={styles.fallback}>

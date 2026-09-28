@@ -20,25 +20,11 @@ const TOP_ICON_SIZE = scale(28);
 const TOP_ICON_GAP = scale(6);
 const TOP_ICON_EDGE = scale(6);
 const TOP_ICON_SECOND_OFFSET = TOP_ICON_EDGE + TOP_ICON_SIZE + TOP_ICON_GAP;
-const TOP_ICON_THIRD_OFFSET = TOP_ICON_EDGE + 2 * (TOP_ICON_SIZE + TOP_ICON_GAP);
-const NEW_PRODUCT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 function isDiscountActive(product: Product): boolean {
   if (!product.discountPercent || product.discountPercent <= 0) return false;
   if (!product.discountUntil) return false;
   return new Date(product.discountUntil).getTime() > Date.now();
-}
-
-/**
- * Approved-reference alignment (cmp_ref_vs_v8934): the reference shows NO pin
- * and NO verified badge on A54 — both seeds carry expired dates (pinnedUntil
- * 2025-03, verifiedUntil 2025-06). Badges must respect expiry, like the
- * discount badge already does.
- */
-function isPinActive(product: Product): boolean {
-  if (!product.isPinned) return false;
-  if (!product.pinnedUntil) return true;
-  return new Date(product.pinnedUntil).getTime() > Date.now();
 }
 
 function isSellerVerificationActive(seller: any): boolean {
@@ -51,19 +37,6 @@ function getDiscountedPrice(product: Product): number {
   if (!isDiscountActive(product)) return product.price;
   const discount = Math.min(30, product.discountPercent || 0);
   return Math.round(product.price * (1 - discount / 100));
-}
-
-function isNewlyPublished(product: Product): boolean {
-  const productWithFreshness = product as Product & {
-    isFirstPartyNew?: boolean;
-    isNew?: boolean;
-    createdAt?: string;
-  };
-  if (productWithFreshness.isFirstPartyNew || productWithFreshness.isNew) return true;
-
-  const publishedAt = new Date(productWithFreshness.createdAt || product.postedDate).getTime();
-  const age = Date.now() - publishedAt;
-  return Number.isFinite(publishedAt) && age >= 0 && age < NEW_PRODUCT_WINDOW_MS;
 }
 
 /**
@@ -104,7 +77,6 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
 
   const title = product?.title?.[language] || product?.title?.en || '';
   const favorite = isFavorite(product.id);
-  const showDeliveryBadge = isNewlyPublished(product) || seller?.isVerified === true || product.sellerVerified === true;
   const openLabel = language === 'fr' ? `Ouvrir ${title}` : isAr ? `فتح ${title}` : `Open ${title}`;
   const favoriteLabel = language === 'fr' ? `Ajouter ${title} aux favoris` : isAr ? `إضافة ${title} إلى المفضلة` : `Add ${title} to favorites`;
 
@@ -174,20 +146,7 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
               <MaterialIcons name="verified" size={scale(12)} color="#FFF" />
             </View>
           ) : null}
-          {isPinActive(product) ? (
-            <View style={[styles.pinnedBadge, isAr ? { left: TOP_ICON_THIRD_OFFSET } : { right: TOP_ICON_THIRD_OFFSET }, { backgroundColor: colors.pinned }]}>
-              <MaterialIcons name="push-pin" size={scale(12)} color="#FFF" />
-            </View>
-          ) : null}
         </View>
-        {showDeliveryBadge ? (
-          <View
-            accessibilityLabel={language === 'fr' ? 'Livraison' : language === 'ar' ? 'توصيل' : 'Delivery'}
-            style={[styles.deliveryBadge, isAr ? styles.deliveryBadgeRTL : styles.deliveryBadgeLTR]}
-          >
-            <MaterialIcons name="local-shipping" size={scale(12)} color="#FFF" />
-          </View>
-        ) : null}
       </View>
 
       <View style={[styles.info, { paddingVertical: cardScale(5), paddingHorizontal: cardScale(8), gap: cardScale(3) }]} testID="product-card-info">
@@ -332,21 +291,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
-    width: TOP_ICON_THIRD_OFFSET + TOP_ICON_SIZE,
+    width: TOP_ICON_SECOND_OFFSET + TOP_ICON_SIZE,
     height: TOP_ICON_EDGE + TOP_ICON_SIZE,
     flexDirection: 'row',
     overflow: 'visible',
   },
   topIconOverlayRTL: { right: undefined, left: 0 },
-  pinnedBadge: {
-    position: 'absolute',
-    top: TOP_ICON_EDGE,
-    width: TOP_ICON_SIZE,
-    height: TOP_ICON_SIZE,
-    borderRadius: TOP_ICON_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   verifiedBadge: {
     position: 'absolute',
     top: TOP_ICON_EDGE,
@@ -371,21 +321,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  deliveryBadge: {
-    position: 'absolute',
-    top: scale(42),
-    minWidth: scale(30),
-    height: scale(22),
-    paddingHorizontal: scale(0),
-    borderRadius: 999,
-    backgroundColor: '#5B48D9',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: scale(3),
-  },
-  deliveryBadgeLTR: { left: scale(8) },
-  deliveryBadgeRTL: { right: scale(8) },
   info: {
     paddingVertical: scale(5),
     paddingHorizontal: scale(8),
