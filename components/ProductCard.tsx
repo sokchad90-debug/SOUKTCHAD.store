@@ -105,7 +105,6 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
   const title = product?.title?.[language] || product?.title?.en || '';
   const favorite = isFavorite(product.id);
   const showDeliveryBadge = isNewlyPublished(product) || seller?.isVerified === true || product.sellerVerified === true;
-  const deliveryLabel = language === 'fr' ? 'Livraison' : isAr ? 'توصيل' : 'Delivery';
   const openLabel = language === 'fr' ? `Ouvrir ${title}` : isAr ? `فتح ${title}` : `Open ${title}`;
   const favoriteLabel = language === 'fr' ? `Ajouter ${title} aux favoris` : isAr ? `إضافة ${title} إلى المفضلة` : `Add ${title} to favorites`;
 
@@ -182,9 +181,11 @@ function ProductCardInner({ product, imageHeightRatio = PRODUCT_IMAGE_RATIO, con
           ) : null}
         </View>
         {showDeliveryBadge ? (
-          <View style={[styles.deliveryBadge, isAr ? styles.deliveryBadgeRTL : styles.deliveryBadgeLTR]}>
+          <View
+            accessibilityLabel={language === 'fr' ? 'Livraison' : language === 'ar' ? 'توصيل' : 'Delivery'}
+            style={[styles.deliveryBadge, isAr ? styles.deliveryBadgeRTL : styles.deliveryBadgeLTR]}
+          >
             <MaterialIcons name="local-shipping" size={scale(12)} color="#FFF" />
-            <Text style={styles.deliveryBadgeText}>{deliveryLabel}</Text>
           </View>
         ) : null}
       </View>
@@ -373,11 +374,11 @@ const styles = StyleSheet.create({
   deliveryBadge: {
     position: 'absolute',
     top: scale(42),
-    minWidth: scale(48),
+    minWidth: scale(30),
     height: scale(22),
-    paddingHorizontal: scale(7),
+    paddingHorizontal: scale(0),
     borderRadius: 999,
-    backgroundColor: '#5B18D9',
+    backgroundColor: '#5B48D9',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -385,7 +386,6 @@ const styles = StyleSheet.create({
   },
   deliveryBadgeLTR: { left: scale(8) },
   deliveryBadgeRTL: { right: scale(8) },
-  deliveryBadgeText: { color: '#FFF', fontSize: scale(12), fontFamily: 'Cairo-SemiBold' },
   info: {
     paddingVertical: scale(5),
     paddingHorizontal: scale(8),
