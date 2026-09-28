@@ -94,8 +94,8 @@ android {
         applicationId 'com.anonymous.sokchadapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 421
-        versionName "8.9.142"
+        versionCode 422
+        versionName "8.9.143"
 
         ndk {
             // Delivery APK = arm64-v8a only (APK<=30MB owner law).
