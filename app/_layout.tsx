@@ -18,6 +18,7 @@ function isPurpleTopRoute(pathname: string): boolean {
   const p = pathname.replace(/\/+$/, '') || '/';
   if (p === '/' || p === '/index' || p === '/(tabs)' || p === '/(tabs)/index') return true; // Home tab
   if (p.startsWith('/all-products')) return true;
+  if (p.startsWith('/services') && !p.startsWith('/services/book')) return true;
   return false;
 }
 

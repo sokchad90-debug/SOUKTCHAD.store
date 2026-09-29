@@ -1,121 +1,27 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, FlatList, useWindowDimensions } from 'react-native';
+import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
-import { shadows } from '@/constants/theme';
-import { BOTTOM_NAV_CONTENT_GAP, scale, usePhoneLayout } from '@/constants/responsive';
-import ConnectionStateView from '@/components/ConnectionStateView';
+import { BOTTOM_NAV_CONTENT_GAP, scale } from '@/constants/responsive';
+import { PDF_BOOKS, RESTAURANTS, SERVICE_CATEGORIES, servicesCounts } from '@/services/servicesHub';
+import { localize, money, PURPLE, Rating } from '@/components/services/ServicePrimitives';
 
-/**
- * Services — dedicated tab for الخدمات category (and future service offers).
- * Same visual language as the approved Categories screen: 3 equal columns,
- * pastel frames, contain images, real product counts, RTL/FR/AR, grows with font.
- * Products in category 'services' (and its children) surface here directly.
- */
-const SERVICE_IMAGES: Record<string, any> = {
-  services: require('@/assets/images/categories/services.png'),
-};
-
-export default function ServicesScreen() {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const layout = usePhoneLayout();
-  const { width: winW } = useWindowDimensions();
-  const { colors, language, products, categories, subCategories, setSelectedCategory } = useApp();
-
-  const isFr = language === 'fr';
-  const isAr = language === 'ar';
-  const lb = (en: string, fr: string, ar: string) => isFr ? fr : isAr ? ar : en;
-
-  // Container-measured card width (same rule as Categories)
-  const [gridW, setGridW] = useState(() => winW);
-  const COLS = 3;
-  const CARD_W = Math.floor((gridW - scale(16) * 2 - scale(12) * (COLS - 1)) / COLS);
-
-  // Real DB categories that BELONG to services family (id === 'services' or parentId chain)
-  const serviceCats = useMemo(() => {
-    const all = [...categories, ...subCategories];
-    const isServiceFamily = (id: string) => id === 'services' || id.startsWith('services_');
-    const direct = all.filter(c => isServiceFamily(c.id));
-    return direct.length > 0 ? direct : all.filter(c => c.id === 'services');
-  }, [categories, subCategories]);
-
-  const countFor = (id: string): number | null => {
-    if (!products || products.length === 0) return null;
-    const kids = (categories || []).filter(c => c.parentId === id).map(c => c.id);
-    const direct = products.filter(p => p?.categoryId === id).length;
-    const viaKids = products.filter(p => p?.categoryId && kids.includes(p.categoryId)).length;
-    return direct + viaKids;
-  };
-
-  const renderItem = ({ item: cat }: { item: any }) => {
-    const count = countFor(cat.id);
-    const name = (cat.name as Record<string, string>)?.[language] || (cat.name as Record<string, string>)?.en || cat.id;
-    const color = cat.color || '#8B5CF6';
-    const image = SERVICE_IMAGES[cat.id];
-    return (
-      <Pressable
-        onPress={() => {
-          setSelectedCategory(cat.id);
-          router.navigate('/(tabs)' as any);
-        }}
-        testID={`service-card-${cat.id}`}
-        style={({ pressed }) => [
-          styles.card,
-          { width: CARD_W, backgroundColor: colors.surface, borderColor: colors.borderLight, opacity: pressed ? 0.92 : 1 },
-          shadows.card,
-        ]}
-      >
-        <View style={[styles.imgFrame, { height: Math.round(CARD_W * 0.86), backgroundColor: `${color}1A` }]}>
-          {SERVICE_IMAGES[cat.id] ? (
-            <Image source={SERVICE_IMAGES[cat.id]} style={styles.img} contentFit="contain" contentPosition="center" transition={120} />
-          ) : (
-            <MaterialIcons name={(cat.icon as any) || 'handyman'} size={scale(30)} color={color} />
-          )}
-        </View>
-        <Text style={[styles.name, { color: colors.textPrimary }]} numberOfLines={2}>{name}</Text>
-        <View style={{ height: scale(20), justifyContent: 'center' }}>
-          {count != null && count > 0 ? (
-            <View style={[styles.count, { backgroundColor: `${color}1A` }]}>
-              <Text style={[styles.countText, { color }]}>{count}</Text>
-            </View>
-          ) : null}
-        </View>
-      </Pressable>
-    );
-  };
-
-  return (
-    <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.background }]}>
-      <FlatList
-        data={serviceCats}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        numColumns={3}
-        columnWrapperStyle={[styles.row, isAr && { flexDirection: 'row-reverse' }]}
-        contentContainerStyle={{ paddingHorizontal: scale(16), paddingTop: scale(16), paddingBottom: insets.bottom + BOTTOM_NAV_CONTENT_GAP + layout.smallGap }}
-        onLayout={(e) => setGridW(e.nativeEvent.layout.width)}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <ConnectionStateView state="empty" compact />
-        }
-      />
-    </SafeAreaView>
-  );
+export default function ServicesTab() {
+  const router = useRouter(); const insets = useSafeAreaInsets(); const { width } = useWindowDimensions();
+  const { colors, language } = useApp(); const isAr = language === 'ar';
+  const lb = (en: string, fr: string, ar: string) => language === 'fr' ? fr : isAr ? ar : en;
+  const [query, setQuery] = useState(''); const cols = width < 720 ? 2 : 3;
+  const categories = useMemo(() => SERVICE_CATEGORIES.filter(c => localize(language, c.name).toLowerCase().includes(query.toLowerCase())), [language, query]);
+  const restaurant = RESTAURANTS[0]; const book = PDF_BOOKS[0];
+  return <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: PURPLE }]}>
+    <KeyboardAvoidingView style={styles.safe} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <View style={styles.header}><Text style={styles.headerTitle}>{lb('Services', 'Services', 'الخدمات')}</Text><View style={[styles.search, isAr && styles.rtl]}><MaterialIcons name="search" size={21} color="#64748B" /><TextInput value={query} onChangeText={setQuery} returnKeyType="search" placeholder={lb('Search a service...', 'Rechercher un service…', 'ابحث عن خدمة…')} placeholderTextColor="#64748B" style={[styles.input, { textAlign: isAr ? 'right' : 'left' }]} /></View></View>
+    <FlatList key={cols} data={categories} numColumns={cols} keyExtractor={x => x.id} columnWrapperStyle={[styles.gridRow, isAr && styles.rtl]} contentContainerStyle={{ padding: scale(14), paddingBottom: insets.bottom + scale(80) + BOTTOM_NAV_CONTENT_GAP }} style={{ backgroundColor: colors.background }} renderItem={({ item }) => <Pressable accessibilityRole="button" accessibilityLabel={localize(language, item.name)} onPress={() => router.push(`/services/${item.id}` as any)} style={[styles.category, { backgroundColor: colors.surface, borderColor: colors.border, width: `${100 / cols - 2}%` }]}><View style={styles.imageFrame}><Image source={item.image} style={styles.categoryImage} contentFit="contain" /></View><Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{localize(language, item.name)}</Text><View style={styles.count}><Text style={styles.countText}>{servicesCounts[item.id as keyof typeof servicesCounts]}</Text></View></Pressable>}
+      ListFooterComponent={<View><Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}>{lb('Discover', 'À découvrir', 'اكتشف')}</Text><Pressable onPress={() => router.push(`/services/restaurant/${restaurant.id}` as any)} style={[styles.feature, isAr && styles.rtl, { backgroundColor: colors.surface }]}><Image source={restaurant.cover} style={styles.featureImage} contentFit="cover" /><View style={styles.featureInfo}><Text style={[styles.featureTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}>{localize(language, restaurant.name)}</Text><Text style={[styles.quote, { color: colors.textSecondary, textAlign: isAr ? 'right' : 'left' }]}>{lb('Local flavors, delivered warm.', 'Saveurs locales, livrées chaudes.', 'نكهات محلية تصلك ساخنة.')}</Text><Rating rating={restaurant.rating} reviews={restaurant.reviews} color={colors.textSecondary} /><Text style={[styles.quote, { color: colors.textSecondary }]}>{restaurant.city}</Text></View></Pressable><Pressable onPress={() => router.push(`/services/book/${book.id}` as any)} style={[styles.feature, isAr && styles.rtl, { backgroundColor: colors.surface }]}><Image source={book.cover} style={styles.featureImage} contentFit="cover" /><View style={styles.featureInfo}><Text style={[styles.featureTitle, { color: colors.textPrimary, textAlign: isAr ? 'right' : 'left' }]}>{localize(language, book.title)}</Text><Text style={[styles.quote, { color: colors.textSecondary }]}>{book.author}</Text><Rating rating={book.rating} reviews={book.reviews} color={colors.textSecondary} /><Text style={styles.price}>{money(book.price)}</Text></View></Pressable></View>}
+    /></KeyboardAvoidingView>
+  </SafeAreaView>;
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  row: { gap: scale(12), marginBottom: scale(16) },
-  card: { borderRadius: scale(16), borderWidth: 1, borderColor: '#EEF2F7', padding: scale(8), alignItems: 'center', gap: scale(6) },
-  imgFrame: { width: '100%', borderRadius: scale(14), alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  img: { width: '100%', height: '100%' },
-  name: { fontSize: scale(13), fontWeight: '600', textAlign: 'center', minHeight: scale(32), lineHeight: scale(16) },
-  count: { paddingHorizontal: scale(10), paddingVertical: scale(2), borderRadius: scale(10) },
-  countText: { fontSize: scale(11), fontWeight: '700' },
-  empty: { alignItems: 'center', paddingVertical: scale(60), gap: scale(12) },
-  emptyText: { fontSize: scale(14), fontWeight: '600' },
-});
+const styles = StyleSheet.create({ safe:{flex:1},header:{paddingHorizontal:scale(14),paddingBottom:scale(12)},headerTitle:{fontFamily:'Cairo-Bold',fontSize:scale(23),color:'#FFF',paddingVertical:scale(8)},search:{height:scale(48),borderRadius:scale(24),backgroundColor:'#FFF',flexDirection:'row',alignItems:'center',paddingHorizontal:scale(15),gap:8},rtl:{flexDirection:'row-reverse'},input:{flex:1,fontFamily:'Cairo-Regular',fontSize:scale(14),color:'#111827'},gridRow:{justifyContent:'space-between',gap:scale(12)},category:{borderRadius:scale(16),borderWidth:1,padding:scale(9),alignItems:'center',marginBottom:scale(12),minHeight:scale(190)},imageFrame:{height:scale(112),width:'100%',borderRadius:scale(12),backgroundColor:'#FFF',overflow:'hidden'},categoryImage:{width:'100%',height:'100%'},cardTitle:{fontFamily:'Cairo-SemiBold',fontSize:scale(13),textAlign:'center',marginTop:scale(7),minHeight:scale(38)},count:{backgroundColor:'#EEEAFE',paddingHorizontal:scale(12),paddingVertical:3,borderRadius:12},countText:{fontFamily:'Cairo-Bold',fontSize:scale(11),color:PURPLE},sectionTitle:{fontFamily:'Cairo-Bold',fontSize:scale(19),marginVertical:scale(12)},feature:{flexDirection:'row',borderRadius:scale(16),padding:scale(10),marginBottom:scale(12),gap:scale(12)},featureImage:{width:scale(106),height:scale(106),borderRadius:scale(12)},featureInfo:{flex:1,justifyContent:'center',gap:3},featureTitle:{fontFamily:'Cairo-Bold',fontSize:scale(14)},quote:{fontFamily:'Cairo-Regular',fontSize:scale(12)},price:{fontFamily:'Cairo-Bold',fontSize:scale(14),color:PURPLE} });
