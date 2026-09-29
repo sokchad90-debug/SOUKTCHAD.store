@@ -60,7 +60,7 @@ export default function SellerStoreScreen() {
     if (isLoggedIn) fetchFollowStatus(String(seller.id)).then(v => setFollowing(v.following));
   }, [seller.id, isLoggedIn, fetchSellerStats, fetchFollowStatus]);
 
-  const productName = (p: any) => typeof p.name === 'string' ? p.name : p.name?.[language] || p.name?.en || '';
+  const productName = (p: any) => (typeof p.title === 'object' ? (p.title?.[language] || p.title?.en || '') : typeof p.name === 'string' ? p.name : p.name?.[language] || p.name?.en || '');
   const filtered = useMemo(() => sellerProducts.filter(p => {
     const condition = filter === 'all' || (filter === 'new' ? p.condition === 'new' : p.condition === 'used' || p.condition === 'like_new');
     return condition && (!query.trim() || productName(p).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
